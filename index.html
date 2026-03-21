@@ -91,7 +91,27 @@
     color: var(--gold);
   }
 
-  .header-status {
+  .header-setlist-name {
+    flex: 1;
+    text-align: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ice);
+    text-shadow: 0 0 20px rgba(232,244,248,0.15);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 20px;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .header-setlist-name.visible { opacity: 1; }
+  .header-setlist-name span {
+    color: var(--gold);
+  }
     display: flex;
     align-items: center;
     gap: 16px;
@@ -1140,58 +1160,152 @@
   .period-tabs {
     display: flex;
     overflow-x: auto;
-    border-bottom: 1px solid var(--panel-border);
+    border-bottom: 2px solid var(--panel-border);
     background: var(--rink);
     flex-shrink: 0;
     scrollbar-width: none;
+    padding: 0 4px;
+    gap: 2px;
+    min-height: 40px;
+    align-items: flex-end;
   }
   .period-tabs::-webkit-scrollbar { display: none; }
 
   .period-tab {
     flex-shrink: 0;
-    padding: 8px 14px;
+    padding: 7px 12px 6px;
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
-    font-size: 11px;
-    letter-spacing: 1.5px;
+    font-size: 12px;
+    letter-spacing: 1px;
     text-transform: uppercase;
     color: var(--text-dim);
     cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+    border-top: 1px solid transparent;
+    border-left: 1px solid transparent;
+    border-right: 1px solid transparent;
+    border-radius: 4px 4px 0 0;
+    transition: all 0.15s;
     white-space: nowrap;
     background: none;
-    border-top: none;
-    border-left: none;
-    border-right: none;
     display: flex;
     align-items: center;
     gap: 5px;
+    position: relative;
+    user-select: none;
+    margin-bottom: -2px;
   }
-  .period-tab:hover { color: var(--text); }
-  .period-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+  .period-tab:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+  .period-tab.active {
+    color: var(--ice);
+    border-color: var(--panel-border);
+    border-bottom-color: var(--rink-mid);
+    background: var(--rink-mid);
+  }
+  .period-tab.drag-over {
+    border-bottom-color: var(--gold) !important;
+    background: rgba(240,180,41,0.15) !important;
+  }
+  .period-tab.dragging { opacity: 0.4; }
 
   .period-tab .period-count {
     background: var(--rink-surface);
     color: var(--text-dim);
-    font-size: 9px;
+    font-size: 10px;
     padding: 1px 5px;
     border-radius: 8px;
     font-weight: 600;
+    min-width: 18px;
+    text-align: center;
   }
-  .period-tab.active .period-count { background: rgba(240,180,41,0.2); color: var(--gold); }
+  .period-tab.active .period-count {
+    background: rgba(232,244,248,0.12);
+    color: var(--ice-dim);
+  }
+
+  .period-tab-close {
+    opacity: 0;
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-left: 2px;
+    padding: 1px 3px;
+    border-radius: 3px;
+    line-height: 1;
+    transition: all 0.15s;
+    cursor: pointer;
+    background: none;
+    border: none;
+  }
+  .period-tab:hover .period-tab-close,
+  .period-tab.active .period-tab-close { opacity: 1; }
+  .period-tab-close:hover { background: rgba(204,17,34,0.3); color: #ff4455; }
 
   .period-tab-add {
     flex-shrink: 0;
-    padding: 8px 10px;
+    padding: 7px 10px;
     color: var(--text-dim);
     cursor: pointer;
     background: none;
     border: none;
-    font-size: 14px;
+    font-size: 16px;
     transition: color 0.2s;
+    margin-bottom: -2px;
+    line-height: 1;
   }
   .period-tab-add:hover { color: var(--green); }
+
+  /* Header action buttons */
+  .hdr-btn {
+    background: none;
+    border: 1px solid var(--panel-border);
+    color: var(--text-dim);
+    font-size: 11px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .hdr-btn:hover { transform: translateY(-1px); }
+  .hdr-btn-red:hover   { border-color: var(--red-line); color: #ff4455; }
+  .hdr-btn-gold:hover  { border-color: var(--gold);     color: var(--gold); }
+  .hdr-btn-green:hover { border-color: var(--green);    color: var(--green); }
+  .hdr-btn-blue:hover  { border-color: var(--active);   color: var(--active); }
+
+  .queue-count-badge {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+
+  /* Bigger queue item text */
+  .track-name { font-size: 14px !important; }
+  .track-artist { font-size: 12px !important; }
+  .track-times { font-size: 11px !important; }
+  .time-tag { font-size: 11px !important; }
+  .played-tag { font-size: 11px !important; }
+
+  /* Bigger result items */
+  .result-name { font-size: 14px !important; }
+  .result-sub  { font-size: 12px !important; }
+
+  /* Bigger panel headers */
+  .panel-title { font-size: 13px !important; letter-spacing: 2px; }
+
+  /* Bigger editor */
+  .editor-title { font-size: 20px !important; }
+  .editor-artist { font-size: 14px !important; }
+  .editor-label { font-size: 12px !important; letter-spacing: 1.5px; }
+
+  /* Bigger now-playing */
+  .np-title { font-size: 17px !important; }
+  .np-artist { font-size: 13px !important; }
   .pa-bar:nth-child(2) { animation-delay: 0.2s; }
   .pa-bar:nth-child(3) { animation-delay: 0.4s; }
   @keyframes paAnim {
@@ -1208,8 +1322,9 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v16</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v19</small></h1>
     </div>
+    <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
       <button onclick="toggleFullscreen()" title="Fullskjerm (F)" style="background:none;border:1px solid var(--panel-border);color:var(--text-dim);font-size:14px;width:32px;height:32px;border-radius:6px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.borderColor='var(--ice-dim)';this.style.color='var(--ice)'" onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'" id="fsBtn">⛶</button>
       <button class="spotify-btn" id="connectBtn" onclick="startSpotifyLogin()">
@@ -1232,26 +1347,19 @@
     <!-- LEFT: SEARCH -->
     <div class="panel">
       <div class="panel-header">
-        <span class="panel-title">📡 Søk</span>
+        <span class="panel-title">📡 Søk etter låter</span>
       </div>
       <div class="search-box">
         <div class="search-input-wrap">
-          <input type="text" id="searchInput" placeholder="Søk etter låter, artister..." onkeydown="if(event.key==='Enter') doSearch()">
+          <input type="text" id="searchInput" placeholder="Søk etter låter..." onkeydown="if(event.key==='Enter') doSearch()">
           <button onclick="doSearch()">🔍</button>
         </div>
-      </div>
-      <div class="search-tabs">
-        <button class="tab-btn active" onclick="switchTab('tracks', this)">Låter</button>
-        <button class="tab-btn" onclick="switchTab('playlists', this)">Playlists</button>
       </div>
       <div class="results-list" id="resultsList">
         <div class="empty-state">
           <div class="big-icon">🎵</div>
-          <p>Søk etter låter eller playlists for å legge dem til i køen</p>
+          <p>Søk etter låter for å legge dem til i køen</p>
         </div>
-      </div>
-      <div class="import-section">
-        <button class="import-btn" onclick="openPlaylistModal()">+ Importer Spotify-playlist via URL</button>
       </div>
     </div>
 
@@ -1260,11 +1368,11 @@
       <div class="panel-header">
         <span class="panel-title">🎯 Spillekø</span>
         <div style="display:flex;align-items:center;gap:6px;">
-          <span style="font-size:11px; color:var(--text-dim);" id="queueCount">0 låter</span>
-          <button onclick="newSetlist()" title="Tøm alle perioder og start ny" style="background:none;border:1px solid var(--panel-border);color:var(--text-dim);font-size:10px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;padding:3px 7px;border-radius:4px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--red-line)';this.style.color='var(--red-line)'" onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'">✦ Ny</button>
-          <button onclick="resetSession()" title="Nullstill avspilt-markering" style="background:none;border:1px solid var(--panel-border);color:var(--text-dim);font-size:10px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;padding:3px 7px;border-radius:4px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'">↺</button>
-          <button onclick="openSaveSetlistModal()" title="Lagre spilleliste" style="background:none;border:1px solid var(--panel-border);color:var(--text-dim);font-size:10px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;padding:3px 7px;border-radius:4px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'">💾</button>
-          <button onclick="openLoadSetlistModal()" title="Åpne lagret spilleliste" style="background:none;border:1px solid var(--panel-border);color:var(--text-dim);font-size:10px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;padding:3px 7px;border-radius:4px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--active)';this.style.color='var(--active)'" onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'">📂</button>
+          <span class="queue-count-badge" id="queueCount">0 låter</span>
+          <button class="hdr-btn hdr-btn-red"   onclick="newSetlist()"           title="Ny tom spilleliste">✦ Ny</button>
+          <button class="hdr-btn hdr-btn-gold"  onclick="resetSession()"         title="Nullstill avspilt-markering">↺ Reset</button>
+          <button class="hdr-btn hdr-btn-green" onclick="openSaveSetlistModal()" title="Lagre spilleliste">💾 Lagre</button>
+          <button class="hdr-btn hdr-btn-blue"  onclick="openLoadSetlistModal()" title="Åpne lagret spilleliste">📂 Åpne</button>
         </div>
       </div>
       <!-- PERIOD TABS -->
@@ -1343,21 +1451,12 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>🏒 Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;">v16</small></h2>
+    <h2>🏒 Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;">v18</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
-
     <div id="authStep1">
-      <div style="background:var(--rink-surface);border:1px solid var(--panel-border);border-radius:8px;padding:14px;margin-bottom:14px;text-align:left;">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;">Steg 1 — Din Spotify Client ID</div>
-        <input type="text" class="modal-input" id="clientIdInput" placeholder="Lim inn Client ID fra developer.spotify.com" style="margin-bottom:0">
-        <div style="font-size:11px;color:var(--text-dim);margin-top:8px;line-height:1.5;">
-          Hent den på <strong style="color:var(--ice-dim)">developer.spotify.com/dashboard</strong> → opprett app → kopier Client ID.<br>
-          Sett <strong style="color:var(--ice-dim)">Redirect URI</strong> til: <code style="color:var(--gold);font-size:10px;" id="redirectUriDisplay">laster...</code>
-        </div>
-      </div>
-      <button class="modal-btn primary" onclick="startPKCEFlow()">♪ Logg inn med Spotify</button>
+      <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">♪ Logg inn med Spotify</button>
       <button class="modal-btn secondary" onclick="useDemoMode()">Bruk demo-modus (uten Spotify)</button>
-      <p class="modal-note">Client ID lagres kun lokalt i nettleseren din.</p>
+      <p class="modal-note">Krever Spotify Premium for avspilling.</p>
     </div>
   </div>
 </div>
@@ -1385,23 +1484,16 @@
     <button class="modal-btn secondary" onclick="closeLoadSetlistModal()">Lukk</button>
   </div>
 </div>
-<div class="modal-overlay hidden" id="playlistModal">
-  <div class="modal">
-    <h2>📋 Importer Playlist</h2>
-    <p>Lim inn en Spotify-playlist URL eller playlist ID</p>
-    <input type="text" class="modal-input" id="playlistInput" placeholder="https://open.spotify.com/playlist/...">
-    <button class="modal-btn primary" onclick="importPlaylist()">Importer</button>
-    <button class="modal-btn secondary" onclick="closePlaylistModal()">Avbryt</button>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script>
 // ============================================================
 // STATE
 // ============================================================
-const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', 'Overtime/Straffer', 'Pauseshow'];
+const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
+
+// Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
+const SPOTIFY_CLIENT_ID = 'fbcfbbe397814636b480e45c52abf3a7';
 
 const state = {
   token: localStorage.getItem('spotify_token') || null,
@@ -1431,14 +1523,11 @@ const state = {
 // INIT
 // ============================================================
 window.onload = async () => {
-  // Vis redirect URI — prøv flere metoder
-  const uri = (window.location.origin + window.location.pathname) || window.location.href.split('?')[0] || '';
-  const uriEl = document.getElementById('redirectUriDisplay');
-  if (uriEl) uriEl.textContent = uri || '(last inn siden på nytt)';
-  console.log('Redirect URI:', uri);
-
   // Pre-fill client ID if saved
-  if (state.clientId) document.getElementById('clientIdInput').value = state.clientId;
+  if (state.clientId) {
+    // Client ID is hardcoded, just store it
+    localStorage.setItem('spotify_client_id', SPOTIFY_CLIENT_ID);
+  }
 
   // Handle OAuth callback (token in URL hash)
   const params = new URLSearchParams(window.location.search);
@@ -1463,6 +1552,9 @@ window.onload = async () => {
   renderPeriodTabs();
   renderQueue();
   updatePlayerUI();
+  // Gjenopprett spillelistenavn
+  const savedSetlistName = localStorage.getItem('hd_current_setlist_name');
+  if (savedSetlistName) updateHeaderSetlistName(savedSetlistName);
 };
 
 
@@ -1486,10 +1578,7 @@ async function generateCodeChallenge(verifier) {
 }
 
 async function startPKCEFlow() {
-  const clientId = document.getElementById('clientIdInput').value.trim();
-  if (!clientId) { showToast('Lim inn Client ID fra Spotify', 'error'); return; }
-
-  // Lagre clientId i begge — localStorage for gjenbruk, sessionStorage for redirect
+  const clientId = SPOTIFY_CLIENT_ID;
   localStorage.setItem('spotify_client_id', clientId);
   sessionStorage.setItem('spotify_client_id', clientId);
   state.clientId = clientId;
@@ -1763,13 +1852,6 @@ function loadDemoTracks() {
 // ============================================================
 // SEARCH
 // ============================================================
-function switchTab(tab, btn) {
-  state.activeTab = tab;
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('resultsList').innerHTML = `<div class="empty-state"><div class="big-icon">🎵</div><p>Søk etter ${tab === 'tracks' ? 'låter' : 'playlists'}</p></div>`;
-}
-
 async function spotifyFetch(url) {
   // Forny token automatisk hvis den er i ferd med å utløpe
   if (state.token && Date.now() > state.tokenExpiry - 60000) {
@@ -1806,16 +1888,14 @@ async function doSearch() {
   if (!q) return;
   if (!state.token) { showToast('Logg inn med Spotify først', 'error'); return; }
 
-  const type = state.activeTab === 'tracks' ? 'track' : 'playlist';
   const el = document.getElementById('resultsList');
   el.innerHTML = '<div class="empty-state"><div class="big-icon">⏳</div><p>Søker...</p></div>';
 
   try {
     const data = await spotifyFetch(
-      `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=${type}&limit=10&market=NO`
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=10&market=NO`
     );
-    if (type === 'track') renderTrackResults(data.tracks?.items || []);
-    else renderPlaylistResults(data.playlists?.items || []);
+    renderTrackResults(data.tracks?.items || []);
   } catch(e) {
     showToast(`Søk feilet: ${e.message}`, 'error');
     el.innerHTML = `<div class="empty-state"><div class="big-icon">❌</div><p>${e.message}</p></div>`;
@@ -1837,80 +1917,126 @@ function renderTrackResults(tracks) {
   `).join('');
 }
 
-function renderPlaylistResults(playlists) {
-  const el = document.getElementById('resultsList');
-  if (!playlists.length) { el.innerHTML = '<div class="empty-state"><div class="big-icon">🔍</div><p>Ingen resultater</p></div>'; return; }
-  el.innerHTML = playlists.map(p => `
-    <div class="result-item" id="pl-${p.id}">
-      <div class="result-thumb">${p.images?.[0] ? `<img src="${p.images[0].url}">` : '📋'}</div>
-      <div class="result-info">
-        <div class="result-name">${esc(p.name)}</div>
-        <div class="result-sub">${p.tracks.total} låter · ${esc(p.owner?.display_name || '—')}</div>
-      </div>
-      <button class="add-btn" onclick="importPlaylistTracks('${p.id}', '${esc(p.name)}', this)" title="Legg til alle låter">+</button>
-    </div>
-  `).join('');
-}
-
-async function importPlaylistTracks(playlistId, playlistName, btn) {
-  if (!state.token) { showToast('Logg inn først', 'error'); return; }
-  btn.disabled = true;
-  btn.textContent = '⏳';
-
-  try {
-    // Bruk search/recommendations-endepunkt som fungerer i Development Mode
-    // Hent tracks direkte fra playlist via browse-endepunktet
-    let added = 0;
-    let offset = 0;
-    const limit = 50;
-    let hasMore = true;
-
-    while (hasMore) {
-      const data = await spotifyFetch(
-        `https://api.spotify.com/v1/playlists/${playlistId}/tracks?limit=${limit}&offset=${offset}&market=NO`
-      );
-
-      (data.items || []).forEach(({ track: t }) => {
-        if (!t || !t.id || !t.artists?.length) return;
-        if (!getActiveQueue().find(q => q.id === t.id)) {
-          addToQueue({
-            id: t.id,
-            name: t.name,
-            artist: t.artists[0].name,
-            duration: Math.round(t.duration_ms / 1000),
-            img: t.album?.images?.[2]?.url || t.album?.images?.[0]?.url || '',
-            uri: t.uri
-          });
-          added++;
-        }
-      });
-
-      offset += limit;
-      hasMore = data.next !== null && data.next !== undefined;
-    }
-
-    btn.textContent = '✓';
-    btn.style.background = 'var(--green)';
-    btn.style.borderColor = 'var(--green)';
-    btn.style.color = 'white';
-    showToast(`"${playlistName}" — +${added} låter ✓`, 'success');
-  } catch(e) {
-    btn.disabled = false;
-    btn.textContent = '+';
-    showToast(`Feil: ${e.message}`, 'error');
-    console.error('importPlaylistTracks feil:', e);
-  }
-}
-
 function renderPeriodTabs() {
   const el = document.getElementById('periodTabs');
-  el.innerHTML = state.periods.map(p => `
+  el.innerHTML = state.periods.map((p, i) => `
     <button class="period-tab${p.id === state.activePeriodId ? ' active' : ''}"
-            onclick="setActivePeriod('${p.id}')">
-      ${esc(p.name)}
+            id="ptab-${p.id}"
+            onclick="setActivePeriod('${p.id}')"
+            ondblclick="renamePeriod('${p.id}', event)"
+            draggable="true"
+            ondragstart="tabDragStart(event, '${p.id}')"
+            ondragover="tabDragOver(event, '${p.id}')"
+            ondragleave="tabDragLeave(event)"
+            ondrop="tabDrop(event, '${p.id}')"
+            ondragend="tabDragEnd()"
+            title="Dobbeltklikk for å gi nytt navn · Dra for å flytte">
+      <span class="period-tab-label" id="ptab-label-${p.id}">${esc(p.name)}</span>
       <span class="period-count">${p.queue.length}</span>
+      ${state.periods.length > 1
+        ? `<button class="period-tab-close" onclick="event.stopPropagation(); deletePeriod('${p.id}')" title="Slett periode">✕</button>`
+        : ''}
     </button>
-  `).join('') + `<button class="period-tab-add" onclick="addPeriod()" title="Legg til periode">＋</button>`;
+  `).join('') +
+  `<button class="period-tab-add" onclick="addPeriod()" title="Legg til periode">＋</button>`;
+}
+
+// Tab drag-to-reorder
+let tabDragSrc = null;
+function tabDragStart(e, id) {
+  tabDragSrc = id;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/period-id', id);
+  setTimeout(() => document.getElementById('ptab-' + id)?.classList.add('dragging'), 0);
+}
+function tabDragOver(e, id) {
+  // Only handle period reorder if dragging a tab, not a track
+  if (!e.dataTransfer.types.includes('text/period-id') &&
+      !e.dataTransfer.types.includes('Text')) return;
+  e.preventDefault();
+  e.stopPropagation();
+  document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('drag-over'));
+  document.getElementById('ptab-' + id)?.classList.add('drag-over');
+}
+function tabDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+function tabDrop(e, targetId) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.querySelectorAll('.period-tab').forEach(t => {
+    t.classList.remove('drag-over');
+    t.classList.remove('dragging');
+  });
+
+  // Check if we're dropping a track onto a tab
+  const trackIdx = e.dataTransfer.getData('text/track-index');
+  if (trackIdx !== '' && trackIdx !== null && tabDragSrc === null) {
+    moveTrackToPeriod(parseInt(trackIdx), targetId);
+    return;
+  }
+
+  // Otherwise reorder tabs
+  if (tabDragSrc && tabDragSrc !== targetId) {
+    const srcIdx = state.periods.findIndex(p => p.id === tabDragSrc);
+    const tgtIdx = state.periods.findIndex(p => p.id === targetId);
+    if (srcIdx >= 0 && tgtIdx >= 0) {
+      const [moved] = state.periods.splice(srcIdx, 1);
+      state.periods.splice(tgtIdx, 0, moved);
+      saveState();
+      renderPeriodTabs();
+    }
+  }
+  tabDragSrc = null;
+}
+function tabDragEnd() {
+  tabDragSrc = null;
+  document.querySelectorAll('.period-tab').forEach(t => {
+    t.classList.remove('drag-over');
+    t.classList.remove('dragging');
+  });
+}
+
+function renamePeriod(id, e) {
+  e.stopPropagation();
+  const period = state.periods.find(p => p.id === id);
+  if (!period) return;
+  const label = document.getElementById('ptab-label-' + id);
+  if (!label) return;
+
+  const input = document.createElement('input');
+  input.value = period.name;
+  input.style.cssText = 'background:transparent;border:none;outline:none;color:inherit;font:inherit;width:' + Math.max(60, period.name.length * 9) + 'px;';
+  label.replaceWith(input);
+  input.focus();
+  input.select();
+
+  const done = () => {
+    const newName = input.value.trim() || period.name;
+    period.name = newName;
+    saveState();
+    renderPeriodTabs();
+  };
+  input.onblur = done;
+  input.onkeydown = e => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { input.value = period.name; input.blur(); }
+  };
+}
+
+function deletePeriod(id) {
+  const period = state.periods.find(p => p.id === id);
+  if (!period) return;
+  if (period.queue.length > 0) {
+    if (!confirm(`Slette "${period.name}" med ${period.queue.length} låter?`)) return;
+  }
+  state.periods = state.periods.filter(p => p.id !== id);
+  if (state.activePeriodId === id) {
+    state.activePeriodId = state.periods[0].id;
+  }
+  saveState();
+  renderPeriodTabs();
+  renderQueue();
 }
 
 function addPeriod() {
@@ -1922,6 +2048,27 @@ function addPeriod() {
   saveState();
   renderPeriodTabs();
   renderQueue();
+}
+
+function moveTrackToPeriod(trackIdx, targetPeriodId) {
+  if (targetPeriodId === state.activePeriodId) return;
+  const q = getActivePeriod().queue;
+  if (trackIdx < 0 || trackIdx >= q.length) return;
+  const track = q[trackIdx];
+  const targetPeriod = state.periods.find(p => p.id === targetPeriodId);
+  if (!targetPeriod) return;
+  if (targetPeriod.queue.find(t => t.id === track.id)) {
+    showToast('Låten er allerede i ' + targetPeriod.name, 'error');
+    return;
+  }
+  // Remove from current, add to target
+  q.splice(trackIdx, 1);
+  targetPeriod.queue.push(track);
+  if (state.currentIndex >= trackIdx) state.currentIndex = Math.max(-1, state.currentIndex - 1);
+  saveState();
+  renderPeriodTabs();
+  renderQueue();
+  showToast(`Flyttet til ${targetPeriod.name} ✓`, 'success');
 }
 
 // ============================================================
@@ -1978,7 +2125,8 @@ function renderQueue() {
     return `
       <div class="queue-item${isPlaying ? ' playing' : isLoaded ? ' loaded' : ''}${isPlayed && !isPlaying && !isLoaded ? ' played' : ''}"
            onclick="selectTrack(${i})" draggable="true"
-           ondragstart="dragStart(event,${i})" ondragover="event.preventDefault()" ondrop="dragDrop(event,${i})">
+           ondragstart="dragStart(event,${i})" ondragover="event.preventDefault()" ondrop="dragDrop(event,${i})"
+           ondragend="document.getElementById('periodTabs').classList.remove('drag-active'); dragSrc=null;">
         <button class="queue-play-btn" onclick="event.stopPropagation(); playTrack(${i})" title="Spill">
           ${isPlaying
             ? `<span style="display:flex;align-items:flex-end;gap:2px;height:14px">
@@ -2009,10 +2157,17 @@ function renderQueue() {
   }).join('');
 }
 
-// Drag & drop reorder
+// Drag & drop reorder within period
 let dragSrc = null;
-function dragStart(e, i) { dragSrc = i; e.dataTransfer.effectAllowed = 'move'; }
+function dragStart(e, i) {
+  dragSrc = i;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/track-index', String(i));
+  // Tell period tabs we're dragging a track
+  document.getElementById('periodTabs').classList.add('drag-active');
+}
 function dragDrop(e, i) {
+  document.getElementById('periodTabs').classList.remove('drag-active');
   if (dragSrc === null || dragSrc === i) return;
   const item = getActiveQueue().splice(dragSrc, 1)[0];
   getActiveQueue().splice(i, 0, item);
@@ -2415,85 +2570,6 @@ function toggleAutoplay() {
 }
 
 // ============================================================
-// PLAYLIST IMPORT
-// ============================================================
-function openPlaylistModal() {
-  if (!state.token) { showToast('Koble til Spotify først', 'error'); return; }
-  document.getElementById('playlistModal').classList.remove('hidden');
-}
-function closePlaylistModal() { document.getElementById('playlistModal').classList.add('hidden'); }
-
-async function importPlaylist() {
-  const input = document.getElementById('playlistInput').value.trim();
-
-  // Ekstraher playlist-ID fra alle URL-varianter
-  let id = null;
-
-  // Prøv spotify URL: https://open.spotify.com/playlist/ID eller https://open.spotify.com/playlist/ID?si=xxx
-  const urlMatch = input.match(/open\.spotify\.com\/playlist\/([a-zA-Z0-9]+)/);
-  if (urlMatch) {
-    id = urlMatch[1];
-  } else {
-    // Prøv spotify URI: spotify:playlist:ID
-    const uriMatch = input.match(/spotify:playlist:([a-zA-Z0-9]+)/);
-    if (uriMatch) {
-      id = uriMatch[1];
-    } else if (/^[a-zA-Z0-9]{15,30}$/.test(input)) {
-      // Bare en ren ID (Spotify IDer er typisk 22 tegn)
-      id = input;
-    }
-  }
-
-  console.log('Playlist input:', input);
-  console.log('Ekstrahert ID:', id);
-
-  if (!id) { showToast('Ugyldig playlist-URL', 'error'); return; }
-  await importPlaylistById(id);
-  closePlaylistModal();
-}
-
-async function importPlaylistById(id) {
-  if (!state.token) { showToast('Koble til Spotify først', 'error'); return; }
-  try {
-    showToast('Laster playlist...', '');
-    console.log('importPlaylistById - token starter med:', state.token.substring(0, 20));
-    console.log('importPlaylistById - token utløper om:', Math.round((state.tokenExpiry - Date.now()) / 1000 / 60), 'min');
-
-    // Hent playlist-info uten fields-filter
-    const info = await spotifyFetch(
-      `https://api.spotify.com/v1/playlists/${id}`
-    );
-    console.log('Playlist info OK:', info.name);
-
-    // Hent spor uten fields-filter (unngår "Resource not found" bug)
-    let url = `https://api.spotify.com/v1/playlists/${id}/tracks?limit=50`;
-    let added = 0;
-    while (url) {
-      const data = await spotifyFetch(url);
-      (data.items || []).forEach(({ track: t }) => {
-        if (!t || !t.id || !t.artists?.length) return;
-        if (!getActiveQueue().find(q => q.id === t.id)) {
-          addToQueue({
-            id: t.id,
-            name: t.name,
-            artist: t.artists[0].name,
-            duration: Math.round(t.duration_ms / 1000),
-            img: t.album?.images?.[2]?.url || t.album?.images?.[0]?.url || '',
-            uri: t.uri
-          });
-          added++;
-        }
-      });
-      url = data.next || null;
-    }
-    showToast(`"${info.name}" — +${added} låter ✓`, 'success');
-  } catch(e) {
-    showToast(`Playlist-feil: ${e.message}`, 'error');
-    console.error('importPlaylistById feil:', e);
-  }
-}
-
-// ============================================================
 // SETLIST SAVE / LOAD
 // ============================================================
 function openSaveSetlistModal() {
@@ -2542,6 +2618,7 @@ function saveSetlistNew() {
   saveState();
   closeSaveSetlistModal();
   showToast(`"${name}" lagret ✓`, 'success');
+  updateHeaderSetlistName(name);
 }
 
 // Keep old name for backward compat
@@ -2557,6 +2634,7 @@ function saveSetlistOverwrite(id) {
   saveState();
   closeSaveSetlistModal();
   showToast(`"${oldName}" oppdatert ✓`, 'success');
+  updateHeaderSetlistName(oldName);
 }
 
 function openLoadSetlistModal() {
@@ -2615,6 +2693,7 @@ function loadSetlist(id) {
   updatePlayerUI();
   closeLoadSetlistModal();
   showToast(`"${sl.name}" lastet inn ✓`, 'success');
+  updateHeaderSetlistName(sl.name);
 }
 
 function deleteSetlist(id) {
@@ -2655,6 +2734,21 @@ function newSetlist() {
   document.getElementById('npCategory').innerHTML = '';
   document.getElementById('editorContent').innerHTML = `<div class="empty-state" style="height:100%"><div class="big-icon">🎚️</div><p>Klikk på en låt for å redigere</p></div>`;
   showToast('Ny spilleliste klar ✓', 'success');
+  updateHeaderSetlistName('');
+}
+
+function updateHeaderSetlistName(name) {
+  const el = document.getElementById('headerSetlistName');
+  if (!el) return;
+  if (name) {
+    el.innerHTML = `<span>♪</span> ${esc(name)}`;
+    el.classList.add('visible');
+    localStorage.setItem('hd_current_setlist_name', name);
+  } else {
+    el.innerHTML = '';
+    el.classList.remove('visible');
+    localStorage.removeItem('hd_current_setlist_name');
+  }
 }
 
 // SESSION RESET
