@@ -63,7 +63,11 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    min-height: 64px;
     height: 64px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
   }
 
   .logo {
@@ -112,9 +116,12 @@
   .header-setlist-name span {
     color: var(--gold);
   }
+
+  .header-status {
     display: flex;
     align-items: center;
     gap: 16px;
+    flex-shrink: 0;
   }
 
   .spotify-btn {
@@ -1173,10 +1180,10 @@
 
   .period-tab {
     flex-shrink: 0;
-    padding: 7px 12px 6px;
+    padding: 10px 16px 8px;
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
-    font-size: 12px;
+    font-size: 15px;
     letter-spacing: 1px;
     text-transform: uppercase;
     color: var(--text-dim);
@@ -1191,7 +1198,7 @@
     background: none;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     position: relative;
     user-select: none;
     margin-bottom: -2px;
@@ -1212,11 +1219,11 @@
   .period-tab .period-count {
     background: var(--rink-surface);
     color: var(--text-dim);
-    font-size: 10px;
-    padding: 1px 5px;
+    font-size: 12px;
+    padding: 2px 7px;
     border-radius: 8px;
     font-weight: 600;
-    min-width: 18px;
+    min-width: 22px;
     text-align: center;
   }
   .period-tab.active .period-count {
@@ -1224,31 +1231,14 @@
     color: var(--ice-dim);
   }
 
-  .period-tab-close {
-    opacity: 0;
-    font-size: 10px;
-    color: var(--text-dim);
-    margin-left: 2px;
-    padding: 1px 3px;
-    border-radius: 3px;
-    line-height: 1;
-    transition: all 0.15s;
-    cursor: pointer;
-    background: none;
-    border: none;
-  }
-  .period-tab:hover .period-tab-close,
-  .period-tab.active .period-tab-close { opacity: 1; }
-  .period-tab-close:hover { background: rgba(204,17,34,0.3); color: #ff4455; }
-
   .period-tab-add {
     flex-shrink: 0;
-    padding: 7px 10px;
+    padding: 10px 14px;
     color: var(--text-dim);
     cursor: pointer;
     background: none;
     border: none;
-    font-size: 16px;
+    font-size: 20px;
     transition: color 0.2s;
     margin-bottom: -2px;
     line-height: 1;
@@ -1263,14 +1253,14 @@
   }
   .left-tab {
     flex: 1;
-    padding: 10px 8px;
+    padding: 14px 8px;
     background: none;
     border: none;
     border-bottom: 3px solid transparent;
     color: var(--text-dim);
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
-    font-size: 12px;
+    font-size: 16px;
     letter-spacing: 1.5px;
     text-transform: uppercase;
     cursor: pointer;
@@ -1347,16 +1337,32 @@
     flex-shrink: 0;
   }
   .lib-selection-info.visible { display: flex; }
+
+  .lib-cat-filter {
+    background: none;
+    border: 1px solid var(--panel-border);
+    color: var(--text-dim);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .lib-cat-filter:hover { border-color: var(--text-dim); color: var(--text); }
+  .lib-cat-filter.active { background: var(--active); border-color: var(--active); color: white; }
   .hdr-btn {
     background: none;
     border: 1px solid var(--panel-border);
     color: var(--text-dim);
-    font-size: 11px;
+    font-size: 13px;
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
     letter-spacing: 1px;
     text-transform: uppercase;
-    padding: 5px 10px;
+    padding: 6px 12px;
     border-radius: 5px;
     cursor: pointer;
     transition: all 0.2s;
@@ -1370,33 +1376,37 @@
 
   .queue-count-badge {
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-dim);
     letter-spacing: 0.5px;
   }
 
   /* Bigger queue item text */
-  .track-name { font-size: 14px !important; }
-  .track-artist { font-size: 12px !important; }
-  .track-times { font-size: 11px !important; }
-  .time-tag { font-size: 11px !important; }
-  .played-tag { font-size: 11px !important; }
+  .track-name { font-size: 15px !important; }
+  .track-artist { font-size: 13px !important; }
+  .track-times { font-size: 12px !important; }
+  .time-tag { font-size: 12px !important; }
+  .played-tag { font-size: 12px !important; }
 
   /* Bigger result items */
-  .result-name { font-size: 14px !important; }
-  .result-sub  { font-size: 12px !important; }
+  .result-name { font-size: 15px !important; }
+  .result-sub  { font-size: 13px !important; }
 
   /* Bigger panel headers */
-  .panel-title { font-size: 13px !important; letter-spacing: 2px; }
+  .panel-title { font-size: 15px !important; letter-spacing: 2px; }
 
   /* Bigger editor */
   .editor-title { font-size: 20px !important; }
   .editor-artist { font-size: 14px !important; }
-  .editor-label { font-size: 12px !important; letter-spacing: 1.5px; }
+  .editor-label { font-size: 13px !important; letter-spacing: 1.5px; }
 
   /* Bigger now-playing */
-  .np-title { font-size: 17px !important; }
-  .np-artist { font-size: 13px !important; }
+  .np-title { font-size: 18px !important; }
+  .np-artist { font-size: 14px !important; }
+
+  /* Bigger library */
+  .lib-item-name { font-size: 14px !important; }
+  .lib-item-sub  { font-size: 12px !important; }
   .pa-bar:nth-child(2) { animation-delay: 0.2s; }
   .pa-bar:nth-child(3) { animation-delay: 0.4s; }
   @keyframes paAnim {
@@ -1413,11 +1423,15 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v21</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v23</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
-      <button onclick="toggleFullscreen()" title="Fullskjerm (F)" style="background:none;border:1px solid var(--panel-border);color:var(--text-dim);font-size:14px;width:32px;height:32px;border-radius:6px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.borderColor='var(--ice-dim)';this.style.color='var(--ice)'" onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'" id="fsBtn">⛶</button>
+      <button onclick="toggleFullscreen()" title="Fullskjerm (F)"
+        id="fsBtn"
+        style="background:none;border:1px solid var(--panel-border);color:var(--text-dim);font-size:16px;width:36px;height:36px;border-radius:6px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;flex-shrink:0;"
+        onmouseover="this.style.borderColor='var(--ice-dim)';this.style.color='var(--ice)'"
+        onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'">⛶</button>
       <button class="spotify-btn" id="connectBtn" onclick="startSpotifyLogin()">
         <span>♪</span> Logg inn med Spotify
       </button>
@@ -1462,10 +1476,21 @@
 
       <!-- LIBRARY VIEW -->
       <div id="leftLibrary" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
-        <div style="padding:10px 12px;border-bottom:1px solid var(--panel-border);display:flex;align-items:center;gap:8px;flex-shrink:0;">
-          <input type="text" id="librarySearch" placeholder="Filtrer bibliotek..." oninput="renderLibrary()"
-            style="flex:1;background:var(--rink-surface);border:1px solid var(--panel-border);border-radius:5px;color:var(--text);padding:7px 10px;font-family:'Barlow',sans-serif;font-size:13px;outline:none;">
-          <span id="libraryCount" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--text-dim);white-space:nowrap;">0 låter</span>
+        <div style="padding:10px 12px;border-bottom:1px solid var(--panel-border);display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="text" id="librarySearch" placeholder="Filtrer bibliotek..." oninput="renderLibrary()"
+              style="flex:1;background:var(--rink-surface);border:1px solid var(--panel-border);border-radius:5px;color:var(--text);padding:7px 10px;font-family:'Barlow',sans-serif;font-size:13px;outline:none;">
+            <span id="libraryCount" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--text-dim);white-space:nowrap;">0 låter</span>
+          </div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            <button class="lib-cat-filter active" data-cat="" onclick="setLibraryCatFilter('', this)">Alle</button>
+            <button class="lib-cat-filter" data-cat="goal" onclick="setLibraryCatFilter('goal', this)">🥅 Mål</button>
+            <button class="lib-cat-filter" data-cat="powerplay" onclick="setLibraryCatFilter('powerplay', this)">⚡ PP</button>
+            <button class="lib-cat-filter" data-cat="intro" onclick="setLibraryCatFilter('intro', this)">🎤 Intro</button>
+            <button class="lib-cat-filter" data-cat="pump" onclick="setLibraryCatFilter('pump', this)">🔥 Pump</button>
+            <button class="lib-cat-filter" data-cat="timeout" onclick="setLibraryCatFilter('timeout', this)">⏸ TO</button>
+            <button class="lib-cat-filter" data-cat="__none__" onclick="setLibraryCatFilter('__none__', this)">—</button>
+          </div>
         </div>
         <div class="lib-selection-info" id="libSelectionInfo">
           <span id="libSelectionCount">0 valgt</span>
@@ -2027,16 +2052,42 @@ async function doSearch() {
 function renderTrackResults(tracks) {
   const el = document.getElementById('resultsList');
   if (!tracks.length) { el.innerHTML = '<div class="empty-state"><div class="big-icon">🔍</div><p>Ingen resultater</p></div>'; return; }
-  el.innerHTML = tracks.map(t => `
-    <div class="result-item" ondblclick='addTrackToQueue(${JSON.stringify({id:t.id,name:t.name,artist:t.artists[0].name,duration:Math.round(t.duration_ms/1000),img:t.album.images[2]?.url||"",uri:t.uri})})'>
+  el.innerHTML = tracks.map(t => {
+    const track = {id:t.id,name:t.name,artist:t.artists[0].name,duration:Math.round(t.duration_ms/1000),img:t.album.images[2]?.url||t.album.images[0]?.url||"",uri:t.uri};
+    const inLib = state.library.find(l => l.id === t.id);
+    const inQueue = getActiveQueue().find(q => q.id === t.id);
+    return `
+    <div class="result-item" ondblclick='addTrackToQueue(${JSON.stringify(track)})'>
       <div class="result-thumb">${t.album.images[2] ? `<img src="${t.album.images[2].url}">` : '🎵'}</div>
       <div class="result-info">
         <div class="result-name">${esc(t.name)}</div>
-        <div class="result-sub">${esc(t.artists[0].name)} · ${fmtTime(Math.round(t.duration_ms/1000))}</div>
+        <div class="result-sub">${esc(t.artists[0].name)} · ${fmtTime(Math.round(t.duration_ms/1000))}${inLib ? ' <span style="color:var(--gold)">★</span>' : ''}</div>
       </div>
-      <button class="add-btn" onclick='addTrackToQueue(${JSON.stringify({id:t.id,name:t.name,artist:t.artists[0].name,duration:Math.round(t.duration_ms/1000),img:t.album.images[2]?.url||"",uri:t.uri})})'>+</button>
+      <div style="display:flex;flex-direction:column;gap:4px;align-items:center;">
+        <button class="add-btn" style="${inQueue ? 'background:rgba(34,204,102,0.15);border-color:var(--green);color:var(--green);' : ''}"
+          onclick='addTrackToQueue(${JSON.stringify(track)})' title="Legg til i kø">${inQueue ? '✓' : '+'}</button>
+        <button style="background:none;border:none;cursor:pointer;font-size:14px;color:${inLib ? 'var(--gold)' : 'var(--text-dim)'};padding:0;line-height:1;transition:color .2s;"
+          onclick='addSearchResultToLibrary(${JSON.stringify(track)}, this)' title="${inLib ? 'I biblioteket' : 'Lagre til bibliotek'}">${inLib ? '★' : '☆'}</button>
+      </div>
     </div>
-  `).join('');
+  `}).join('');
+}
+
+function addSearchResultToLibrary(track, btn) {
+  const existing = state.library.findIndex(l => l.id === track.id);
+  const entry = {
+    ...track,
+    settings: state.trackSettings[track.id] || { startTime: 0, endTime: track.duration, category: '', note: '', fadeOut: 0 },
+    savedAt: Date.now(),
+  };
+  if (existing >= 0) {
+    state.library[existing] = entry;
+  } else {
+    state.library.push(entry);
+  }
+  saveState();
+  if (btn) { btn.textContent = '★'; btn.style.color = 'var(--gold)'; }
+  showToast(`"${track.name}" lagret i biblioteket ✓`, 'success');
 }
 
 function renderPeriodTabs() {
@@ -2132,7 +2183,29 @@ function tabDrop(e, targetId) {
     t.classList.remove('dragging');
   });
 
-  if (dragType === 'track' && dragTrackIdx !== null) {
+  if (dragType === 'library' && libDragId) {
+    // Drop library item onto tab → add to that period
+    const targetPeriod = state.periods.find(p => p.id === targetId);
+    if (!targetPeriod) return;
+    const entry = state.library.find(l => l.id === libDragId);
+    if (!entry) return;
+    if (targetPeriod.queue.find(t => t.id === libDragId)) {
+      showToast(`Allerede i ${targetPeriod.name}`, 'error');
+    } else {
+      targetPeriod.queue.push({ id: entry.id, name: entry.name, artist: entry.artist,
+        duration: entry.duration, img: entry.img, uri: entry.uri });
+      if (entry.settings && Object.keys(entry.settings).length) {
+        state.trackSettings[entry.id] = JSON.parse(JSON.stringify(entry.settings));
+      } else if (!state.trackSettings[entry.id]) {
+        state.trackSettings[entry.id] = { startTime: 0, endTime: entry.duration, category: '', note: '', fadeOut: 0 };
+      }
+      saveState();
+      renderPeriodTabs();
+      renderQueue();
+      renderLibrary();
+      showToast(`"${entry.name}" → ${targetPeriod.name} ✓`, 'success');
+    }
+  } else if (dragType === 'track' && dragTrackIdx !== null) {
     // Drop track onto tab → move to that period
     moveTrackToPeriod(dragTrackIdx, targetId);
   } else if (dragType === 'tab' && tabDragSrc && tabDragSrc !== targetId) {
@@ -2995,19 +3068,32 @@ function removeFromLibrary(trackId, e) {
   showToast('Fjernet fra biblioteket', '');
 }
 
+let libraryCatFilter = '';
+
+function setLibraryCatFilter(cat, btn) {
+  libraryCatFilter = cat;
+  document.querySelectorAll('.lib-cat-filter').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLibrary();
+}
+
 function renderLibrary() {
   const el = document.getElementById('libraryList');
-  const filter = (document.getElementById('librarySearch')?.value || '').toLowerCase();
-  const items = state.library.filter(l =>
-    !filter || l.name.toLowerCase().includes(filter) || l.artist.toLowerCase().includes(filter)
-  );
+  const textFilter = (document.getElementById('librarySearch')?.value || '').toLowerCase();
 
-  document.getElementById('libraryCount').textContent = `${state.library.length} låter`;
+  const items = state.library.filter(l => {
+    if (textFilter && !l.name.toLowerCase().includes(textFilter) && !l.artist.toLowerCase().includes(textFilter)) return false;
+    if (libraryCatFilter === '__none__') return !l.settings?.category;
+    if (libraryCatFilter) return l.settings?.category === libraryCatFilter;
+    return true;
+  });
+
+  document.getElementById('libraryCount').textContent = `${items.length} / ${state.library.length} låter`;
 
   if (!items.length) {
     el.innerHTML = state.library.length
       ? '<div class="empty-state"><div class="big-icon">🔍</div><p>Ingen treff</p></div>'
-      : '<div class="empty-state"><div class="big-icon">📚</div><p>Lagre sanger til biblioteket fra redigeringspanelet</p></div>';
+      : '<div class="empty-state"><div class="big-icon">📚</div><p>Lagre sanger til biblioteket fra redigeringspanelet eller søkeresultat</p></div>';
     updateLibrarySelectionBar();
     return;
   }
@@ -3018,24 +3104,29 @@ function renderLibrary() {
     const isSelected = librarySelection.has(l.id);
     const catColor = getCatColor(s.category);
     return `
-      <div class="lib-item${isSelected ? ' selected' : ''}" onclick="toggleLibrarySelect('${l.id}', event)"
-           ondblclick="addLibItemToQueue('${l.id}')">
+      <div class="lib-item${isSelected ? ' selected' : ''}"
+           onclick="toggleLibrarySelect('${l.id}', event)"
+           ondblclick="addLibItemToQueue('${l.id}')"
+           draggable="true"
+           ondragstart="libDragStart(event, '${l.id}')"
+           ondragend="libDragEnd()">
         <div class="lib-item-thumb">${l.img ? `<img src="${l.img}">` : '🎵'}</div>
         <div class="lib-item-info">
           <div class="lib-item-name">${esc(l.name)}</div>
           <div class="lib-item-sub">
             <span>${esc(l.artist)}</span>
             ${s.category ? `<span style="color:${catColor}">${catEmoji(s.category)} ${s.category}</span>` : ''}
-            ${s.startTime > 0 ? `<span style="color:var(--green);font-size:10px">▶${fmtTime(s.startTime)}</span>` : ''}
-            ${s.endTime && s.endTime < l.duration ? `<span style="color:var(--red-line);font-size:10px">■${fmtTime(s.endTime)}</span>` : ''}
+            ${s.startTime > 0 ? `<span style="color:var(--green)">▶${fmtTime(s.startTime)}</span>` : ''}
+            ${s.endTime && s.endTime < l.duration ? `<span style="color:var(--red-line)">■${fmtTime(s.endTime)}</span>` : ''}
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;align-items:center;flex-shrink:0;">
-          <button class="add-btn${inQueue ? '' : ''}" style="width:26px;height:26px;${inQueue ? 'background:rgba(34,204,102,0.15);border-color:var(--green);color:var(--green);' : ''}"
+          <button class="add-btn" style="width:28px;height:28px;${inQueue ? 'background:rgba(34,204,102,0.15);border-color:var(--green);color:var(--green);' : ''}"
             onclick="event.stopPropagation(); addLibItemToQueue('${l.id}')" title="${inQueue ? 'Allerede i køen' : 'Legg til i kø'}">
             ${inQueue ? '✓' : '+'}
           </button>
-          <button style="background:none;border:none;color:var(--text-dim);font-size:11px;cursor:pointer;padding:2px;"
+          <button style="background:none;border:none;color:var(--text-dim);font-size:13px;cursor:pointer;padding:2px;transition:color .2s;"
+            onmouseover="this.style.color='#ff4455'" onmouseout="this.style.color='var(--text-dim)'"
             onclick="removeFromLibrary('${l.id}', event)" title="Fjern fra bibliotek">🗑</button>
         </div>
       </div>
@@ -3043,6 +3134,23 @@ function renderLibrary() {
   }).join('');
 
   updateLibrarySelectionBar();
+}
+
+// Drag from library to period tab
+let libDragId = null;
+
+function libDragStart(e, id) {
+  libDragId = id;
+  dragType = 'library';
+  e.dataTransfer.effectAllowed = 'copy';
+  e.dataTransfer.setData('text/plain', 'library:' + id);
+  document.getElementById('periodTabs').classList.add('drag-active');
+}
+
+function libDragEnd() {
+  libDragId = null;
+  if (dragType === 'library') dragType = null;
+  document.getElementById('periodTabs').classList.remove('drag-active');
 }
 
 function toggleLibrarySelect(id, e) {
