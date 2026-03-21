@@ -1072,7 +1072,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v9</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v10</small></h1>
     </div>
     <div class="header-status">
       <button class="spotify-btn" id="connectBtn" onclick="startSpotifyLogin()">
@@ -1198,7 +1198,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>🏒 Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;">v9</small></h2>
+    <h2>🏒 Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;">v10</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
 
     <div id="authStep1">
@@ -1614,7 +1614,7 @@ async function doSearch() {
 
   try {
     const data = await spotifyFetch(
-      `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=${type}&limit=20`
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=${type}&limit=10&market=NO`
     );
     if (type === 'track') renderTrackResults(data.tracks?.items || []);
     else renderPlaylistResults(data.playlists?.items || []);
