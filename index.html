@@ -2015,18 +2015,26 @@ function closePlaylistModal() { document.getElementById('playlistModal').classLi
 async function importPlaylist() {
   const input = document.getElementById('playlistInput').value.trim();
 
-  // Håndter alle URL-varianter:
-  // https://open.spotify.com/playlist/ID
-  // https://open.spotify.com/playlist/ID?si=xxx
-  // spotify:playlist:ID
-  // Bare ID direkte
+  // Ekstraher playlist-ID fra alle URL-varianter
   let id = null;
-  const urlMatch = input.match(/playlist[\/:]([a-zA-Z0-9]+)/);
+
+  // Prøv spotify URL: https://open.spotify.com/playlist/ID eller https://open.spotify.com/playlist/ID?si=xxx
+  const urlMatch = input.match(/open\.spotify\.com\/playlist\/([a-zA-Z0-9]+)/);
   if (urlMatch) {
     id = urlMatch[1];
-  } else if (/^[a-zA-Z0-9]{10,}$/.test(input)) {
-    id = input; // Bare en ren ID
+  } else {
+    // Prøv spotify URI: spotify:playlist:ID
+    const uriMatch = input.match(/spotify:playlist:([a-zA-Z0-9]+)/);
+    if (uriMatch) {
+      id = uriMatch[1];
+    } else if (/^[a-zA-Z0-9]{15,30}$/.test(input)) {
+      // Bare en ren ID (Spotify IDer er typisk 22 tegn)
+      id = input;
+    }
   }
+
+  console.log('Playlist input:', input);
+  console.log('Ekstrahert ID:', id);
 
   if (!id) { showToast('Ugyldig playlist-URL', 'error'); return; }
   await importPlaylistById(id);
