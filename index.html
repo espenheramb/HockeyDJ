@@ -1,0 +1,2125 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hockey DJ</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ice: #e8f4f8;
+    --ice-dim: #a8c8d8;
+    --rink: #0a1628;
+    --rink-mid: #0f2040;
+    --rink-surface: #142850;
+    --red-line: #cc1122;
+    --blue-line: #1155cc;
+    --gold: #f0b429;
+    --gold-dim: #c8942a;
+    --text: #e8f4f8;
+    --text-dim: #6a8fa8;
+    --panel: #0d1e35;
+    --panel-border: #1e3a5a;
+    --active: #1a7fc4;
+    --green: #22cc66;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--rink);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Rink lines background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      linear-gradient(90deg, transparent 49.8%, rgba(204,17,34,0.08) 49.8%, rgba(204,17,34,0.08) 50.2%, transparent 50.2%),
+      linear-gradient(90deg, transparent 29.8%, rgba(17,85,204,0.06) 29.8%, rgba(17,85,204,0.06) 30.2%, transparent 30.2%),
+      linear-gradient(90deg, transparent 69.8%, rgba(17,85,204,0.06) 69.8%, rgba(17,85,204,0.06) 70.2%, transparent 70.2%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #app {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(180deg, #000 0%, var(--rink) 100%);
+    border-bottom: 2px solid var(--red-line);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    font-size: 28px;
+    filter: drop-shadow(0 0 8px var(--gold));
+  }
+
+  .logo h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 28px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--ice);
+    text-shadow: 0 0 20px rgba(232,244,248,0.3);
+  }
+
+  .logo h1 span {
+    color: var(--gold);
+  }
+
+  .header-status {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .spotify-btn {
+    background: #1DB954;
+    color: #000;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .spotify-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+
+  .user-profile {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 24px;
+    padding: 5px 14px 5px 6px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .user-profile:hover { border-color: var(--active); }
+  .user-profile.visible { display: flex; }
+
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--rink-surface);
+    border: 1px solid var(--panel-border);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+  .user-info {}
+  .user-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    color: var(--text);
+    line-height: 1.1;
+  }
+  .user-status {
+    font-size: 10px;
+    color: #1DB954;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .user-status::before {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #1DB954;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .logout-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 2px 4px;
+    transition: color 0.2s;
+    margin-left: 2px;
+  }
+  .logout-btn:hover { color: var(--red-line); }
+
+  /* MAIN LAYOUT */
+  main {
+    display: grid;
+    grid-template-columns: 320px 1fr 300px;
+    gap: 0;
+    height: calc(100vh - 64px - 160px);
+  }
+
+  /* PANELS */
+  .panel {
+    background: var(--panel);
+    border-right: 1px solid var(--panel-border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--panel-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .panel-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ice-dim);
+  }
+
+  /* SEARCH PANEL */
+  .search-box {
+    padding: 12px;
+    border-bottom: 1px solid var(--panel-border);
+    flex-shrink: 0;
+  }
+
+  .search-input-wrap {
+    display: flex;
+    background: var(--rink-surface);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .search-input-wrap:focus-within { border-color: var(--active); }
+
+  .search-input-wrap input {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text);
+    padding: 9px 12px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px;
+    outline: none;
+  }
+  .search-input-wrap input::placeholder { color: var(--text-dim); }
+
+  .search-input-wrap button {
+    background: var(--active);
+    border: none;
+    color: white;
+    padding: 0 14px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+  }
+  .search-input-wrap button:hover { background: #1a6fa8; }
+
+  .search-tabs {
+    display: flex;
+    padding: 8px 12px 0;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .tab-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+  .tab-btn:hover:not(.active) { color: var(--text); }
+
+  .results-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+
+  .results-list::-webkit-scrollbar { width: 4px; }
+  .results-list::-webkit-scrollbar-track { background: transparent; }
+  .results-list::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 2px; }
+
+  .result-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .result-item:hover { background: var(--rink-surface); border-left-color: var(--active); }
+
+  .result-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    background: var(--rink-surface);
+    flex-shrink: 0;
+    object-fit: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--text-dim);
+  }
+  .result-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 4px; }
+
+  .result-info { flex: 1; min-width: 0; }
+  .result-name {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .result-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .add-btn {
+    background: none;
+    border: 1px solid var(--panel-border);
+    color: var(--text-dim);
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .add-btn:hover { background: var(--green); border-color: var(--green); color: white; }
+
+  /* QUEUE PANEL (CENTER) */
+  .queue-panel {
+    background: var(--rink-mid);
+    border-right: 1px solid var(--panel-border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .queue-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+  .queue-list::-webkit-scrollbar { width: 4px; }
+  .queue-list::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 2px; }
+
+  .queue-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+    position: relative;
+  }
+  .queue-item:hover { background: rgba(26,127,196,0.1); border-left-color: var(--active); }
+  .queue-item.playing { background: rgba(26,127,196,0.15); border-left-color: var(--gold); }
+  .queue-item.playing .track-name { color: var(--gold); }
+
+  .queue-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    color: var(--text-dim);
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .queue-item.playing .queue-num { color: var(--gold); }
+
+  .track-thumb {
+    width: 38px;
+    height: 38px;
+    border-radius: 4px;
+    background: var(--rink-surface);
+    flex-shrink: 0;
+    object-fit: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    overflow: hidden;
+  }
+  .track-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+  .track-info { flex: 1; min-width: 0; }
+  .track-name {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .track-artist {
+    font-size: 11px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .track-markers {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .marker-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--active);
+  }
+  .marker-dot.end { background: var(--red-line); }
+
+  .track-duration {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+
+  .remove-track-btn {
+    background: none;
+    border: none;
+    color: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 4px;
+    transition: color 0.2s;
+    flex-shrink: 0;
+  }
+  .queue-item:hover .remove-track-btn { color: var(--red-line); }
+
+  /* TRACK EDITOR PANEL */
+  .editor-panel {
+    background: var(--panel);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .editor-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  .editor-thumb {
+    width: 100%;
+    aspect-ratio: 1;
+    background: var(--rink-surface);
+    border-radius: 8px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    overflow: hidden;
+    border: 1px solid var(--panel-border);
+  }
+  .editor-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+
+  .editor-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .editor-artist {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  .editor-section {
+    margin-bottom: 18px;
+  }
+
+  .editor-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Mini waveform / timeline */
+  .waveform-wrap {
+    background: var(--rink-surface);
+    border-radius: 6px;
+    padding: 10px 10px 6px;
+    border: 1px solid var(--panel-border);
+    position: relative;
+    cursor: crosshair;
+  }
+
+  .waveform {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    height: 40px;
+    margin-bottom: 6px;
+  }
+
+  .wave-bar {
+    flex: 1;
+    background: var(--active);
+    border-radius: 1px;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+  .wave-bar.past { background: var(--text-dim); opacity: 0.3; }
+  .wave-bar.active { opacity: 1; background: var(--gold); }
+
+  .waveform-markers {
+    position: relative;
+    height: 16px;
+  }
+
+  .wm-marker {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 40px;
+    border-radius: 1px;
+    margin-top: -46px;
+    pointer-events: none;
+  }
+  .wm-marker.start { background: var(--green); }
+  .wm-marker.end { background: var(--red-line); }
+
+  .wm-label {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1px;
+    font-weight: 700;
+  }
+  .wm-label.start { color: var(--green); }
+  .wm-label.end { color: var(--red-line); }
+
+  .time-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .time-input-group label {
+    display: block;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .time-input-group label.start-lbl { color: var(--green); }
+  .time-input-group label.end-lbl { color: var(--red-line); }
+
+  .time-input-group input {
+    width: 100%;
+    background: var(--rink-surface);
+    border: 1px solid var(--panel-border);
+    border-radius: 5px;
+    color: var(--text);
+    padding: 7px 10px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px;
+    letter-spacing: 1px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .time-input-group input:focus { border-color: var(--active); }
+
+  .category-select {
+    width: 100%;
+    background: var(--rink-surface);
+    border: 1px solid var(--panel-border);
+    border-radius: 5px;
+    color: var(--text);
+    padding: 8px 10px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .category-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .cat-pill {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+  }
+  .cat-pill[data-cat="goal"] { background: rgba(240,180,41,0.15); color: var(--gold); border-color: rgba(240,180,41,0.3); }
+  .cat-pill[data-cat="goal"].active { background: var(--gold); color: #000; }
+  .cat-pill[data-cat="powerplay"] { background: rgba(26,127,196,0.15); color: var(--active); border-color: rgba(26,127,196,0.3); }
+  .cat-pill[data-cat="powerplay"].active { background: var(--active); color: white; }
+  .cat-pill[data-cat="intro"] { background: rgba(34,204,102,0.15); color: var(--green); border-color: rgba(34,204,102,0.3); }
+  .cat-pill[data-cat="intro"].active { background: var(--green); color: #000; }
+  .cat-pill[data-cat="pump"] { background: rgba(204,17,34,0.15); color: #ff4455; border-color: rgba(204,17,34,0.3); }
+  .cat-pill[data-cat="pump"].active { background: var(--red-line); color: white; }
+  .cat-pill[data-cat="timeout"] { background: rgba(100,100,100,0.15); color: #888; border-color: rgba(100,100,100,0.3); }
+  .cat-pill[data-cat="timeout"].active { background: #666; color: white; }
+
+  .save-btn {
+    width: 100%;
+    background: var(--active);
+    border: none;
+    color: white;
+    padding: 10px;
+    border-radius: 6px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 4px;
+  }
+  .save-btn:hover { background: #1a6fa8; transform: translateY(-1px); }
+
+  /* PLAYER BAR */
+  .player-bar {
+    background: linear-gradient(0deg, #000 0%, var(--rink) 100%);
+    border-top: 2px solid var(--blue-line);
+    height: 160px;
+    display: grid;
+    grid-template-columns: 280px 1fr 280px;
+    align-items: center;
+    padding: 0 24px;
+    gap: 24px;
+  }
+
+  .now-playing {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .np-thumb {
+    width: 56px;
+    height: 56px;
+    border-radius: 6px;
+    background: var(--rink-surface);
+    border: 1px solid var(--panel-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .np-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+  .np-info {}
+  .np-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text);
+  }
+  .np-artist { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+  .np-category { margin-top: 6px; }
+  .np-cat-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: rgba(240,180,41,0.2);
+    color: var(--gold);
+    border: 1px solid rgba(240,180,41,0.4);
+  }
+
+  .player-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .transport {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ctrl-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 20px;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+  }
+  .ctrl-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+
+  .play-btn {
+    background: var(--ice);
+    color: var(--rink);
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 0 20px rgba(232,244,248,0.2);
+  }
+  .play-btn:hover { transform: scale(1.06); box-shadow: 0 0 30px rgba(232,244,248,0.35); }
+  .play-btn.playing { background: var(--gold); color: #000; box-shadow: 0 0 20px rgba(240,180,41,0.4); }
+
+  .progress-area {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .time-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    color: var(--text-dim);
+    width: 36px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .progress-wrap {
+    flex: 1;
+    position: relative;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 4px;
+    background: var(--rink-surface);
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue-line), var(--active));
+    border-radius: 2px;
+    transition: width 0.3s linear;
+    width: 0%;
+  }
+
+  .progress-start-marker, .progress-end-marker {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 3px;
+    height: 14px;
+    border-radius: 1px;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .progress-start-marker { background: var(--green); }
+  .progress-end-marker { background: var(--red-line); }
+
+  .progress-handle {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 12px;
+    height: 12px;
+    background: white;
+    border-radius: 50%;
+    pointer-events: none;
+    box-shadow: 0 0 6px rgba(0,0,0,0.4);
+  }
+
+  .player-right {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  .volume-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .volume-row span { font-size: 16px; color: var(--text-dim); }
+
+  .vol-slider {
+    -webkit-appearance: none;
+    width: 100px;
+    height: 4px;
+    background: var(--rink-surface);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  .vol-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    background: var(--ice-dim);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .next-up {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: right;
+  }
+  .next-up strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .autoplay-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .toggle-pill {
+    width: 32px;
+    height: 16px;
+    background: var(--panel-border);
+    border-radius: 8px;
+    position: relative;
+    transition: background 0.2s;
+  }
+  .toggle-pill.on { background: var(--active); }
+  .toggle-pill::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: white;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.2s;
+  }
+  .toggle-pill.on::after { transform: translateX(16px); }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    color: var(--text-dim);
+    text-align: center;
+    padding: 24px;
+    gap: 8px;
+  }
+  .empty-state .big-icon { font-size: 40px; opacity: 0.3; }
+  .empty-state p { font-size: 13px; line-height: 1.5; }
+
+  /* Auth modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.hidden { display: none; }
+
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 32px;
+    width: 420px;
+    max-width: 90vw;
+    text-align: center;
+  }
+  .modal h2 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 24px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ice);
+    margin-bottom: 8px;
+  }
+  .modal p { font-size: 14px; color: var(--text-dim); margin-bottom: 24px; line-height: 1.6; }
+
+  .modal-input {
+    width: 100%;
+    background: var(--rink-surface);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 10px 14px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px;
+    outline: none;
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+  }
+  .modal-input:focus { border-color: var(--active); }
+
+  .modal-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 6px;
+    border: none;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 8px;
+  }
+  .modal-btn.primary { background: #1DB954; color: #000; }
+  .modal-btn.primary:hover { filter: brightness(1.1); }
+  .modal-btn.secondary { background: transparent; color: var(--text-dim); border: 1px solid var(--panel-border); }
+  .modal-btn.secondary:hover { color: var(--text); border-color: var(--text-dim); }
+
+  .modal-note { font-size: 11px; color: var(--text-dim); margin-top: 12px; }
+
+  .toast {
+    position: fixed;
+    bottom: 180px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 13px;
+    color: var(--text);
+    z-index: 50;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--green); color: var(--green); }
+  .toast.error { border-color: var(--red-line); color: #ff4455; }
+
+  /* Playlist import section */
+  .import-section {
+    padding: 10px 12px;
+    border-top: 1px solid var(--panel-border);
+    flex-shrink: 0;
+  }
+  .import-btn {
+    width: 100%;
+    background: rgba(29,185,84,0.1);
+    border: 1px solid rgba(29,185,84,0.3);
+    color: #1DB954;
+    padding: 7px;
+    border-radius: 5px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .import-btn:hover { background: rgba(29,185,84,0.2); }
+
+  .playing-animation {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 16px;
+  }
+  .pa-bar {
+    width: 3px;
+    background: var(--gold);
+    border-radius: 1px;
+    animation: paAnim 0.8s ease-in-out infinite alternate;
+  }
+  .pa-bar:nth-child(2) { animation-delay: 0.2s; }
+  .pa-bar:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes paAnim {
+    from { height: 4px; }
+    to { height: 14px; }
+  }
+
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <span class="logo-icon">🏒</span>
+      <h1>HOCKEY <span>DJ</span></h1>
+    </div>
+    <div class="header-status">
+      <button class="spotify-btn" id="connectBtn" onclick="startSpotifyLogin()">
+        <span>♪</span> Logg inn med Spotify
+      </button>
+      <div class="user-profile" id="userProfile" onclick="showUserMenu()">
+        <div class="user-avatar" id="userAvatar">🎧</div>
+        <div class="user-info">
+          <div class="user-name" id="userName">—</div>
+          <div class="user-status">Spotify koblet</div>
+        </div>
+        <button class="logout-btn" onclick="event.stopPropagation(); logOut()" title="Logg ut">✕</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- LEFT: SEARCH -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">📡 Søk</span>
+      </div>
+      <div class="search-box">
+        <div class="search-input-wrap">
+          <input type="text" id="searchInput" placeholder="Søk etter låter, artister..." onkeydown="if(event.key==='Enter') doSearch()">
+          <button onclick="doSearch()">🔍</button>
+        </div>
+      </div>
+      <div class="search-tabs">
+        <button class="tab-btn active" onclick="switchTab('tracks', this)">Låter</button>
+        <button class="tab-btn" onclick="switchTab('playlists', this)">Playlists</button>
+      </div>
+      <div class="results-list" id="resultsList">
+        <div class="empty-state">
+          <div class="big-icon">🎵</div>
+          <p>Søk etter låter eller playlists for å legge dem til i køen</p>
+        </div>
+      </div>
+      <div class="import-section">
+        <button class="import-btn" onclick="openPlaylistModal()">+ Importer Spotify-playlist via URL</button>
+      </div>
+    </div>
+
+    <!-- CENTER: QUEUE -->
+    <div class="queue-panel">
+      <div class="panel-header">
+        <span class="panel-title">🎯 Spillekø</span>
+        <span style="font-size:11px; color:var(--text-dim);" id="queueCount">0 låter</span>
+      </div>
+      <div class="queue-list" id="queueList">
+        <div class="empty-state">
+          <div class="big-icon">🏒</div>
+          <p>Legg til låter fra søket til venstre</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: EDITOR -->
+    <div class="editor-panel panel">
+      <div class="panel-header">
+        <span class="panel-title">✂️ Rediger spor</span>
+      </div>
+      <div class="editor-content" id="editorContent">
+        <div class="empty-state" style="height:100%; justify-content:center;">
+          <div class="big-icon">🎚️</div>
+          <p>Klikk på en låt i køen for å redigere start/stopp-punkt og kategori</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- PLAYER BAR -->
+  <div class="player-bar">
+    <div class="now-playing">
+      <div class="np-thumb" id="npThumb">🎵</div>
+      <div class="np-info">
+        <div class="np-title" id="npTitle">Ingen låt valgt</div>
+        <div class="np-artist" id="npArtist">—</div>
+        <div class="np-category" id="npCategory"></div>
+      </div>
+    </div>
+
+    <div class="player-center">
+      <div class="transport">
+        <button class="ctrl-btn" onclick="prevTrack()" title="Forrige">⏮</button>
+        <button class="ctrl-btn" onclick="seek(-10)" title="-10s">⏪</button>
+        <button class="play-btn" id="playBtn" onclick="togglePlay()">▶</button>
+        <button class="ctrl-btn" onclick="seek(10)" title="+10s">⏩</button>
+        <button class="ctrl-btn" onclick="nextTrack()" title="Neste">⏭</button>
+      </div>
+      <div class="progress-area">
+        <span class="time-label" id="currentTime">0:00</span>
+        <div class="progress-wrap" id="progressWrap" onclick="seekToClick(event)">
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="progress-start-marker" id="startMarkerBar" style="display:none;"></div>
+          <div class="progress-end-marker" id="endMarkerBar" style="display:none;"></div>
+          <div class="progress-handle" id="progressHandle" style="left:0%"></div>
+        </div>
+        <span class="time-label" id="totalTime">0:00</span>
+      </div>
+    </div>
+
+    <div class="player-right">
+      <div class="volume-row">
+        <span>🔊</span>
+        <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="80" oninput="setVolume(this.value)">
+      </div>
+      <div class="next-up" id="nextUpInfo">Neste: —</div>
+      <label class="autoplay-toggle" onclick="toggleAutoplay()">
+        <div class="toggle-pill" id="autoplayPill"></div>
+        AUTOPLAY
+      </label>
+    </div>
+  </div>
+
+</div>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal">
+    <h2>🏒 Hockey DJ</h2>
+    <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
+
+    <div id="authStep1">
+      <div style="background:var(--rink-surface);border:1px solid var(--panel-border);border-radius:8px;padding:14px;margin-bottom:14px;text-align:left;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;">Steg 1 — Din Spotify Client ID</div>
+        <input type="text" class="modal-input" id="clientIdInput" placeholder="Lim inn Client ID fra developer.spotify.com" style="margin-bottom:0">
+        <div style="font-size:11px;color:var(--text-dim);margin-top:8px;line-height:1.5;">
+          Hent den på <strong style="color:var(--ice-dim)">developer.spotify.com/dashboard</strong> → opprett app → kopier Client ID.<br>
+          Sett <strong style="color:var(--ice-dim)">Redirect URI</strong> til: <code style="color:var(--gold);font-size:10px;" id="redirectUriDisplay"></code>
+        </div>
+      </div>
+      <button class="modal-btn primary" onclick="startPKCEFlow()">♪ Logg inn med Spotify</button>
+      <button class="modal-btn secondary" onclick="useDemoMode()">Bruk demo-modus (uten Spotify)</button>
+      <p class="modal-note">Client ID lagres kun lokalt i nettleseren din.</p>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYLIST IMPORT MODAL -->
+<div class="modal-overlay hidden" id="playlistModal">
+  <div class="modal">
+    <h2>📋 Importer Playlist</h2>
+    <p>Lim inn en Spotify-playlist URL eller playlist ID</p>
+    <input type="text" class="modal-input" id="playlistInput" placeholder="https://open.spotify.com/playlist/...">
+    <button class="modal-btn primary" onclick="importPlaylist()">Importer</button>
+    <button class="modal-btn secondary" onclick="closePlaylistModal()">Avbryt</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  token: localStorage.getItem('spotify_token') || null,
+  tokenExpiry: parseInt(localStorage.getItem('spotify_token_expiry') || '0'),
+  demoMode: localStorage.getItem('demo_mode') === 'true',
+  clientId: localStorage.getItem('spotify_client_id') || '',
+  queue: JSON.parse(localStorage.getItem('hd_queue') || '[]'),
+  trackSettings: JSON.parse(localStorage.getItem('hd_settings') || '{}'),
+  currentIndex: -1,
+  isPlaying: false,
+  currentPos: 0,
+  duration: 0,
+  autoplay: true,
+  activeTab: 'tracks',
+  selectedTrackId: null,
+  player: null,
+  ticker: null,
+  user: null,
+};
+
+// ============================================================
+// INIT
+// ============================================================
+window.onload = async () => {
+  // Show redirect URI in modal
+  document.getElementById('redirectUriDisplay').textContent = window.location.href.split('?')[0].split('#')[0];
+
+  // Pre-fill client ID if saved
+  if (state.clientId) document.getElementById('clientIdInput').value = state.clientId;
+
+  // Handle OAuth callback (token in URL hash)
+  const params = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace('#', ''));
+
+  if (params.get('code')) {
+    await handlePKCECallback(params.get('code'));
+    return;
+  }
+
+  if (state.token && Date.now() < state.tokenExpiry) {
+    closeAuthModal();
+    await fetchUserProfile();
+    initSpotifySDK();
+  } else if (state.demoMode) {
+    closeAuthModal();
+    showDemoUser();
+  } else {
+    document.getElementById('authModal').classList.remove('hidden');
+  }
+
+  renderQueue();
+  updatePlayerUI();
+};
+
+// ============================================================
+// PKCE OAUTH FLOW
+// ============================================================
+function getRedirectUri() {
+  return window.location.href.split('?')[0].split('#')[0];
+}
+
+async function generateCodeVerifier() {
+  const array = new Uint8Array(64);
+  crypto.getRandomValues(array);
+  return btoa(String.fromCharCode(...array)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+
+async function generateCodeChallenge(verifier) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(verifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+
+async function startPKCEFlow() {
+  const clientId = document.getElementById('clientIdInput').value.trim();
+  if (!clientId) { showToast('Lim inn Client ID fra Spotify', 'error'); return; }
+
+  // Lagre clientId i begge — localStorage for gjenbruk, sessionStorage for redirect
+  localStorage.setItem('spotify_client_id', clientId);
+  sessionStorage.setItem('spotify_client_id', clientId);
+  state.clientId = clientId;
+
+  const verifier = await generateCodeVerifier();
+  const challenge = await generateCodeChallenge(verifier);
+
+  // sessionStorage overlever redirect innen samme tab (også i inkognito)
+  sessionStorage.setItem('pkce_verifier', verifier);
+  localStorage.setItem('pkce_verifier', verifier); // fallback
+
+  const scopes = [
+    'user-read-private', 'user-read-email',
+    'streaming', 'user-modify-playback-state',
+    'user-read-playback-state', 'playlist-read-private', 'playlist-read-collaborative'
+  ].join(' ');
+
+  const authUrl = new URL('https://accounts.spotify.com/authorize');
+  authUrl.searchParams.set('client_id', clientId);
+  authUrl.searchParams.set('response_type', 'code');
+  authUrl.searchParams.set('redirect_uri', getRedirectUri());
+  authUrl.searchParams.set('code_challenge_method', 'S256');
+  authUrl.searchParams.set('code_challenge', challenge);
+  authUrl.searchParams.set('scope', scopes);
+
+  window.location.href = authUrl.toString();
+}
+
+async function handlePKCECallback(code) {
+  // Prøv sessionStorage først (overlever redirect), deretter localStorage
+  const verifier = sessionStorage.getItem('pkce_verifier') || localStorage.getItem('pkce_verifier');
+  const clientId = sessionStorage.getItem('spotify_client_id') || localStorage.getItem('spotify_client_id');
+
+  if (!verifier || !clientId) {
+    showToast('Sesjonsdata mangler — logg inn på nytt', 'error');
+    document.getElementById('authModal').classList.remove('hidden');
+    renderQueue(); updatePlayerUI();
+    return;
+  }
+
+  try {
+    const res = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: getRedirectUri(),
+        client_id: clientId,
+        code_verifier: verifier,
+      })
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error_description || errData.error || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+
+    state.token = data.access_token;
+    state.tokenExpiry = Date.now() + (data.expires_in * 1000);
+    localStorage.setItem('spotify_token', state.token);
+    localStorage.setItem('spotify_token_expiry', state.tokenExpiry);
+    localStorage.setItem('spotify_refresh_token', data.refresh_token || '');
+    localStorage.setItem('spotify_client_id', clientId);
+
+    // Rydd opp
+    sessionStorage.removeItem('pkce_verifier');
+    sessionStorage.removeItem('spotify_client_id');
+    localStorage.removeItem('pkce_verifier');
+
+    // Fjern ?code= fra URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+
+    closeAuthModal();
+    await fetchUserProfile();
+    initSpotifySDK();
+
+  } catch(e) {
+    showToast('Innlogging feilet: ' + e.message, 'error');
+    console.error('PKCE callback feil:', e);
+    document.getElementById('authModal').classList.remove('hidden');
+  }
+
+  renderQueue();
+  updatePlayerUI();
+}
+
+async function refreshToken() {
+  const refreshToken = localStorage.getItem('spotify_refresh_token');
+  const clientId = localStorage.getItem('spotify_client_id');
+  if (!refreshToken || !clientId) return false;
+  try {
+    const res = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        client_id: clientId,
+      })
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    state.token = data.access_token;
+    state.tokenExpiry = Date.now() + (data.expires_in * 1000);
+    localStorage.setItem('spotify_token', state.token);
+    localStorage.setItem('spotify_token_expiry', state.tokenExpiry);
+    if (data.refresh_token) localStorage.setItem('spotify_refresh_token', data.refresh_token);
+    return true;
+  } catch { return false; }
+}
+
+// ============================================================
+// USER PROFILE
+// ============================================================
+async function fetchUserProfile() {
+  if (!state.token) return;
+  try {
+    const res = await fetch('https://api.spotify.com/v1/me', {
+      headers: { Authorization: `Bearer ${state.token}` }
+    });
+    if (res.status === 401) {
+      const refreshed = await refreshToken();
+      if (refreshed) return fetchUserProfile();
+      logOut(); return;
+    }
+    if (!res.ok) return;
+    const user = await res.json();
+    state.user = user;
+    renderUserProfile(user);
+  } catch(e) { console.error('Profil feil:', e); }
+}
+
+function renderUserProfile(user) {
+  const name = user.display_name || user.id || 'Ukjent bruker';
+  document.getElementById('userName').textContent = name;
+
+  const avatar = document.getElementById('userAvatar');
+  if (user.images && user.images.length > 0) {
+    avatar.innerHTML = `<img src="${user.images[0].url}" alt="${name}">`;
+  } else {
+    avatar.textContent = name.charAt(0).toUpperCase();
+  }
+
+  document.getElementById('userProfile').classList.add('visible');
+  document.getElementById('connectBtn').style.display = 'none';
+}
+
+function showDemoUser() {
+  document.getElementById('userName').textContent = 'Demo-modus';
+  document.getElementById('userAvatar').textContent = '🎭';
+  document.getElementById('userProfile').classList.add('visible');
+  document.getElementById('connectBtn').style.display = 'none';
+}
+
+function showUserMenu() {
+  if (state.user) {
+    const followers = state.user.followers?.total ?? '—';
+    showToast(`${state.user.display_name || state.user.id} · ${state.user.product === 'premium' ? '★ Premium' : 'Free'} · ${followers} følgere`, 'success');
+  }
+}
+
+function logOut() {
+  localStorage.removeItem('spotify_token');
+  localStorage.removeItem('spotify_token_expiry');
+  localStorage.removeItem('spotify_refresh_token');
+  localStorage.removeItem('demo_mode');
+  state.token = null;
+  state.demoMode = false;
+  state.user = null;
+  if (state.player) { state.player.disconnect(); state.player = null; }
+  document.getElementById('userProfile').classList.remove('visible');
+  document.getElementById('connectBtn').style.display = 'flex';
+  document.getElementById('authModal').classList.remove('hidden');
+  showToast('Logget ut', '');
+}
+
+// ============================================================
+// SPOTIFY SDK
+// ============================================================
+function initSpotifySDK() {
+  if (!state.token) return;
+  window.onSpotifyWebPlaybackSDKReady = () => {
+    state.player = new Spotify.Player({
+      name: 'Hockey DJ',
+      getOAuthToken: async cb => {
+        if (Date.now() > state.tokenExpiry - 60000) await refreshToken();
+        cb(state.token);
+      },
+      volume: 0.8,
+    });
+    state.player.addListener('player_state_changed', onPlayerStateChanged);
+    state.player.addListener('ready', ({ device_id }) => {
+      state.deviceId = device_id;
+      showToast('Spotify klar! 🏒', 'success');
+    });
+    state.player.addListener('not_ready', () => showToast('Spotify frakoblet', 'error'));
+    state.player.connect();
+  };
+  const script = document.createElement('script');
+  script.src = 'https://sdk.scdn.co/spotify-player.js';
+  document.head.appendChild(script);
+}
+
+function onPlayerStateChanged(s) {
+  if (!s) return;
+  state.isPlaying = !s.paused;
+  state.duration = s.duration / 1000;
+  state.currentPos = s.position / 1000;
+  updatePlayerUI();
+  if (!state.ticker) startTicker();
+}
+
+// ============================================================
+// AUTH helpers
+// ============================================================
+function openAuthModal() { document.getElementById('authModal').classList.remove('hidden'); }
+function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
+
+function startSpotifyLogin() {
+  document.getElementById('authModal').classList.remove('hidden');
+}
+
+function useDemoMode() {
+  state.demoMode = true;
+  localStorage.setItem('demo_mode', 'true');
+  closeAuthModal();
+  showDemoUser();
+  showToast('Demo-modus aktivert', 'success');
+  loadDemoTracks();
+}
+
+// ============================================================
+// DEMO DATA
+// ============================================================
+function loadDemoTracks() {
+  const demos = [
+    { id:'d1', name:'Thunderstruck', artist:'AC/DC', duration:292, img:'', uri:'spotify:track:57bgtoPSgt236HzfBOd8kj' },
+    { id:'d2', name:'Eye of the Tiger', artist:'Survivor', duration:245, img:'', uri:'spotify:track:2HHtWyy5CgaQbC7XSoOb0e' },
+    { id:'d3', name:'We Will Rock You', artist:'Queen', duration:122, img:'', uri:'spotify:track:4pbJqGIASGPr0ZpGpnWkDn' },
+    { id:'d4', name:'Kernkraft 400', artist:'Zombie Nation', duration:354, img:'', uri:'spotify:track:1E2WTcYLP1dFe1tiGDwRmT' },
+    { id:'d5', name:'Welcome to the Jungle', artist:'Guns N\' Roses', duration:272, img:'', uri:'spotify:track:0o4jSZBxOQUiDKzMJSyfIS' },
+  ];
+  demos.forEach(addToQueue);
+  showToast('Demo-låter lastet!', 'success');
+}
+
+// ============================================================
+// SEARCH
+// ============================================================
+function switchTab(tab, btn) {
+  state.activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('resultsList').innerHTML = `<div class="empty-state"><div class="big-icon">🎵</div><p>Søk etter ${tab === 'tracks' ? 'låter' : 'playlists'}</p></div>`;
+}
+
+async function spotifyFetch(url) {
+  // Forny token automatisk hvis den er i ferd med å utløpe
+  if (state.token && Date.now() > state.tokenExpiry - 60000) {
+    await refreshToken();
+  }
+  if (!state.token) throw new Error('Ikke innlogget');
+
+  let res = await fetch(url, {
+    headers: { Authorization: `Bearer ${state.token}` }
+  });
+
+  // 401 = token utløpt, prøv å forny én gang
+  if (res.status === 401) {
+    const refreshed = await refreshToken();
+    if (!refreshed) throw new Error('Sesjonen er utløpt — logg inn på nytt');
+    res = await fetch(url, {
+      headers: { Authorization: `Bearer ${state.token}` }
+    });
+  }
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+async function doSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) return;
+  if (!state.token) { showToast('Logg inn med Spotify først', 'error'); return; }
+
+  const type = state.activeTab === 'tracks' ? 'track' : 'playlist';
+  const el = document.getElementById('resultsList');
+  el.innerHTML = '<div class="empty-state"><div class="big-icon">⏳</div><p>Søker...</p></div>';
+
+  try {
+    const data = await spotifyFetch(
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=${type}&limit=20`
+    );
+    if (type === 'track') renderTrackResults(data.tracks?.items || []);
+    else renderPlaylistResults(data.playlists?.items || []);
+  } catch(e) {
+    showToast(`Søk feilet: ${e.message}`, 'error');
+    el.innerHTML = `<div class="empty-state"><div class="big-icon">❌</div><p>${e.message}</p></div>`;
+  }
+}
+
+function renderTrackResults(tracks) {
+  const el = document.getElementById('resultsList');
+  if (!tracks.length) { el.innerHTML = '<div class="empty-state"><div class="big-icon">🔍</div><p>Ingen resultater</p></div>'; return; }
+  el.innerHTML = tracks.map(t => `
+    <div class="result-item" ondblclick='addTrackToQueue(${JSON.stringify({id:t.id,name:t.name,artist:t.artists[0].name,duration:Math.round(t.duration_ms/1000),img:t.album.images[2]?.url||"",uri:t.uri})})'>
+      <div class="result-thumb">${t.album.images[2] ? `<img src="${t.album.images[2].url}">` : '🎵'}</div>
+      <div class="result-info">
+        <div class="result-name">${esc(t.name)}</div>
+        <div class="result-sub">${esc(t.artists[0].name)} · ${fmtTime(Math.round(t.duration_ms/1000))}</div>
+      </div>
+      <button class="add-btn" onclick='addTrackToQueue(${JSON.stringify({id:t.id,name:t.name,artist:t.artists[0].name,duration:Math.round(t.duration_ms/1000),img:t.album.images[2]?.url||"",uri:t.uri})})'>+</button>
+    </div>
+  `).join('');
+}
+
+function renderPlaylistResults(playlists) {
+  const el = document.getElementById('resultsList');
+  if (!playlists.length) { el.innerHTML = '<div class="empty-state"><div class="big-icon">🔍</div><p>Ingen resultater</p></div>'; return; }
+  el.innerHTML = playlists.map(p => `
+    <div class="result-item">
+      <div class="result-thumb">${p.images?.[0] ? `<img src="${p.images[0].url}">` : '📋'}</div>
+      <div class="result-info">
+        <div class="result-name">${esc(p.name)}</div>
+        <div class="result-sub">${p.tracks.total} låter · ${esc(p.owner.display_name)}</div>
+      </div>
+      <button class="add-btn" onclick="importPlaylistById('${p.id}')">+</button>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// QUEUE
+// ============================================================
+function addTrackToQueue(track) {
+  if (state.queue.find(t => t.id === track.id)) { showToast('Allerede i køen', 'error'); return; }
+  addToQueue(track);
+  showToast(`+ ${track.name}`, 'success');
+}
+
+function addToQueue(track) {
+  state.queue.push(track);
+  if (!state.trackSettings[track.id]) {
+    state.trackSettings[track.id] = { startTime: 0, endTime: track.duration, category: '' };
+  }
+  saveState();
+  renderQueue();
+}
+
+function removeFromQueue(idx) {
+  state.queue.splice(idx, 1);
+  if (state.currentIndex >= idx) state.currentIndex = Math.max(-1, state.currentIndex - 1);
+  saveState();
+  renderQueue();
+  if (state.selectedTrackId && !state.queue.find(t => t.id === state.selectedTrackId)) {
+    state.selectedTrackId = null;
+    document.getElementById('editorContent').innerHTML = `<div class="empty-state" style="height:100%"><div class="big-icon">🎚️</div><p>Klikk på en låt for å redigere</p></div>`;
+  }
+}
+
+function renderQueue() {
+  const el = document.getElementById('queueList');
+  document.getElementById('queueCount').textContent = `${state.queue.length} låt${state.queue.length !== 1 ? 'er' : ''}`;
+  if (!state.queue.length) {
+    el.innerHTML = '<div class="empty-state"><div class="big-icon">🏒</div><p>Legg til låter fra søket</p></div>';
+    return;
+  }
+  el.innerHTML = state.queue.map((t, i) => {
+    const s = state.trackSettings[t.id] || {};
+    const hasStart = s.startTime > 0;
+    const hasEnd = s.endTime && s.endTime < t.duration;
+    const isPlaying = i === state.currentIndex;
+    const catColor = getCatColor(s.category);
+    return `
+      <div class="queue-item${isPlaying ? ' playing' : ''}" onclick="selectTrack(${i})" draggable="true"
+           ondragstart="dragStart(event,${i})" ondragover="event.preventDefault()" ondrop="dragDrop(event,${i})">
+        <span class="queue-num">${isPlaying ? `<span style="display:flex;align-items:flex-end;gap:2px;height:16px"><span style="width:3px;background:var(--gold);border-radius:1px;animation:paAnim .8s ease-in-out infinite alternate;height:6px;display:block"></span><span style="width:3px;background:var(--gold);border-radius:1px;animation:paAnim .8s ease-in-out infinite alternate .2s;height:6px;display:block"></span><span style="width:3px;background:var(--gold);border-radius:1px;animation:paAnim .8s ease-in-out infinite alternate .4s;height:6px;display:block"></span></span>` : i + 1}</span>
+        <div class="track-thumb">${t.img ? `<img src="${t.img}">` : '🎵'}</div>
+        <div class="track-info">
+          <div class="track-name">${esc(t.name)}</div>
+          <div class="track-artist">${esc(t.artist)}${s.category ? ` · <span style="color:${catColor}">${s.category}</span>` : ''}</div>
+        </div>
+        <div class="track-markers">
+          ${hasStart ? '<div class="marker-dot" title="Startpunkt satt"></div>' : ''}
+          ${hasEnd ? '<div class="marker-dot end" title="Stoppunkt satt"></div>' : ''}
+        </div>
+        <span class="track-duration">${fmtTime(s.endTime || t.duration)}</span>
+        <button class="remove-track-btn" onclick="event.stopPropagation(); removeFromQueue(${i})">✕</button>
+      </div>
+    `;
+  }).join('');
+}
+
+// Drag & drop reorder
+let dragSrc = null;
+function dragStart(e, i) { dragSrc = i; e.dataTransfer.effectAllowed = 'move'; }
+function dragDrop(e, i) {
+  if (dragSrc === null || dragSrc === i) return;
+  const item = state.queue.splice(dragSrc, 1)[0];
+  state.queue.splice(i, 0, item);
+  if (state.currentIndex === dragSrc) state.currentIndex = i;
+  else if (state.currentIndex > dragSrc && state.currentIndex <= i) state.currentIndex--;
+  else if (state.currentIndex < dragSrc && state.currentIndex >= i) state.currentIndex++;
+  dragSrc = null;
+  saveState();
+  renderQueue();
+}
+
+// ============================================================
+// TRACK EDITOR
+// ============================================================
+function selectTrack(idx) {
+  const track = state.queue[idx];
+  state.selectedTrackId = track.id;
+  const s = state.trackSettings[track.id] || { startTime: 0, endTime: track.duration, category: '' };
+
+  document.getElementById('editorContent').innerHTML = `
+    <div class="editor-thumb">${track.img ? `<img src="${track.img}">` : '🎵'}</div>
+    <div class="editor-title">${esc(track.name)}</div>
+    <div class="editor-artist">${esc(track.artist)} · ${fmtTime(track.duration)}</div>
+
+    <div class="editor-section">
+      <div class="editor-label">Tidslinje <span style="color:var(--text-dim);font-size:10px">klikk for å sette markør</span></div>
+      <div class="waveform-wrap" id="waveformWrap" onclick="waveformClick(event,'${track.id}',${track.duration})">
+        <div class="waveform" id="waveformBars">${generateWaveBars(track.id, track.duration)}</div>
+        <div class="waveform-markers" id="waveformMarkers">
+          ${renderWaveMarkers(s, track.duration)}
+        </div>
+      </div>
+    </div>
+
+    <div class="editor-section">
+      <div class="editor-label">Tidspunkter</div>
+      <div class="time-inputs">
+        <div class="time-input-group">
+          <label class="start-lbl">▶ Start</label>
+          <input type="text" id="startInput" value="${fmtTime(s.startTime)}" placeholder="0:00"
+            onchange="updateTimeFromInput('${track.id}','start',this.value,${track.duration})">
+        </div>
+        <div class="time-input-group">
+          <label class="end-lbl">■ Stopp</label>
+          <input type="text" id="endInput" value="${fmtTime(s.endTime || track.duration)}" placeholder="${fmtTime(track.duration)}"
+            onchange="updateTimeFromInput('${track.id}','end',this.value,${track.duration})">
+        </div>
+      </div>
+    </div>
+
+    <div class="editor-section">
+      <div class="editor-label">Kategori</div>
+      <div class="category-pills">
+        ${['goal','powerplay','intro','pump','timeout'].map(cat => `
+          <div class="cat-pill${s.category===cat?' active':''}" data-cat="${cat}"
+               onclick="setCategory('${track.id}','${cat}',this)">${catEmoji(cat)} ${cat}</div>
+        `).join('')}
+      </div>
+    </div>
+
+    <button class="save-btn" onclick="saveTrackSettings('${track.id}')">💾 Lagre innstillinger</button>
+  `;
+  renderQueue();
+}
+
+function generateWaveBars(trackId, duration) {
+  const count = 60;
+  const s = state.trackSettings[trackId] || {};
+  const startPct = (s.startTime || 0) / duration;
+  const endPct = (s.endTime || duration) / duration;
+  let bars = '';
+  for (let i = 0; i < count; i++) {
+    const pct = i / count;
+    const h = 15 + Math.round(Math.random() * 70);
+    let cls = 'wave-bar';
+    if (pct < startPct || pct > endPct) cls += ' past';
+    bars += `<div class="${cls}" style="height:${h}%"></div>`;
+  }
+  return bars;
+}
+
+function renderWaveMarkers(s, duration) {
+  const startPct = ((s.startTime || 0) / duration * 100).toFixed(1);
+  const endPct = ((s.endTime || duration) / duration * 100).toFixed(1);
+  return `
+    <div class="wm-marker start" style="left:${startPct}%"></div>
+    <div class="wm-label start" style="left:${startPct}%">▶</div>
+    <div class="wm-marker end" style="left:${endPct}%"></div>
+    <div class="wm-label end" style="left:${endPct}%">■</div>
+  `;
+}
+
+let waveClickMode = 'start';
+function waveformClick(e, trackId, duration) {
+  const wrap = document.getElementById('waveformWrap');
+  const rect = wrap.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  const time = Math.round(pct * duration);
+  const s = state.trackSettings[trackId];
+
+  // Toggle between start/end based on proximity
+  const startPct = s.startTime / duration;
+  const endPct = (s.endTime || duration) / duration;
+  const distToStart = Math.abs(pct - startPct);
+  const distToEnd = Math.abs(pct - endPct);
+
+  if (distToStart < distToEnd) {
+    s.startTime = Math.min(time, s.endTime - 5);
+    document.getElementById('startInput').value = fmtTime(s.startTime);
+  } else {
+    s.endTime = Math.max(time, s.startTime + 5);
+    document.getElementById('endInput').value = fmtTime(s.endTime);
+  }
+  document.getElementById('waveformBars').innerHTML = generateWaveBars(trackId, duration);
+  document.getElementById('waveformMarkers').innerHTML = renderWaveMarkers(s, duration);
+}
+
+function updateTimeFromInput(trackId, type, val, duration) {
+  const secs = parseTimeInput(val);
+  if (isNaN(secs)) return;
+  const s = state.trackSettings[trackId];
+  if (type === 'start') s.startTime = Math.max(0, Math.min(secs, duration - 5));
+  else s.endTime = Math.max(5, Math.min(secs, duration));
+  document.getElementById('waveformBars').innerHTML = generateWaveBars(trackId, duration);
+  document.getElementById('waveformMarkers').innerHTML = renderWaveMarkers(s, duration);
+}
+
+function setCategory(trackId, cat, el) {
+  const s = state.trackSettings[trackId];
+  s.category = s.category === cat ? '' : cat;
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  if (s.category) el.classList.add('active');
+}
+
+function saveTrackSettings(trackId) {
+  saveState();
+  renderQueue();
+  showToast('Innstillinger lagret ✓', 'success');
+}
+
+// ============================================================
+// PLAYBACK
+// ============================================================
+async function playTrack(idx) {
+  if (idx < 0 || idx >= state.queue.length) return;
+  state.currentIndex = idx;
+  const track = state.queue[idx];
+  const s = state.trackSettings[track.id] || {};
+
+  updatePlayerBar(track, s);
+
+  if (state.player && state.deviceId && !state.demoMode) {
+    const startMs = (s.startTime || 0) * 1000;
+    try {
+      await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${state.deviceId}`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${state.token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uris: [track.uri], position_ms: startMs })
+      });
+    } catch(e) { showToast('Avspilling feilet', 'error'); }
+  } else {
+    // Demo mode: simulate playback
+    state.isPlaying = true;
+    state.duration = track.duration;
+    state.currentPos = s.startTime || 0;
+    startTicker();
+  }
+
+  renderQueue();
+  updatePlayerUI();
+}
+
+function togglePlay() {
+  if (state.currentIndex < 0) {
+    if (state.queue.length) playTrack(0);
+    return;
+  }
+  if (state.player && !state.demoMode) {
+    state.player.togglePlay();
+  } else {
+    state.isPlaying = !state.isPlaying;
+    if (state.isPlaying) startTicker(); else stopTicker();
+    updatePlayerUI();
+  }
+}
+
+function nextTrack() {
+  const next = state.currentIndex + 1;
+  if (next < state.queue.length) playTrack(next);
+}
+
+function prevTrack() {
+  if (state.currentPos > 3) {
+    state.currentPos = state.trackSettings[state.queue[state.currentIndex]?.id]?.startTime || 0;
+    return;
+  }
+  const prev = state.currentIndex - 1;
+  if (prev >= 0) playTrack(prev);
+}
+
+function seek(secs) {
+  state.currentPos = Math.max(0, Math.min(state.currentPos + secs, state.duration));
+  if (state.player && !state.demoMode) state.player.seek(state.currentPos * 1000);
+  updateProgressUI();
+}
+
+function seekToClick(e) {
+  const wrap = document.getElementById('progressWrap');
+  const rect = wrap.getBoundingClientRect();
+  const pct = Math.max(0, Math.min((e.clientX - rect.left) / rect.width, 1));
+  state.currentPos = pct * state.duration;
+  if (state.player && !state.demoMode) state.player.seek(state.currentPos * 1000);
+  updateProgressUI();
+}
+
+function setVolume(v) {
+  if (state.player) state.player.setVolume(v / 100);
+}
+
+let _ticker;
+function startTicker() {
+  stopTicker();
+  _ticker = setInterval(() => {
+    if (!state.isPlaying) return;
+    state.currentPos += 0.5;
+    const track = state.queue[state.currentIndex];
+    const s = track ? (state.trackSettings[track.id] || {}) : {};
+    const endTime = s.endTime || state.duration;
+    if (state.currentPos >= endTime) {
+      state.currentPos = endTime;
+      state.isPlaying = false;
+      updatePlayerUI();
+      stopTicker();
+      if (state.autoplay) setTimeout(nextTrack, 300);
+      return;
+    }
+    updateProgressUI();
+  }, 500);
+}
+
+function stopTicker() { clearInterval(_ticker); _ticker = null; }
+
+// ============================================================
+// UI UPDATES
+// ============================================================
+function updatePlayerBar(track, s) {
+  document.getElementById('npThumb').innerHTML = track.img ? `<img src="${track.img}">` : '🎵';
+  document.getElementById('npTitle').textContent = track.name;
+  document.getElementById('npArtist').textContent = track.artist;
+  const cat = s.category;
+  document.getElementById('npCategory').innerHTML = cat ? `<span class="np-cat-badge">${catEmoji(cat)} ${cat}</span>` : '';
+  state.duration = track.duration;
+  updateProgressUI();
+
+  const nextIdx = state.currentIndex + 1;
+  const nextTrackEl = state.queue[nextIdx];
+  document.getElementById('nextUpInfo').innerHTML = nextTrackEl
+    ? `Neste: <strong>${esc(nextTrackEl.name)}</strong>`
+    : 'Neste: —';
+
+  // Progress markers
+  const startPct = ((s.startTime || 0) / track.duration * 100).toFixed(1);
+  const endPct = ((s.endTime || track.duration) / track.duration * 100).toFixed(1);
+  const sm = document.getElementById('startMarkerBar');
+  const em = document.getElementById('endMarkerBar');
+  if (s.startTime > 0) { sm.style.display = 'block'; sm.style.left = startPct + '%'; } else sm.style.display = 'none';
+  if (s.endTime && s.endTime < track.duration) { em.style.display = 'block'; em.style.left = endPct + '%'; } else em.style.display = 'none';
+}
+
+function updatePlayerUI() {
+  const btn = document.getElementById('playBtn');
+  btn.innerHTML = state.isPlaying ? '⏸' : '▶';
+  btn.classList.toggle('playing', state.isPlaying);
+  updateProgressUI();
+}
+
+function updateProgressUI() {
+  const pct = state.duration > 0 ? (state.currentPos / state.duration * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressHandle').style.left = pct + '%';
+  document.getElementById('currentTime').textContent = fmtTime(Math.round(state.currentPos));
+  document.getElementById('totalTime').textContent = fmtTime(Math.round(state.duration));
+}
+
+function toggleAutoplay() {
+  state.autoplay = !state.autoplay;
+  document.getElementById('autoplayPill').classList.toggle('on', state.autoplay);
+}
+
+// ============================================================
+// PLAYLIST IMPORT
+// ============================================================
+function openPlaylistModal() {
+  if (!state.token) { showToast('Koble til Spotify først', 'error'); return; }
+  document.getElementById('playlistModal').classList.remove('hidden');
+}
+function closePlaylistModal() { document.getElementById('playlistModal').classList.add('hidden'); }
+
+async function importPlaylist() {
+  const input = document.getElementById('playlistInput').value.trim();
+
+  // Håndter alle URL-varianter:
+  // https://open.spotify.com/playlist/ID
+  // https://open.spotify.com/playlist/ID?si=xxx
+  // spotify:playlist:ID
+  // Bare ID direkte
+  let id = null;
+  const urlMatch = input.match(/playlist[\/:]([a-zA-Z0-9]+)/);
+  if (urlMatch) {
+    id = urlMatch[1];
+  } else if (/^[a-zA-Z0-9]{10,}$/.test(input)) {
+    id = input; // Bare en ren ID
+  }
+
+  if (!id) { showToast('Ugyldig playlist-URL', 'error'); return; }
+  await importPlaylistById(id);
+  closePlaylistModal();
+}
+
+async function importPlaylistById(id) {
+  if (!state.token) { showToast('Koble til Spotify først', 'error'); return; }
+  try {
+    showToast('Laster playlist...', '');
+
+    const info = await spotifyFetch(
+      `https://api.spotify.com/v1/playlists/${id}?fields=name,tracks.total`
+    );
+
+    let url = `https://api.spotify.com/v1/playlists/${id}/tracks?limit=50&fields=next,items(track(id,name,artists,duration_ms,album(images),uri))`;
+    let added = 0;
+    while (url) {
+      const data = await spotifyFetch(url);
+      (data.items || []).forEach(({ track: t }) => {
+        if (!t || !t.id || !t.artists?.length) return;
+        if (!state.queue.find(q => q.id === t.id)) {
+          addToQueue({
+            id: t.id,
+            name: t.name,
+            artist: t.artists[0].name,
+            duration: Math.round(t.duration_ms / 1000),
+            img: t.album.images[2]?.url || t.album.images[0]?.url || '',
+            uri: t.uri
+          });
+          added++;
+        }
+      });
+      url = data.next || null;
+    }
+    showToast(`"${info.name}" — +${added} låter ✓`, 'success');
+  } catch(e) {
+    showToast(`Playlist-feil: ${e.message}`, 'error');
+    console.error('importPlaylistById feil:', e);
+  }
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function fmtTime(secs) {
+  if (!secs && secs !== 0) return '0:00';
+  const m = Math.floor(secs / 60);
+  const s = Math.floor(secs % 60);
+  return `${m}:${s.toString().padStart(2,'0')}`;
+}
+
+function parseTimeInput(val) {
+  const parts = val.split(':');
+  if (parts.length === 2) return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+  return parseInt(val);
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function getCatColor(cat) {
+  return { goal:'var(--gold)', powerplay:'var(--active)', intro:'var(--green)', pump:'#ff4455', timeout:'#888' }[cat] || 'var(--text-dim)';
+}
+
+function catEmoji(cat) {
+  return { goal:'🥅', powerplay:'⚡', intro:'🎤', pump:'🔥', timeout:'⏸' }[cat] || '';
+}
+
+function saveState() {
+  localStorage.setItem('hd_queue', JSON.stringify(state.queue));
+  localStorage.setItem('hd_settings', JSON.stringify(state.trackSettings));
+}
+
+function showToast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (type ? ' ' + type : '');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// Double-click queue item to play
+document.getElementById('queueList').addEventListener('dblclick', e => {
+  const item = e.target.closest('.queue-item');
+  if (item) {
+    const idx = [...item.parentElement.children].indexOf(item);
+    playTrack(idx);
+  }
+});
+
+// Init autoplay pill
+document.getElementById('autoplayPill').classList.toggle('on', state.autoplay);
+</script>
+</body>
+</html>
