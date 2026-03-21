@@ -2038,11 +2038,13 @@ async function importPlaylistById(id) {
   try {
     showToast('Laster playlist...', '');
 
+    // Hent playlist-info uten fields-filter
     const info = await spotifyFetch(
-      `https://api.spotify.com/v1/playlists/${id}?fields=name,tracks.total`
+      `https://api.spotify.com/v1/playlists/${id}`
     );
 
-    let url = `https://api.spotify.com/v1/playlists/${id}/tracks?limit=50&fields=next,items(track(id,name,artists,duration_ms,album(images),uri))`;
+    // Hent spor uten fields-filter (unngår "Resource not found" bug)
+    let url = `https://api.spotify.com/v1/playlists/${id}/tracks?limit=50`;
     let added = 0;
     while (url) {
       const data = await spotifyFetch(url);
@@ -2054,7 +2056,7 @@ async function importPlaylistById(id) {
             name: t.name,
             artist: t.artists[0].name,
             duration: Math.round(t.duration_ms / 1000),
-            img: t.album.images[2]?.url || t.album.images[0]?.url || '',
+            img: t.album?.images?.[2]?.url || t.album?.images?.[0]?.url || '',
             uri: t.uri
           });
           added++;
