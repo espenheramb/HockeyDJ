@@ -1137,12 +1137,61 @@
     transition: all 0.2s;
   }
   .setlist-delete-btn:hover { border-color: var(--red-line); color: var(--red-line); }
-  .pa-bar {
-    width: 3px;
-    background: var(--gold);
-    border-radius: 1px;
-    animation: paAnim 0.8s ease-in-out infinite alternate;
+  .period-tabs {
+    display: flex;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--panel-border);
+    background: var(--rink);
+    flex-shrink: 0;
+    scrollbar-width: none;
   }
+  .period-tabs::-webkit-scrollbar { display: none; }
+
+  .period-tab {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .period-tab:hover { color: var(--text); }
+  .period-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  .period-tab .period-count {
+    background: var(--rink-surface);
+    color: var(--text-dim);
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 8px;
+    font-weight: 600;
+  }
+  .period-tab.active .period-count { background: rgba(240,180,41,0.2); color: var(--gold); }
+
+  .period-tab-add {
+    flex-shrink: 0;
+    padding: 8px 10px;
+    color: var(--text-dim);
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-size: 14px;
+    transition: color 0.2s;
+  }
+  .period-tab-add:hover { color: var(--green); }
   .pa-bar:nth-child(2) { animation-delay: 0.2s; }
   .pa-bar:nth-child(3) { animation-delay: 0.4s; }
   @keyframes paAnim {
@@ -1159,7 +1208,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v11</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v13</small></h1>
     </div>
     <div class="header-status">
       <button class="spotify-btn" id="connectBtn" onclick="startSpotifyLogin()">
@@ -1209,13 +1258,16 @@
     <div class="queue-panel">
       <div class="panel-header">
         <span class="panel-title">🎯 Spillekø</span>
-        <div style="display:flex;align-items:center;gap:8px;">
+        <div style="display:flex;align-items:center;gap:6px;">
           <span style="font-size:11px; color:var(--text-dim);" id="queueCount">0 låter</span>
-          <button onclick="resetSession()" title="Nullstill sesjonen (avspilt-markering)" style="background:none;border:1px solid var(--panel-border);color:var(--text-dim);font-size:10px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:4px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'">↺ Reset sesjon</button>
-          <button onclick="openSaveSetlistModal()" title="Lagre spilleliste" style="background:none;border:1px solid var(--panel-border);color:var(--text-dim);font-size:10px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:4px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'">💾 Lagre</button>
-          <button onclick="openLoadSetlistModal()" title="Åpne lagret spilleliste" style="background:none;border:1px solid var(--panel-border);color:var(--text-dim);font-size:10px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:4px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--active)';this.style.color='var(--active)'" onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'">📂 Åpne</button>
+          <button onclick="newSetlist()" title="Tøm alle perioder og start ny" style="background:none;border:1px solid var(--panel-border);color:var(--text-dim);font-size:10px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;padding:3px 7px;border-radius:4px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--red-line)';this.style.color='var(--red-line)'" onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'">✦ Ny</button>
+          <button onclick="resetSession()" title="Nullstill avspilt-markering" style="background:none;border:1px solid var(--panel-border);color:var(--text-dim);font-size:10px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;padding:3px 7px;border-radius:4px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'">↺</button>
+          <button onclick="openSaveSetlistModal()" title="Lagre spilleliste" style="background:none;border:1px solid var(--panel-border);color:var(--text-dim);font-size:10px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;padding:3px 7px;border-radius:4px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'">💾</button>
+          <button onclick="openLoadSetlistModal()" title="Åpne lagret spilleliste" style="background:none;border:1px solid var(--panel-border);color:var(--text-dim);font-size:10px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;padding:3px 7px;border-radius:4px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--active)';this.style.color='var(--active)'" onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'">📂</button>
         </div>
       </div>
+      <!-- PERIOD TABS -->
+      <div class="period-tabs" id="periodTabs"></div>
       <div class="queue-list" id="queueList">
         <div class="empty-state">
           <div class="big-icon">🏒</div>
@@ -1290,7 +1342,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>🏒 Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;">v11</small></h2>
+    <h2>🏒 Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;">v13</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
 
     <div id="authStep1">
@@ -1344,17 +1396,22 @@
 // ============================================================
 // STATE
 // ============================================================
+const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', 'Overtime / Straffer', 'Pauseshow'];
+
 const state = {
   token: localStorage.getItem('spotify_token') || null,
   tokenExpiry: parseInt(localStorage.getItem('spotify_token_expiry') || '0'),
   demoMode: localStorage.getItem('demo_mode') === 'true',
   clientId: localStorage.getItem('spotify_client_id') || '',
-  queue: JSON.parse(localStorage.getItem('hd_queue') || '[]'),
+  // Perioder: array av { id, name, queue: [] }
+  periods: JSON.parse(localStorage.getItem('hd_periods') || 'null') || DEFAULT_PERIODS.map((name, i) => ({ id: 'p' + i, name, queue: [] })),
+  activePeriodId: localStorage.getItem('hd_active_period') || 'p0',
   trackSettings: JSON.parse(localStorage.getItem('hd_settings') || '{}'),
-  playedTracks: JSON.parse(localStorage.getItem('hd_played') || '[]'), // IDer avspilt denne sesjonen
-  savedSetlists: JSON.parse(localStorage.getItem('hd_setlists') || '[]'), // Lagrede spillelister
-  loadedIndex: -1, // Spor som er klart til avspilling (markert i lista)
+  playedTracks: JSON.parse(localStorage.getItem('hd_played') || '[]'),
+  savedSetlists: JSON.parse(localStorage.getItem('hd_setlists') || '[]'),
+  loadedIndex: -1,
   currentIndex: -1,
+  currentPeriodId: localStorage.getItem('hd_active_period') || 'p0',
   isPlaying: false,
   currentPos: 0,
   duration: 0,
@@ -1362,7 +1419,6 @@ const state = {
   activeTab: 'tracks',
   selectedTrackId: null,
   player: null,
-  ticker: null,
   user: null,
 };
 
@@ -1396,12 +1452,12 @@ window.onload = async () => {
     document.getElementById('authModal').classList.remove('hidden');
   }
 
+  renderPeriodTabs();
   renderQueue();
   updatePlayerUI();
 };
 
-// ============================================================
-// PKCE OAUTH FLOW
+
 // ============================================================
 function getRedirectUri() {
   // Alltid returner ren URL uten ?code=, ?si= eller andre parametere
@@ -1634,11 +1690,32 @@ function initSpotifySDK() {
 
 function onPlayerStateChanged(s) {
   if (!s) return;
+  const wasPlaying = state.isPlaying;
   state.isPlaying = !s.paused;
   state.duration = s.duration / 1000;
   state.currentPos = s.position / 1000;
+
+  // Sjekk om vi har passert stoppunktet
+  const track = getActiveQueue()[state.currentIndex];
+  if (track && state.isPlaying) {
+    const settings = state.trackSettings[track.id] || {};
+    const endTime = settings.endTime || state.duration;
+    if (state.currentPos >= endTime - 0.5) {
+      state.player.pause();
+      state.isPlaying = false;
+      if (state.autoplay) setTimeout(nextTrack, 300);
+    }
+  }
+
+  // Autoplay: song ended naturally
+  if (wasPlaying && !state.isPlaying && s.position === 0 && state.autoplay) {
+    setTimeout(nextTrack, 300);
+  }
+
   updatePlayerUI();
-  if (!state.ticker) startTicker();
+  renderQueue();
+  if (state.isPlaying && !_ticker) startTicker();
+  if (!state.isPlaying) stopTicker();
 }
 
 // ============================================================
@@ -1787,7 +1864,7 @@ async function importPlaylistTracks(playlistId, playlistName, btn) {
 
       (data.items || []).forEach(({ track: t }) => {
         if (!t || !t.id || !t.artists?.length) return;
-        if (!state.queue.find(q => q.id === t.id)) {
+        if (!getActiveQueue().find(q => q.id === t.id)) {
           addToQueue({
             id: t.id,
             name: t.name,
@@ -1817,30 +1894,53 @@ async function importPlaylistTracks(playlistId, playlistName, btn) {
   }
 }
 
+function renderPeriodTabs() {
+  const el = document.getElementById('periodTabs');
+  el.innerHTML = state.periods.map(p => `
+    <button class="period-tab${p.id === state.activePeriodId ? ' active' : ''}"
+            onclick="setActivePeriod('${p.id}')">
+      ${esc(p.name)}
+      <span class="period-count">${p.queue.length}</span>
+    </button>
+  `).join('') + `<button class="period-tab-add" onclick="addPeriod()" title="Legg til periode">＋</button>`;
+}
+
+function addPeriod() {
+  const name = prompt('Navn på ny periode:');
+  if (!name?.trim()) return;
+  const id = 'p' + Date.now();
+  state.periods.push({ id, name: name.trim(), queue: [] });
+  state.activePeriodId = id;
+  saveState();
+  renderPeriodTabs();
+  renderQueue();
+}
+
 // ============================================================
 // QUEUE
 // ============================================================
 function addTrackToQueue(track) {
-  if (state.queue.find(t => t.id === track.id)) { showToast('Allerede i køen', 'error'); return; }
+  if (getActiveQueue().find(t => t.id === track.id)) { showToast('Allerede i køen', 'error'); return; }
   addToQueue(track);
   showToast(`+ ${track.name}`, 'success');
 }
 
 function addToQueue(track) {
-  state.queue.push(track);
+  getActivePeriod().queue.push(track);
   if (!state.trackSettings[track.id]) {
-    state.trackSettings[track.id] = { startTime: 0, endTime: track.duration, category: '' };
+    state.trackSettings[track.id] = { startTime: 0, endTime: track.duration, category: '', note: '', fadeOut: 0 };
   }
   saveState();
   renderQueue();
 }
 
 function removeFromQueue(idx) {
-  state.queue.splice(idx, 1);
+  const q = getActivePeriod().queue;
+  q.splice(idx, 1);
   if (state.currentIndex >= idx) state.currentIndex = Math.max(-1, state.currentIndex - 1);
   saveState();
   renderQueue();
-  if (state.selectedTrackId && !state.queue.find(t => t.id === state.selectedTrackId)) {
+  if (state.selectedTrackId && !q.find(t => t.id === state.selectedTrackId)) {
     state.selectedTrackId = null;
     document.getElementById('editorContent').innerHTML = `<div class="empty-state" style="height:100%"><div class="big-icon">🎚️</div><p>Klikk på en låt for å redigere</p></div>`;
   }
@@ -1848,12 +1948,15 @@ function removeFromQueue(idx) {
 
 function renderQueue() {
   const el = document.getElementById('queueList');
-  document.getElementById('queueCount').textContent = `${state.queue.length} låt${state.queue.length !== 1 ? 'er' : ''}`;
-  if (!state.queue.length) {
+  const q = getActiveQueue();
+  const totalAll = state.periods.reduce((sum, p) => sum + p.queue.length, 0);
+  document.getElementById('queueCount').textContent = `${q.length} / ${totalAll} låter`;
+  renderPeriodTabs();
+  if (!q.length) {
     el.innerHTML = '<div class="empty-state"><div class="big-icon">🏒</div><p>Legg til låter fra søket</p></div>';
     return;
   }
-  el.innerHTML = state.queue.map((t, i) => {
+  el.innerHTML = q.map((t, i) => {
     const s = state.trackSettings[t.id] || {};
     const isPlaying = i === state.currentIndex && state.isPlaying;
     const isLoaded = i === state.loadedIndex || i === state.currentIndex;
@@ -1883,12 +1986,14 @@ function renderQueue() {
           <div class="track-artist" style="display:flex;align-items:center;gap:6px;">
             <span style="${isPlayed && !isPlaying ? 'opacity:0.5' : ''}">${esc(t.artist)}</span>
             ${s.category ? `<span style="color:${catColor};font-size:10px">${catEmoji(s.category)} ${s.category}</span>` : ''}
+            ${s.fadeOut > 0 ? `<span style="color:var(--text-dim);font-size:10px" title="Fade ut ${s.fadeOut}s">↘ ${s.fadeOut}s</span>` : ''}
           </div>
           <div class="track-times">
             <span class="${hasCustomStart ? 'time-tag start-tag' : 'time-tag'}">▶ ${fmtTime(startSecs)}</span>
             <span class="${hasCustomEnd ? 'time-tag end-tag' : 'time-tag'}">■ ${fmtTime(endSecs)}</span>
             ${isPlayed && !isPlaying ? '<span class="played-tag">✓ avspilt</span>' : ''}
           </div>
+          ${s.note ? `<div style="font-size:10px;color:var(--gold);opacity:0.8;margin-top:2px;font-style:italic">📝 ${esc(s.note)}</div>` : ''}
         </div>
         <button class="remove-track-btn" onclick="event.stopPropagation(); removeFromQueue(${i})">✕</button>
       </div>
@@ -1901,8 +2006,8 @@ let dragSrc = null;
 function dragStart(e, i) { dragSrc = i; e.dataTransfer.effectAllowed = 'move'; }
 function dragDrop(e, i) {
   if (dragSrc === null || dragSrc === i) return;
-  const item = state.queue.splice(dragSrc, 1)[0];
-  state.queue.splice(i, 0, item);
+  const item = getActiveQueue().splice(dragSrc, 1)[0];
+  getActiveQueue().splice(i, 0, item);
   if (state.currentIndex === dragSrc) state.currentIndex = i;
   else if (state.currentIndex > dragSrc && state.currentIndex <= i) state.currentIndex--;
   else if (state.currentIndex < dragSrc && state.currentIndex >= i) state.currentIndex++;
@@ -1915,7 +2020,7 @@ function dragDrop(e, i) {
 // TRACK EDITOR
 // ============================================================
 function selectTrack(idx) {
-  const track = state.queue[idx];
+  const track = getActiveQueue()[idx];
   state.selectedTrackId = track.id;
 
   // Last sangen klar uten å spille
@@ -1968,6 +2073,17 @@ function selectTrack(idx) {
             onchange="updateTimeFromInput('${track.id}','end',this.value,${track.duration})">
         </div>
       </div>
+      <button onclick="resetTrackPosition('${track.id}')" style="margin-top:8px;width:100%;background:none;border:1px solid var(--panel-border);color:var(--text-dim);padding:6px;border-radius:5px;font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--active)';this.style.color='var(--active)'" onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'">↩ Tilbakestill til startpunkt</button>
+    </div>
+
+    <div class="editor-section">
+      <div class="editor-label">Fade ut <span style="color:var(--text-dim);font-size:10px">(sekunder før stopp)</span></div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input type="range" min="0" max="10" step="1" value="${s.fadeOut || 0}" id="fadeOutSlider"
+          oninput="updateFadeOut('${track.id}', this.value); document.getElementById('fadeOutVal').textContent = this.value + 's'"
+          style="-webkit-appearance:none;flex:1;height:4px;background:var(--rink-surface);border-radius:2px;outline:none;cursor:pointer;">
+        <span id="fadeOutVal" style="font-family:'Barlow Condensed',sans-serif;font-size:14px;color:var(--text-dim);width:28px;">${s.fadeOut || 0}s</span>
+      </div>
     </div>
 
     <div class="editor-section">
@@ -1978,6 +2094,14 @@ function selectTrack(idx) {
                onclick="setCategory('${track.id}','${cat}',this)">${catEmoji(cat)} ${cat}</div>
         `).join('')}
       </div>
+    </div>
+
+    <div class="editor-section">
+      <div class="editor-label">Notat</div>
+      <textarea id="trackNote" placeholder="F.eks. spill etter mål, ved utvisning..."
+        style="width:100%;background:var(--rink-surface);border:1px solid var(--panel-border);border-radius:5px;color:var(--text);padding:8px 10px;font-family:'Barlow',sans-serif;font-size:12px;resize:vertical;min-height:56px;outline:none;transition:border-color .2s;"
+        onfocus="this.style.borderColor='var(--active)'" onblur="this.style.borderColor='var(--panel-border)'"
+        onchange="updateNote('${track.id}', this.value)">${esc(s.note || '')}</textarea>
     </div>
 
     <button class="save-btn" onclick="saveTrackSettings('${track.id}')">💾 Lagre innstillinger</button>
@@ -2054,6 +2178,35 @@ function setCategory(trackId, cat, el) {
   if (s.category) el.classList.add('active');
 }
 
+function updateNote(trackId, value) {
+  if (!state.trackSettings[trackId]) state.trackSettings[trackId] = {};
+  state.trackSettings[trackId].note = value;
+}
+
+function updateFadeOut(trackId, value) {
+  if (!state.trackSettings[trackId]) state.trackSettings[trackId] = {};
+  state.trackSettings[trackId].fadeOut = parseInt(value);
+}
+
+function resetTrackPosition(trackId) {
+  const s = state.trackSettings[trackId];
+  if (!s) return;
+  const track = getActiveQueue().find(t => t.id === trackId);
+  // If this track is loaded/playing, seek to start
+  const idx = getActiveQueue().findIndex(t => t.id === trackId);
+  if (idx === state.currentIndex || idx === state.loadedIndex) {
+    const startTime = s.startTime || 0;
+    state.currentPos = startTime;
+    if (state.player && !state.demoMode) state.player.seek(startTime * 1000);
+    updateProgressUI();
+  }
+  // Remove from played
+  state.playedTracks = state.playedTracks.filter(id => id !== trackId);
+  saveState();
+  renderQueue();
+  showToast('Tilbakestilt ✓', 'success');
+}
+
 function saveTrackSettings(trackId) {
   saveState();
   renderQueue();
@@ -2064,9 +2217,9 @@ function saveTrackSettings(trackId) {
 // PLAYBACK
 // ============================================================
 async function playTrack(idx) {
-  if (idx < 0 || idx >= state.queue.length) return;
+  if (idx < 0 || idx >= getActiveQueue().length) return;
   state.currentIndex = idx;
-  const track = state.queue[idx];
+  const track = getActiveQueue()[idx];
   const s = state.trackSettings[track.id] || {};
 
   // Merk som avspilt i sesjonen
@@ -2074,7 +2227,7 @@ async function playTrack(idx) {
     state.playedTracks.push(track.id);
     saveState();
   }
-
+  state.loadedIndex = idx;
   updatePlayerBar(track, s);
 
   if (state.player && state.deviceId && !state.demoMode) {
@@ -2103,7 +2256,7 @@ function togglePlay() {
   const targetIdx = state.currentIndex >= 0 ? state.currentIndex : state.loadedIndex;
 
   if (targetIdx < 0) {
-    if (state.queue.length) playTrack(0);
+    if (getActiveQueue().length) playTrack(0);
     return;
   }
 
@@ -2130,12 +2283,12 @@ function togglePlay() {
 
 function nextTrack() {
   const next = state.currentIndex + 1;
-  if (next < state.queue.length) playTrack(next);
+  if (next < getActiveQueue().length) playTrack(next);
 }
 
 function prevTrack() {
   if (state.currentPos > 3) {
-    state.currentPos = state.trackSettings[state.queue[state.currentIndex]?.id]?.startTime || 0;
+    state.currentPos = state.trackSettings[getActiveQueue()[state.currentIndex]?.id]?.startTime || 0;
     return;
   }
   const prev = state.currentIndex - 1;
@@ -2167,12 +2320,30 @@ function startTicker() {
   _ticker = setInterval(() => {
     if (!state.isPlaying) return;
     state.currentPos += 0.5;
-    const track = state.queue[state.currentIndex];
+    const track = getActiveQueue()[state.currentIndex];
     const s = track ? (state.trackSettings[track.id] || {}) : {};
     const endTime = s.endTime || state.duration;
+    const fadeOut = s.fadeOut || 0;
+
+    // Fade out volume gradually
+    if (fadeOut > 0 && state.player) {
+      const timeLeft = endTime - state.currentPos;
+      if (timeLeft <= fadeOut && timeLeft > 0) {
+        const vol = Math.max(0, timeLeft / fadeOut);
+        state.player.setVolume(vol * (document.getElementById('volSlider').value / 100));
+      } else if (timeLeft > fadeOut) {
+        // Restore volume
+        state.player.setVolume(document.getElementById('volSlider').value / 100);
+      }
+    }
+
     if (state.currentPos >= endTime) {
       state.currentPos = endTime;
       state.isPlaying = false;
+      // Restore volume after fade
+      if (fadeOut > 0 && state.player) {
+        state.player.setVolume(document.getElementById('volSlider').value / 100);
+      }
       updatePlayerUI();
       stopTicker();
       if (state.autoplay) setTimeout(nextTrack, 300);
@@ -2192,12 +2363,16 @@ function updatePlayerBar(track, s) {
   document.getElementById('npTitle').textContent = track.name;
   document.getElementById('npArtist').textContent = track.artist;
   const cat = s.category;
-  document.getElementById('npCategory').innerHTML = cat ? `<span class="np-cat-badge">${catEmoji(cat)} ${cat}</span>` : '';
+  const periodName = getActivePeriod().name;
+  document.getElementById('npCategory').innerHTML =
+    `<span style="font-size:10px;color:var(--text-dim);letter-spacing:1px;">${periodName}</span>` +
+    (cat ? ` <span class="np-cat-badge">${catEmoji(cat)} ${cat}</span>` : '') +
+    (s.note ? ` <span style="font-size:10px;color:var(--gold);font-style:italic">📝 ${esc(s.note)}</span>` : '');
   state.duration = track.duration;
   updateProgressUI();
 
   const nextIdx = state.currentIndex + 1;
-  const nextTrackEl = state.queue[nextIdx];
+  const nextTrackEl = getActiveQueue()[nextIdx];
   document.getElementById('nextUpInfo').innerHTML = nextTrackEl
     ? `Neste: <strong>${esc(nextTrackEl.name)}</strong>`
     : 'Neste: —';
@@ -2289,7 +2464,7 @@ async function importPlaylistById(id) {
       const data = await spotifyFetch(url);
       (data.items || []).forEach(({ track: t }) => {
         if (!t || !t.id || !t.artists?.length) return;
-        if (!state.queue.find(q => q.id === t.id)) {
+        if (!getActiveQueue().find(q => q.id === t.id)) {
           addToQueue({
             id: t.id,
             name: t.name,
@@ -2314,7 +2489,7 @@ async function importPlaylistById(id) {
 // SETLIST SAVE / LOAD
 // ============================================================
 function openSaveSetlistModal() {
-  if (!state.queue.length) { showToast('Køen er tom — legg til låter først', 'error'); return; }
+  if (!getActiveQueue().length) { showToast('Køen er tom — legg til låter først', 'error'); return; }
   document.getElementById('setlistNameInput').value = '';
   document.getElementById('saveSetlistModal').classList.remove('hidden');
   setTimeout(() => document.getElementById('setlistNameInput').focus(), 100);
@@ -2329,9 +2504,10 @@ function saveSetlist() {
     id: Date.now().toString(),
     name,
     date: new Date().toLocaleDateString('no-NO'),
-    tracks: JSON.parse(JSON.stringify(state.queue)),
+    // Lagre alle perioder
+    periods: JSON.parse(JSON.stringify(state.periods)),
     settings: JSON.parse(JSON.stringify(state.trackSettings)),
-    count: state.queue.length,
+    count: state.periods.reduce((sum, p) => sum + p.queue.length, 0),
   };
 
   state.savedSetlists.push(setlist);
@@ -2356,7 +2532,7 @@ function renderSetlistList() {
     <div class="setlist-item">
       <div class="setlist-info">
         <div class="setlist-name">${esc(sl.name)}</div>
-        <div class="setlist-meta">${sl.date} · ${sl.count} låter</div>
+        <div class="setlist-meta">${sl.date} · ${sl.count} låter · ${sl.periods ? sl.periods.length + ' perioder' : ''}</div>
       </div>
       <div class="setlist-actions">
         <button class="setlist-load-btn" onclick="loadSetlist('${sl.id}')">▶ Last inn</button>
@@ -2370,20 +2546,28 @@ function loadSetlist(id) {
   const sl = state.savedSetlists.find(s => s.id === id);
   if (!sl) return;
 
-  if (state.queue.length > 0) {
-    if (!confirm(`Erstatte nåværende kø (${state.queue.length} låter) med "${sl.name}"?`)) return;
+  const totalTracks = state.periods.reduce((sum, p) => sum + p.queue.length, 0);
+  if (totalTracks > 0) {
+    if (!confirm(`Erstatte alle perioder med "${sl.name}"?`)) return;
   }
 
-  state.queue = JSON.parse(JSON.stringify(sl.tracks));
-  // Merge innstillinger — behold eksisterende hvis de finnes
+  // Last inn perioder hvis de finnes, ellers bruk default
+  if (sl.periods) {
+    state.periods = JSON.parse(JSON.stringify(sl.periods));
+  } else if (sl.tracks) {
+    // Bakoverkompatibilitet: gammel format uten perioder
+    getActivePeriod().queue = JSON.parse(JSON.stringify(sl.tracks));
+  }
   Object.keys(sl.settings).forEach(key => {
     if (!state.trackSettings[key]) state.trackSettings[key] = sl.settings[key];
   });
   state.playedTracks = [];
   state.currentIndex = -1;
+  state.loadedIndex = -1;
   state.isPlaying = false;
   stopTicker();
   saveState();
+  renderPeriodTabs();
   renderQueue();
   updatePlayerUI();
   closeLoadSetlistModal();
@@ -2400,9 +2584,41 @@ function deleteSetlist(id) {
   showToast('Spilleliste slettet', '');
 }
 
-// ============================================================
+function newSetlist() {
+  const totalTracks = state.periods.reduce((sum, p) => sum + p.queue.length, 0);
+  if (totalTracks > 0) {
+    if (!confirm(`Tøm alle perioder og start ny spilleliste?\n\nTips: Lagre først med 💾-knappen.`)) return;
+  }
+  if (state.isPlaying) {
+    if (state.player && !state.demoMode) state.player.pause();
+    state.isPlaying = false;
+    stopTicker();
+  }
+  // Nullstill alle perioder
+  state.periods = DEFAULT_PERIODS.map((name, i) => ({ id: 'p' + i, name, queue: [] }));
+  state.activePeriodId = state.periods[0].id;
+  state.playedTracks = [];
+  state.currentIndex = -1;
+  state.loadedIndex = -1;
+  state.currentPos = 0;
+  state.duration = 0;
+  saveState();
+  renderPeriodTabs();
+  renderQueue();
+  updatePlayerUI();
+  document.getElementById('npTitle').textContent = 'Ingen låt valgt';
+  document.getElementById('npArtist').textContent = '—';
+  document.getElementById('npThumb').innerHTML = '🎵';
+  document.getElementById('npCategory').innerHTML = '';
+  document.getElementById('editorContent').innerHTML = `<div class="empty-state" style="height:100%"><div class="big-icon">🎚️</div><p>Klikk på en låt for å redigere</p></div>`;
+  showToast('Ny spilleliste klar ✓', 'success');
+}
+  document.getElementById('npCategory').innerHTML = '';
+  document.getElementById('editorContent').innerHTML = `<div class="empty-state" style="height:100%"><div class="big-icon">🎚️</div><p>Klikk på en låt for å redigere</p></div>`;
+  showToast('Ny spilleliste klar ✓', 'success');
+}
+
 // SESSION RESET
-// ============================================================
 function resetSession() {
   if (!state.playedTracks.length) { showToast('Ingen avspilte låter å nullstille', ''); return; }
   state.playedTracks = [];
@@ -2436,10 +2652,36 @@ function catEmoji(cat) {
 }
 
 function saveState() {
-  localStorage.setItem('hd_queue', JSON.stringify(state.queue));
+  localStorage.setItem('hd_periods', JSON.stringify(state.periods));
+  localStorage.setItem('hd_active_period', state.activePeriodId);
   localStorage.setItem('hd_settings', JSON.stringify(state.trackSettings));
   localStorage.setItem('hd_played', JSON.stringify(state.playedTracks));
   localStorage.setItem('hd_setlists', JSON.stringify(state.savedSetlists));
+}
+
+// Period helpers
+function getActivePeriod() {
+  return state.periods.find(p => p.id === state.activePeriodId) || state.periods[0];
+}
+function getActiveQueue() {
+  return getActivePeriod().queue;
+}
+function setActivePeriod(id) {
+  // Stop playback if switching period
+  if (state.currentPeriodId !== id && state.isPlaying) {
+    if (state.player && !state.demoMode) state.player.pause();
+    state.isPlaying = false;
+    stopTicker();
+  }
+  state.activePeriodId = id;
+  state.currentIndex = -1;
+  state.loadedIndex = -1;
+  state.currentPos = 0;
+  state.duration = 0;
+  saveState();
+  renderPeriodTabs();
+  renderQueue();
+  updatePlayerUI();
 }
 
 function showToast(msg, type) {
@@ -2461,13 +2703,21 @@ document.getElementById('queueList').addEventListener('dblclick', e => {
 // Init autoplay pill
 document.getElementById('autoplayPill').classList.toggle('on', state.autoplay);
 
-// Spacebar = play/pause (ikke når bruker skriver i inputfelt)
+// Keyboard shortcuts (not when typing in inputs)
 document.addEventListener('keydown', e => {
-  if (e.code !== 'Space') return;
   const tag = document.activeElement?.tagName;
   if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-  e.preventDefault();
-  togglePlay();
+
+  if (e.code === 'Space') {
+    e.preventDefault();
+    togglePlay();
+  } else if (e.code === 'ArrowRight') {
+    e.preventDefault();
+    nextTrack();
+  } else if (e.code === 'ArrowLeft') {
+    e.preventDefault();
+    prevTrack();
+  }
 });
 </script>
 </body>
