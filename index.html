@@ -1291,7 +1291,8 @@ window.onload = async () => {
 // PKCE OAUTH FLOW
 // ============================================================
 function getRedirectUri() {
-  return window.location.href.split('?')[0].split('#')[0];
+  // Alltid returner ren URL uten ?code=, ?si= eller andre parametere
+  return window.location.origin + window.location.pathname;
 }
 
 async function generateCodeVerifier() {
@@ -1353,13 +1354,15 @@ async function handlePKCECallback(code) {
   }
 
   try {
+    const redirectUri = getRedirectUri();
+    console.log('Token-utveksling med redirect_uri:', redirectUri);
     const res = await fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         grant_type: 'authorization_code',
         code,
-        redirect_uri: getRedirectUri(),
+        redirect_uri: redirectUri,
         client_id: clientId,
         code_verifier: verifier,
       })
@@ -1373,6 +1376,7 @@ async function handlePKCECallback(code) {
 
     state.token = data.access_token;
     state.tokenExpiry = Date.now() + (data.expires_in * 1000);
+    console.log('✅ Token mottatt! Scopes:', data.scope);
     localStorage.setItem('spotify_token', state.token);
     localStorage.setItem('spotify_token_expiry', state.tokenExpiry);
     localStorage.setItem('spotify_refresh_token', data.refresh_token || '');
