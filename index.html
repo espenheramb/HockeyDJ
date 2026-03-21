@@ -1044,12 +1044,99 @@
   }
   .import-btn:hover { background: rgba(29,185,84,0.2); }
 
-  .playing-animation {
+  .queue-play-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
     display: flex;
-    align-items: flex-end;
-    gap: 2px;
-    height: 16px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: background 0.15s;
+    font-size: 12px;
   }
+  .queue-play-btn:hover { background: rgba(255,255,255,0.08); }
+
+  .queue-item.loaded { background: rgba(232,244,248,0.05); border-left-color: var(--ice-dim) !important; }
+  .queue-item.loaded .track-name { color: var(--ice); }
+  .queue-item.played { opacity: 0.7; }
+
+  .track-times {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+    flex-wrap: wrap;
+  }
+
+  .time-tag {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+  }
+  .time-tag.start-tag { color: var(--green); }
+  .time-tag.end-tag { color: var(--red-line); }
+
+  .played-tag {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    color: var(--gold);
+    opacity: 0.7;
+  }
+
+  .setlist-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--rink-surface);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .setlist-item:hover { border-color: var(--active); }
+  .setlist-info { flex: 1; }
+  .setlist-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text);
+  }
+  .setlist-meta { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .setlist-actions { display: flex; gap: 6px; }
+  .setlist-load-btn {
+    background: var(--active);
+    border: none;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .setlist-load-btn:hover { background: #1a6fa8; }
+  .setlist-delete-btn {
+    background: none;
+    border: 1px solid var(--panel-border);
+    color: var(--text-dim);
+    padding: 5px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+  }
+  .setlist-delete-btn:hover { border-color: var(--red-line); color: var(--red-line); }
   .pa-bar {
     width: 3px;
     background: var(--gold);
@@ -1072,7 +1159,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v10</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v11</small></h1>
     </div>
     <div class="header-status">
       <button class="spotify-btn" id="connectBtn" onclick="startSpotifyLogin()">
@@ -1122,7 +1209,12 @@
     <div class="queue-panel">
       <div class="panel-header">
         <span class="panel-title">🎯 Spillekø</span>
-        <span style="font-size:11px; color:var(--text-dim);" id="queueCount">0 låter</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:11px; color:var(--text-dim);" id="queueCount">0 låter</span>
+          <button onclick="resetSession()" title="Nullstill sesjonen (avspilt-markering)" style="background:none;border:1px solid var(--panel-border);color:var(--text-dim);font-size:10px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:4px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'">↺ Reset sesjon</button>
+          <button onclick="openSaveSetlistModal()" title="Lagre spilleliste" style="background:none;border:1px solid var(--panel-border);color:var(--text-dim);font-size:10px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:4px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'">💾 Lagre</button>
+          <button onclick="openLoadSetlistModal()" title="Åpne lagret spilleliste" style="background:none;border:1px solid var(--panel-border);color:var(--text-dim);font-size:10px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:4px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--active)';this.style.color='var(--active)'" onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'">📂 Åpne</button>
+        </div>
       </div>
       <div class="queue-list" id="queueList">
         <div class="empty-state">
@@ -1198,7 +1290,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>🏒 Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;">v10</small></h2>
+    <h2>🏒 Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;">v11</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
 
     <div id="authStep1">
@@ -1217,7 +1309,25 @@
   </div>
 </div>
 
-<!-- PLAYLIST IMPORT MODAL -->
+<!-- SAVE SETLIST MODAL -->
+<div class="modal-overlay hidden" id="saveSetlistModal">
+  <div class="modal">
+    <h2>💾 Lagre spilleliste</h2>
+    <p>Gi spillelisten et navn så du kan laste den inn igjen senere.</p>
+    <input type="text" class="modal-input" id="setlistNameInput" placeholder="F.eks. Kamp 15. mars, Hjemmekamp..." onkeydown="if(event.key==='Enter') saveSetlist()">
+    <button class="modal-btn primary" onclick="saveSetlist()">Lagre</button>
+    <button class="modal-btn secondary" onclick="closeSaveSetlistModal()">Avbryt</button>
+  </div>
+</div>
+
+<!-- LOAD SETLIST MODAL -->
+<div class="modal-overlay hidden" id="loadSetlistModal">
+  <div class="modal">
+    <h2>📂 Lagrede spillelister</h2>
+    <div id="setlistList" style="max-height:320px;overflow-y:auto;margin-bottom:12px;"></div>
+    <button class="modal-btn secondary" onclick="closeLoadSetlistModal()">Lukk</button>
+  </div>
+</div>
 <div class="modal-overlay hidden" id="playlistModal">
   <div class="modal">
     <h2>📋 Importer Playlist</h2>
@@ -1241,6 +1351,9 @@ const state = {
   clientId: localStorage.getItem('spotify_client_id') || '',
   queue: JSON.parse(localStorage.getItem('hd_queue') || '[]'),
   trackSettings: JSON.parse(localStorage.getItem('hd_settings') || '{}'),
+  playedTracks: JSON.parse(localStorage.getItem('hd_played') || '[]'), // IDer avspilt denne sesjonen
+  savedSetlists: JSON.parse(localStorage.getItem('hd_setlists') || '[]'), // Lagrede spillelister
+  loadedIndex: -1, // Spor som er klart til avspilling (markert i lista)
   currentIndex: -1,
   isPlaying: false,
   currentPos: 0,
@@ -1742,24 +1855,41 @@ function renderQueue() {
   }
   el.innerHTML = state.queue.map((t, i) => {
     const s = state.trackSettings[t.id] || {};
-    const hasStart = s.startTime > 0;
-    const hasEnd = s.endTime && s.endTime < t.duration;
-    const isPlaying = i === state.currentIndex;
+    const isPlaying = i === state.currentIndex && state.isPlaying;
+    const isLoaded = i === state.loadedIndex || i === state.currentIndex;
+    const isPlayed = state.playedTracks.includes(t.id);
     const catColor = getCatColor(s.category);
+    const startSecs = s.startTime || 0;
+    const endSecs = s.endTime || t.duration;
+    const hasCustomStart = startSecs > 0;
+    const hasCustomEnd = s.endTime && s.endTime < t.duration;
+
     return `
-      <div class="queue-item${isPlaying ? ' playing' : ''}" onclick="selectTrack(${i})" draggable="true"
+      <div class="queue-item${isPlaying ? ' playing' : isLoaded ? ' loaded' : ''}${isPlayed && !isPlaying && !isLoaded ? ' played' : ''}"
+           onclick="selectTrack(${i})" draggable="true"
            ondragstart="dragStart(event,${i})" ondragover="event.preventDefault()" ondrop="dragDrop(event,${i})">
-        <span class="queue-num">${isPlaying ? `<span style="display:flex;align-items:flex-end;gap:2px;height:16px"><span style="width:3px;background:var(--gold);border-radius:1px;animation:paAnim .8s ease-in-out infinite alternate;height:6px;display:block"></span><span style="width:3px;background:var(--gold);border-radius:1px;animation:paAnim .8s ease-in-out infinite alternate .2s;height:6px;display:block"></span><span style="width:3px;background:var(--gold);border-radius:1px;animation:paAnim .8s ease-in-out infinite alternate .4s;height:6px;display:block"></span></span>` : i + 1}</span>
+        <button class="queue-play-btn" onclick="event.stopPropagation(); playTrack(${i})" title="Spill">
+          ${isPlaying
+            ? `<span style="display:flex;align-items:flex-end;gap:2px;height:14px">
+                <span style="width:3px;background:var(--gold);border-radius:1px;animation:paAnim .8s ease-in-out infinite alternate;display:block"></span>
+                <span style="width:3px;background:var(--gold);border-radius:1px;animation:paAnim .8s ease-in-out infinite alternate .2s;display:block"></span>
+                <span style="width:3px;background:var(--gold);border-radius:1px;animation:paAnim .8s ease-in-out infinite alternate .4s;display:block"></span>
+               </span>`
+            : `<span style="color:${isLoaded ? 'var(--ice)' : isPlayed ? 'var(--text-dim)' : 'var(--text-dim)'}">▶</span>`}
+        </button>
         <div class="track-thumb">${t.img ? `<img src="${t.img}">` : '🎵'}</div>
         <div class="track-info">
-          <div class="track-name">${esc(t.name)}</div>
-          <div class="track-artist">${esc(t.artist)}${s.category ? ` · <span style="color:${catColor}">${s.category}</span>` : ''}</div>
+          <div class="track-name" style="${isPlayed && !isPlaying ? 'opacity:0.5' : ''}">${esc(t.name)}</div>
+          <div class="track-artist" style="display:flex;align-items:center;gap:6px;">
+            <span style="${isPlayed && !isPlaying ? 'opacity:0.5' : ''}">${esc(t.artist)}</span>
+            ${s.category ? `<span style="color:${catColor};font-size:10px">${catEmoji(s.category)} ${s.category}</span>` : ''}
+          </div>
+          <div class="track-times">
+            <span class="${hasCustomStart ? 'time-tag start-tag' : 'time-tag'}">▶ ${fmtTime(startSecs)}</span>
+            <span class="${hasCustomEnd ? 'time-tag end-tag' : 'time-tag'}">■ ${fmtTime(endSecs)}</span>
+            ${isPlayed && !isPlaying ? '<span class="played-tag">✓ avspilt</span>' : ''}
+          </div>
         </div>
-        <div class="track-markers">
-          ${hasStart ? '<div class="marker-dot" title="Startpunkt satt"></div>' : ''}
-          ${hasEnd ? '<div class="marker-dot end" title="Stoppunkt satt"></div>' : ''}
-        </div>
-        <span class="track-duration">${fmtTime(s.endTime || t.duration)}</span>
         <button class="remove-track-btn" onclick="event.stopPropagation(); removeFromQueue(${i})">✕</button>
       </div>
     `;
@@ -1787,6 +1917,26 @@ function dragDrop(e, i) {
 function selectTrack(idx) {
   const track = state.queue[idx];
   state.selectedTrackId = track.id;
+
+  // Last sangen klar uten å spille
+  // Bare oppdater lastet-indeks hvis ikke allerede spiller denne
+  if (state.currentIndex !== idx) {
+    state.loadedIndex = idx;
+    // Oppdater player bar til å vise den valgte sangen
+    const s = state.trackSettings[track.id] || { startTime: 0, endTime: track.duration, category: '' };
+    updatePlayerBar(track, s);
+    // Stopp evt. pågående avspilling
+    if (state.isPlaying) {
+      if (state.player && !state.demoMode) state.player.pause();
+      state.isPlaying = false;
+      stopTicker();
+      updatePlayerUI();
+    }
+    state.currentPos = s.startTime || 0;
+    state.duration = track.duration;
+    updateProgressUI();
+    renderQueue();
+  }
   const s = state.trackSettings[track.id] || { startTime: 0, endTime: track.duration, category: '' };
 
   document.getElementById('editorContent').innerHTML = `
@@ -1919,6 +2069,12 @@ async function playTrack(idx) {
   const track = state.queue[idx];
   const s = state.trackSettings[track.id] || {};
 
+  // Merk som avspilt i sesjonen
+  if (!state.playedTracks.includes(track.id)) {
+    state.playedTracks.push(track.id);
+    saveState();
+  }
+
   updatePlayerBar(track, s);
 
   if (state.player && state.deviceId && !state.demoMode) {
@@ -1943,15 +2099,31 @@ async function playTrack(idx) {
 }
 
 function togglePlay() {
-  if (state.currentIndex < 0) {
+  // Bruk lastet spor hvis ingenting spiller
+  const targetIdx = state.currentIndex >= 0 ? state.currentIndex : state.loadedIndex;
+
+  if (targetIdx < 0) {
     if (state.queue.length) playTrack(0);
     return;
   }
+
+  // Hvis et annet spor er lastet men ikke spiller — start det
+  if (!state.isPlaying && state.loadedIndex >= 0 && state.loadedIndex !== state.currentIndex) {
+    playTrack(state.loadedIndex);
+    return;
+  }
+
   if (state.player && !state.demoMode) {
     state.player.togglePlay();
   } else {
     state.isPlaying = !state.isPlaying;
-    if (state.isPlaying) startTicker(); else stopTicker();
+    if (state.isPlaying) {
+      // Start fra lastet posisjon
+      if (state.currentIndex !== targetIdx) playTrack(targetIdx);
+      else startTicker();
+    } else {
+      stopTicker();
+    }
     updatePlayerUI();
   }
 }
@@ -2139,8 +2311,105 @@ async function importPlaylistById(id) {
 }
 
 // ============================================================
-// UTILS
+// SETLIST SAVE / LOAD
 // ============================================================
+function openSaveSetlistModal() {
+  if (!state.queue.length) { showToast('Køen er tom — legg til låter først', 'error'); return; }
+  document.getElementById('setlistNameInput').value = '';
+  document.getElementById('saveSetlistModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('setlistNameInput').focus(), 100);
+}
+function closeSaveSetlistModal() { document.getElementById('saveSetlistModal').classList.add('hidden'); }
+
+function saveSetlist() {
+  const name = document.getElementById('setlistNameInput').value.trim();
+  if (!name) { showToast('Gi spillelisten et navn', 'error'); return; }
+
+  const setlist = {
+    id: Date.now().toString(),
+    name,
+    date: new Date().toLocaleDateString('no-NO'),
+    tracks: JSON.parse(JSON.stringify(state.queue)),
+    settings: JSON.parse(JSON.stringify(state.trackSettings)),
+    count: state.queue.length,
+  };
+
+  state.savedSetlists.push(setlist);
+  saveState();
+  closeSaveSetlistModal();
+  showToast(`"${name}" lagret ✓`, 'success');
+}
+
+function openLoadSetlistModal() {
+  renderSetlistList();
+  document.getElementById('loadSetlistModal').classList.remove('hidden');
+}
+function closeLoadSetlistModal() { document.getElementById('loadSetlistModal').classList.add('hidden'); }
+
+function renderSetlistList() {
+  const el = document.getElementById('setlistList');
+  if (!state.savedSetlists.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:20px"><div class="big-icon">📋</div><p>Ingen lagrede spillelister ennå</p></div>';
+    return;
+  }
+  el.innerHTML = [...state.savedSetlists].reverse().map(sl => `
+    <div class="setlist-item">
+      <div class="setlist-info">
+        <div class="setlist-name">${esc(sl.name)}</div>
+        <div class="setlist-meta">${sl.date} · ${sl.count} låter</div>
+      </div>
+      <div class="setlist-actions">
+        <button class="setlist-load-btn" onclick="loadSetlist('${sl.id}')">▶ Last inn</button>
+        <button class="setlist-delete-btn" onclick="deleteSetlist('${sl.id}')" title="Slett">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadSetlist(id) {
+  const sl = state.savedSetlists.find(s => s.id === id);
+  if (!sl) return;
+
+  if (state.queue.length > 0) {
+    if (!confirm(`Erstatte nåværende kø (${state.queue.length} låter) med "${sl.name}"?`)) return;
+  }
+
+  state.queue = JSON.parse(JSON.stringify(sl.tracks));
+  // Merge innstillinger — behold eksisterende hvis de finnes
+  Object.keys(sl.settings).forEach(key => {
+    if (!state.trackSettings[key]) state.trackSettings[key] = sl.settings[key];
+  });
+  state.playedTracks = [];
+  state.currentIndex = -1;
+  state.isPlaying = false;
+  stopTicker();
+  saveState();
+  renderQueue();
+  updatePlayerUI();
+  closeLoadSetlistModal();
+  showToast(`"${sl.name}" lastet inn ✓`, 'success');
+}
+
+function deleteSetlist(id) {
+  const sl = state.savedSetlists.find(s => s.id === id);
+  if (!sl) return;
+  if (!confirm(`Slette "${sl.name}"?`)) return;
+  state.savedSetlists = state.savedSetlists.filter(s => s.id !== id);
+  saveState();
+  renderSetlistList();
+  showToast('Spilleliste slettet', '');
+}
+
+// ============================================================
+// SESSION RESET
+// ============================================================
+function resetSession() {
+  if (!state.playedTracks.length) { showToast('Ingen avspilte låter å nullstille', ''); return; }
+  state.playedTracks = [];
+  saveState();
+  renderQueue();
+  showToast('Sesjon nullstilt ✓', 'success');
+}
 function fmtTime(secs) {
   if (!secs && secs !== 0) return '0:00';
   const m = Math.floor(secs / 60);
@@ -2169,6 +2438,8 @@ function catEmoji(cat) {
 function saveState() {
   localStorage.setItem('hd_queue', JSON.stringify(state.queue));
   localStorage.setItem('hd_settings', JSON.stringify(state.trackSettings));
+  localStorage.setItem('hd_played', JSON.stringify(state.playedTracks));
+  localStorage.setItem('hd_setlists', JSON.stringify(state.savedSetlists));
 }
 
 function showToast(msg, type) {
@@ -2189,6 +2460,15 @@ document.getElementById('queueList').addEventListener('dblclick', e => {
 
 // Init autoplay pill
 document.getElementById('autoplayPill').classList.toggle('on', state.autoplay);
+
+// Spacebar = play/pause (ikke når bruker skriver i inputfelt)
+document.addEventListener('keydown', e => {
+  if (e.code !== 'Space') return;
+  const tag = document.activeElement?.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+  e.preventDefault();
+  togglePlay();
+});
 </script>
 </body>
 </html>
