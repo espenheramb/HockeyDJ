@@ -1208,7 +1208,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v14</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v16</small></h1>
     </div>
     <div class="header-status">
       <button onclick="toggleFullscreen()" title="Fullskjerm (F)" style="background:none;border:1px solid var(--panel-border);color:var(--text-dim);font-size:14px;width:32px;height:32px;border-radius:6px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.borderColor='var(--ice-dim)';this.style.color='var(--ice)'" onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'" id="fsBtn">⛶</button>
@@ -1343,7 +1343,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>🏒 Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;">v14</small></h2>
+    <h2>🏒 Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;">v16</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
 
     <div id="authStep1">
@@ -1352,7 +1352,7 @@
         <input type="text" class="modal-input" id="clientIdInput" placeholder="Lim inn Client ID fra developer.spotify.com" style="margin-bottom:0">
         <div style="font-size:11px;color:var(--text-dim);margin-top:8px;line-height:1.5;">
           Hent den på <strong style="color:var(--ice-dim)">developer.spotify.com/dashboard</strong> → opprett app → kopier Client ID.<br>
-          Sett <strong style="color:var(--ice-dim)">Redirect URI</strong> til: <code style="color:var(--gold);font-size:10px;" id="redirectUriDisplay"></code>
+          Sett <strong style="color:var(--ice-dim)">Redirect URI</strong> til: <code style="color:var(--gold);font-size:10px;" id="redirectUriDisplay">laster...</code>
         </div>
       </div>
       <button class="modal-btn primary" onclick="startPKCEFlow()">♪ Logg inn med Spotify</button>
@@ -1401,7 +1401,7 @@
 // ============================================================
 // STATE
 // ============================================================
-const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', 'Overtime / Straffer', 'Pauseshow'];
+const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 const state = {
   token: localStorage.getItem('spotify_token') || null,
@@ -1431,8 +1431,11 @@ const state = {
 // INIT
 // ============================================================
 window.onload = async () => {
-  // Show redirect URI in modal — bruk samme funksjon som PKCE-flyten
-  document.getElementById('redirectUriDisplay').textContent = window.location.origin + window.location.pathname;
+  // Vis redirect URI — prøv flere metoder
+  const uri = (window.location.origin + window.location.pathname) || window.location.href.split('?')[0] || '';
+  const uriEl = document.getElementById('redirectUriDisplay');
+  if (uriEl) uriEl.textContent = uri || '(last inn siden på nytt)';
+  console.log('Redirect URI:', uri);
 
   // Pre-fill client ID if saved
   if (state.clientId) document.getElementById('clientIdInput').value = state.clientId;
@@ -1751,7 +1754,7 @@ function loadDemoTracks() {
     { id:'d2', name:'Eye of the Tiger', artist:'Survivor', duration:245, img:'', uri:'spotify:track:2HHtWyy5CgaQbC7XSoOb0e' },
     { id:'d3', name:'We Will Rock You', artist:'Queen', duration:122, img:'', uri:'spotify:track:4pbJqGIASGPr0ZpGpnWkDn' },
     { id:'d4', name:'Kernkraft 400', artist:'Zombie Nation', duration:354, img:'', uri:'spotify:track:1E2WTcYLP1dFe1tiGDwRmT' },
-    { id:'d5', name:'Welcome to the Jungle', artist:'Guns N\' Roses', duration:272, img:'', uri:'spotify:track:0o4jSZBxOQUiDKzMJSyfIS' },
+    { id:'d5', name:'Welcome to the Jungle', artist:'Guns N Roses', duration:272, img:'', uri:'spotify:track:0o4jSZBxOQUiDKzMJSyfIS' },
   ];
   demos.forEach(addToQueue);
   showToast('Demo-låter lastet!', 'success');
@@ -2649,10 +2652,6 @@ function newSetlist() {
   document.getElementById('npTitle').textContent = 'Ingen låt valgt';
   document.getElementById('npArtist').textContent = '—';
   document.getElementById('npThumb').innerHTML = '🎵';
-  document.getElementById('npCategory').innerHTML = '';
-  document.getElementById('editorContent').innerHTML = `<div class="empty-state" style="height:100%"><div class="big-icon">🎚️</div><p>Klikk på en låt for å redigere</p></div>`;
-  showToast('Ny spilleliste klar ✓', 'success');
-}
   document.getElementById('npCategory').innerHTML = '';
   document.getElementById('editorContent').innerHTML = `<div class="empty-state" style="height:100%"><div class="big-icon">🎚️</div><p>Klikk på en låt for å redigere</p></div>`;
   showToast('Ny spilleliste klar ✓', 'success');
