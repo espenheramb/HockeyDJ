@@ -1208,9 +1208,10 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v13</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v14</small></h1>
     </div>
     <div class="header-status">
+      <button onclick="toggleFullscreen()" title="Fullskjerm (F)" style="background:none;border:1px solid var(--panel-border);color:var(--text-dim);font-size:14px;width:32px;height:32px;border-radius:6px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.borderColor='var(--ice-dim)';this.style.color='var(--ice)'" onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'" id="fsBtn">⛶</button>
       <button class="spotify-btn" id="connectBtn" onclick="startSpotifyLogin()">
         <span>♪</span> Logg inn med Spotify
       </button>
@@ -1342,7 +1343,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>🏒 Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;">v13</small></h2>
+    <h2>🏒 Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;">v14</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
 
     <div id="authStep1">
@@ -1365,9 +1366,13 @@
 <div class="modal-overlay hidden" id="saveSetlistModal">
   <div class="modal">
     <h2>💾 Lagre spilleliste</h2>
-    <p>Gi spillelisten et navn så du kan laste den inn igjen senere.</p>
-    <input type="text" class="modal-input" id="setlistNameInput" placeholder="F.eks. Kamp 15. mars, Hjemmekamp..." onkeydown="if(event.key==='Enter') saveSetlist()">
-    <button class="modal-btn primary" onclick="saveSetlist()">Lagre</button>
+    <div id="saveSetlistExisting" style="margin-bottom:14px;display:none;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;">Oppdater eksisterende</div>
+      <div id="saveSetlistExistingList" style="max-height:160px;overflow-y:auto;margin-bottom:10px;"></div>
+      <div style="text-align:center;font-size:12px;color:var(--text-dim);margin-bottom:10px;">— eller lagre som ny —</div>
+    </div>
+    <input type="text" class="modal-input" id="setlistNameInput" placeholder="Navn på ny spilleliste..." onkeydown="if(event.key==='Enter') saveSetlistNew()">
+    <button class="modal-btn primary" onclick="saveSetlistNew()">💾 Lagre som ny</button>
     <button class="modal-btn secondary" onclick="closeSaveSetlistModal()">Avbryt</button>
   </div>
 </div>
@@ -1426,8 +1431,8 @@ const state = {
 // INIT
 // ============================================================
 window.onload = async () => {
-  // Show redirect URI in modal
-  document.getElementById('redirectUriDisplay').textContent = window.location.href.split('?')[0].split('#')[0];
+  // Show redirect URI in modal — bruk samme funksjon som PKCE-flyten
+  document.getElementById('redirectUriDisplay').textContent = window.location.origin + window.location.pathname;
 
   // Pre-fill client ID if saved
   if (state.clientId) document.getElementById('clientIdInput').value = state.clientId;
@@ -2489,31 +2494,66 @@ async function importPlaylistById(id) {
 // SETLIST SAVE / LOAD
 // ============================================================
 function openSaveSetlistModal() {
-  if (!getActiveQueue().length) { showToast('Køen er tom — legg til låter først', 'error'); return; }
+  const total = state.periods.reduce((sum, p) => sum + p.queue.length, 0);
+  if (!total) { showToast('Ingen låter å lagre', 'error'); return; }
   document.getElementById('setlistNameInput').value = '';
+
+  // Show existing setlists to overwrite
+  const existingEl = document.getElementById('saveSetlistExisting');
+  const listEl = document.getElementById('saveSetlistExistingList');
+  if (state.savedSetlists.length) {
+    existingEl.style.display = 'block';
+    listEl.innerHTML = [...state.savedSetlists].reverse().map(sl => `
+      <div class="setlist-item" style="margin-bottom:6px;padding:8px 12px;">
+        <div class="setlist-info">
+          <div class="setlist-name" style="font-size:13px;">${esc(sl.name)}</div>
+          <div class="setlist-meta">${sl.date} · ${sl.count} låter</div>
+        </div>
+        <button class="setlist-load-btn" onclick="saveSetlistOverwrite('${sl.id}')" style="background:var(--gold);color:#000;">↑ Oppdater</button>
+      </div>
+    `).join('');
+  } else {
+    existingEl.style.display = 'none';
+  }
+
   document.getElementById('saveSetlistModal').classList.remove('hidden');
   setTimeout(() => document.getElementById('setlistNameInput').focus(), 100);
 }
 function closeSaveSetlistModal() { document.getElementById('saveSetlistModal').classList.add('hidden'); }
 
-function saveSetlist() {
-  const name = document.getElementById('setlistNameInput').value.trim();
-  if (!name) { showToast('Gi spillelisten et navn', 'error'); return; }
-
-  const setlist = {
+function buildSetlistData(name) {
+  return {
     id: Date.now().toString(),
     name,
     date: new Date().toLocaleDateString('no-NO'),
-    // Lagre alle perioder
     periods: JSON.parse(JSON.stringify(state.periods)),
     settings: JSON.parse(JSON.stringify(state.trackSettings)),
     count: state.periods.reduce((sum, p) => sum + p.queue.length, 0),
   };
+}
 
-  state.savedSetlists.push(setlist);
+function saveSetlistNew() {
+  const name = document.getElementById('setlistNameInput').value.trim();
+  if (!name) { showToast('Gi spillelisten et navn', 'error'); return; }
+  state.savedSetlists.push(buildSetlistData(name));
   saveState();
   closeSaveSetlistModal();
   showToast(`"${name}" lagret ✓`, 'success');
+}
+
+// Keep old name for backward compat
+function saveSetlist() { saveSetlistNew(); }
+
+function saveSetlistOverwrite(id) {
+  const idx = state.savedSetlists.findIndex(s => s.id === id);
+  if (idx < 0) return;
+  const oldName = state.savedSetlists[idx].name;
+  const newData = buildSetlistData(oldName);
+  newData.id = id; // keep same ID
+  state.savedSetlists[idx] = newData;
+  saveState();
+  closeSaveSetlistModal();
+  showToast(`"${oldName}" oppdatert ✓`, 'success');
 }
 
 function openLoadSetlistModal() {
@@ -2717,6 +2757,30 @@ document.addEventListener('keydown', e => {
   } else if (e.code === 'ArrowLeft') {
     e.preventDefault();
     prevTrack();
+  } else if (e.code === 'KeyF') {
+    e.preventDefault();
+    toggleFullscreen();
+  }
+});
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+    document.getElementById('fsBtn').textContent = '⛶';
+    document.getElementById('fsBtn').title = 'Avslutt fullskjerm (F)';
+  } else {
+    document.exitFullscreen().catch(() => {});
+  }
+}
+
+document.addEventListener('fullscreenchange', () => {
+  const btn = document.getElementById('fsBtn');
+  if (document.fullscreenElement) {
+    btn.textContent = '✕';
+    btn.title = 'Avslutt fullskjerm (F)';
+  } else {
+    btn.textContent = '⛶';
+    btn.title = 'Fullskjerm (F)';
   }
 });
 </script>
