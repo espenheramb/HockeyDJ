@@ -1072,7 +1072,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v8</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v9</small></h1>
     </div>
     <div class="header-status">
       <button class="spotify-btn" id="connectBtn" onclick="startSpotifyLogin()">
@@ -1198,7 +1198,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>🏒 Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;">v8</small></h2>
+    <h2>🏒 Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;">v9</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
 
     <div id="authStep1">
@@ -1382,17 +1382,15 @@ async function handlePKCECallback(code) {
     localStorage.setItem('spotify_refresh_token', data.refresh_token || '');
     localStorage.setItem('spotify_client_id', clientId);
 
-    // Rydd opp
+    // Rydd opp - redirect til ren URL
     sessionStorage.removeItem('pkce_verifier');
     sessionStorage.removeItem('spotify_client_id');
     localStorage.removeItem('pkce_verifier');
 
-    // Fjern ?code= fra URL
-    window.history.replaceState({}, document.title, window.location.pathname);
-
-    closeAuthModal();
-    await fetchUserProfile();
-    initSpotifySDK();
+    // Bruk location.replace for å fjerne ?code= fra URL helt
+    // Siden lastes på nytt automatisk, som trigger window.onload med ren URL
+    window.location.replace(window.location.origin + window.location.pathname);
+    return; // Stopp videre kjøring
 
   } catch(e) {
     showToast('Innlogging feilet: ' + e.message, 'error');
