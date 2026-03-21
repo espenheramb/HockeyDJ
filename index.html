@@ -1072,7 +1072,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v6</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v7</small></h1>
     </div>
     <div class="header-status">
       <button class="spotify-btn" id="connectBtn" onclick="startSpotifyLogin()">
@@ -1198,7 +1198,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>🏒 Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;">v6</small></h2>
+    <h2>🏒 Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;">v7</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
 
     <div id="authStep1">
@@ -1641,15 +1641,65 @@ function renderPlaylistResults(playlists) {
   const el = document.getElementById('resultsList');
   if (!playlists.length) { el.innerHTML = '<div class="empty-state"><div class="big-icon">🔍</div><p>Ingen resultater</p></div>'; return; }
   el.innerHTML = playlists.map(p => `
-    <div class="result-item">
+    <div class="result-item" id="pl-${p.id}">
       <div class="result-thumb">${p.images?.[0] ? `<img src="${p.images[0].url}">` : '📋'}</div>
       <div class="result-info">
         <div class="result-name">${esc(p.name)}</div>
-        <div class="result-sub">${p.tracks.total} låter · ${esc(p.owner.display_name)}</div>
+        <div class="result-sub">${p.tracks.total} låter · ${esc(p.owner?.display_name || '—')}</div>
       </div>
-      <button class="add-btn" onclick="importPlaylistById('${p.id}')">+</button>
+      <button class="add-btn" onclick="importPlaylistTracks('${p.id}', '${esc(p.name)}', this)" title="Legg til alle låter">+</button>
     </div>
   `).join('');
+}
+
+async function importPlaylistTracks(playlistId, playlistName, btn) {
+  if (!state.token) { showToast('Logg inn først', 'error'); return; }
+  btn.disabled = true;
+  btn.textContent = '⏳';
+
+  try {
+    // Bruk search/recommendations-endepunkt som fungerer i Development Mode
+    // Hent tracks direkte fra playlist via browse-endepunktet
+    let added = 0;
+    let offset = 0;
+    const limit = 50;
+    let hasMore = true;
+
+    while (hasMore) {
+      const data = await spotifyFetch(
+        `https://api.spotify.com/v1/playlists/${playlistId}/tracks?limit=${limit}&offset=${offset}&market=NO`
+      );
+
+      (data.items || []).forEach(({ track: t }) => {
+        if (!t || !t.id || !t.artists?.length) return;
+        if (!state.queue.find(q => q.id === t.id)) {
+          addToQueue({
+            id: t.id,
+            name: t.name,
+            artist: t.artists[0].name,
+            duration: Math.round(t.duration_ms / 1000),
+            img: t.album?.images?.[2]?.url || t.album?.images?.[0]?.url || '',
+            uri: t.uri
+          });
+          added++;
+        }
+      });
+
+      offset += limit;
+      hasMore = data.next !== null && data.next !== undefined;
+    }
+
+    btn.textContent = '✓';
+    btn.style.background = 'var(--green)';
+    btn.style.borderColor = 'var(--green)';
+    btn.style.color = 'white';
+    showToast(`"${playlistName}" — +${added} låter ✓`, 'success');
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '+';
+    showToast(`Feil: ${e.message}`, 'error');
+    console.error('importPlaylistTracks feil:', e);
+  }
 }
 
 // ============================================================
