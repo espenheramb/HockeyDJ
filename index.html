@@ -1255,7 +1255,98 @@
   }
   .period-tab-add:hover { color: var(--green); }
 
-  /* Header action buttons */
+  /* Left panel tabs */
+  .left-panel-tabs {
+    display: flex;
+    width: 100%;
+    border-bottom: 2px solid var(--panel-border);
+  }
+  .left-tab {
+    flex: 1;
+    padding: 10px 8px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--text-dim);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: -2px;
+  }
+  .left-tab:hover { color: var(--text); }
+  .left-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* Library items */
+  .lib-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+    cursor: pointer;
+  }
+  .lib-item:hover { background: var(--rink-surface); border-left-color: var(--active); }
+  .lib-item.selected { background: rgba(26,127,196,0.12); border-left-color: var(--active); }
+
+  .lib-item-thumb {
+    width: 38px;
+    height: 38px;
+    border-radius: 4px;
+    background: var(--rink-surface);
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  .lib-item-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+  .lib-item-info { flex: 1; min-width: 0; }
+  .lib-item-name {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .lib-item-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 1px;
+  }
+
+  .lib-toolbar {
+    padding: 8px 12px;
+    border-top: 1px solid var(--panel-border);
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .lib-selection-info {
+    padding: 6px 12px;
+    background: rgba(26,127,196,0.1);
+    border-bottom: 1px solid var(--panel-border);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    color: var(--active);
+    letter-spacing: 0.5px;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .lib-selection-info.visible { display: flex; }
   .hdr-btn {
     background: none;
     border: 1px solid var(--panel-border);
@@ -1322,7 +1413,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v19</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v21</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -1344,21 +1435,50 @@
   <!-- MAIN -->
   <main>
 
-    <!-- LEFT: SEARCH -->
+    <!-- LEFT: SEARCH + LIBRARY -->
     <div class="panel">
-      <div class="panel-header">
-        <span class="panel-title">📡 Søk etter låter</span>
-      </div>
-      <div class="search-box">
-        <div class="search-input-wrap">
-          <input type="text" id="searchInput" placeholder="Søk etter låter..." onkeydown="if(event.key==='Enter') doSearch()">
-          <button onclick="doSearch()">🔍</button>
+      <div class="panel-header" style="padding-bottom:0;border-bottom:none;">
+        <div class="left-panel-tabs">
+          <button class="left-tab active" id="leftTabSearch" onclick="switchLeftTab('search')">📡 Søk</button>
+          <button class="left-tab" id="leftTabLibrary" onclick="switchLeftTab('library')">📚 Bibliotek</button>
         </div>
       </div>
-      <div class="results-list" id="resultsList">
-        <div class="empty-state">
-          <div class="big-icon">🎵</div>
-          <p>Søk etter låter for å legge dem til i køen</p>
+
+      <!-- SEARCH VIEW -->
+      <div id="leftSearch">
+        <div class="search-box">
+          <div class="search-input-wrap">
+            <input type="text" id="searchInput" placeholder="Søk etter låter..." onkeydown="if(event.key==='Enter') doSearch()">
+            <button onclick="doSearch()">🔍</button>
+          </div>
+        </div>
+        <div class="results-list" id="resultsList">
+          <div class="empty-state">
+            <div class="big-icon">🎵</div>
+            <p>Søk etter låter for å legge dem til i køen</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIBRARY VIEW -->
+      <div id="leftLibrary" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+        <div style="padding:10px 12px;border-bottom:1px solid var(--panel-border);display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <input type="text" id="librarySearch" placeholder="Filtrer bibliotek..." oninput="renderLibrary()"
+            style="flex:1;background:var(--rink-surface);border:1px solid var(--panel-border);border-radius:5px;color:var(--text);padding:7px 10px;font-family:'Barlow',sans-serif;font-size:13px;outline:none;">
+          <span id="libraryCount" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--text-dim);white-space:nowrap;">0 låter</span>
+        </div>
+        <div class="lib-selection-info" id="libSelectionInfo">
+          <span id="libSelectionCount">0 valgt</span>
+          <div style="display:flex;gap:6px;">
+            <button class="hdr-btn hdr-btn-green" onclick="addSelectedToQueue()" style="font-size:10px;padding:3px 8px;">+ Legg til kø</button>
+            <button class="hdr-btn" onclick="clearLibrarySelection()" style="font-size:10px;padding:3px 8px;">✕ Fjern valg</button>
+          </div>
+        </div>
+        <div class="results-list" id="libraryList">
+          <div class="empty-state">
+            <div class="big-icon">📚</div>
+            <p>Lagre sanger til biblioteket fra redigeringspanelet</p>
+          </div>
         </div>
       </div>
     </div>
@@ -1506,6 +1626,7 @@ const state = {
   trackSettings: JSON.parse(localStorage.getItem('hd_settings') || '{}'),
   playedTracks: JSON.parse(localStorage.getItem('hd_played') || '[]'),
   savedSetlists: JSON.parse(localStorage.getItem('hd_setlists') || '[]'),
+  library: JSON.parse(localStorage.getItem('hd_library') || '[]'), // Permanent sangbibliotek
   loadedIndex: -1,
   currentIndex: -1,
   currentPeriodId: localStorage.getItem('hd_active_period') || 'p0',
@@ -1555,6 +1676,7 @@ window.onload = async () => {
   // Gjenopprett spillelistenavn
   const savedSetlistName = localStorage.getItem('hd_current_setlist_name');
   if (savedSetlistName) updateHeaderSetlistName(savedSetlistName);
+  switchLeftTab('search');
 };
 
 
@@ -1924,43 +2046,84 @@ function renderPeriodTabs() {
             id="ptab-${p.id}"
             onclick="setActivePeriod('${p.id}')"
             ondblclick="renamePeriod('${p.id}', event)"
+            oncontextmenu="periodTabContextMenu(event, '${p.id}')"
             draggable="true"
             ondragstart="tabDragStart(event, '${p.id}')"
             ondragover="tabDragOver(event, '${p.id}')"
             ondragleave="tabDragLeave(event)"
             ondrop="tabDrop(event, '${p.id}')"
             ondragend="tabDragEnd()"
-            title="Dobbeltklikk for å gi nytt navn · Dra for å flytte">
+            title="Dobbeltklikk: endre navn · Høyreklikk: slett">
       <span class="period-tab-label" id="ptab-label-${p.id}">${esc(p.name)}</span>
       <span class="period-count">${p.queue.length}</span>
-      ${state.periods.length > 1
-        ? `<button class="period-tab-close" onclick="event.stopPropagation(); deletePeriod('${p.id}')" title="Slett periode">✕</button>`
-        : ''}
     </button>
   `).join('') +
   `<button class="period-tab-add" onclick="addPeriod()" title="Legg til periode">＋</button>`;
 }
 
-// Tab drag-to-reorder
+// Context menu for period tab (right-click)
+let ctxMenuTarget = null;
+function periodTabContextMenu(e, id) {
+  e.preventDefault();
+  e.stopPropagation();
+  const period = state.periods.find(p => p.id === id);
+  if (!period) return;
+
+  // Remove existing context menu
+  document.getElementById('periodCtxMenu')?.remove();
+
+  const menu = document.createElement('div');
+  menu.id = 'periodCtxMenu';
+  menu.style.cssText = `position:fixed;top:${e.clientY}px;left:${e.clientX}px;
+    background:var(--panel);border:1px solid var(--panel-border);border-radius:8px;
+    padding:6px;z-index:200;min-width:160px;box-shadow:0 4px 20px rgba(0,0,0,0.4);`;
+
+  menu.innerHTML = `
+    <div style="padding:4px 8px;font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;">${esc(period.name)}</div>
+    <button onclick="renamePeriodMenu('${id}')" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:7px 10px;border-radius:5px;cursor:pointer;font-size:13px;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='none'">✏️ Endre navn</button>
+    ${state.periods.length > 1 ? `<button onclick="deletePeriod('${id}')" style="display:block;width:100%;text-align:left;background:none;border:none;color:#ff4455;padding:7px 10px;border-radius:5px;cursor:pointer;font-size:13px;transition:background .15s;" onmouseover="this.style.background='rgba(204,17,34,0.15)'" onmouseout="this.style.background='none'">🗑 Slett periode</button>` : ''}
+  `;
+
+  document.body.appendChild(menu);
+
+  // Close on click outside
+  setTimeout(() => document.addEventListener('click', () => menu.remove(), { once: true }), 0);
+}
+
+function renamePeriodMenu(id) {
+  document.getElementById('periodCtxMenu')?.remove();
+  const tab = document.getElementById('ptab-' + id);
+  if (tab) {
+    const evt = new MouseEvent('dblclick', { bubbles: true });
+    tab.dispatchEvent(evt);
+  }
+}
+
+// Track what is being dragged: 'track' or 'tab'
+let dragType = null;
+let dragTrackIdx = null;
 let tabDragSrc = null;
+
 function tabDragStart(e, id) {
+  dragType = 'tab';
   tabDragSrc = id;
+  dragTrackIdx = null;
   e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/period-id', id);
+  e.dataTransfer.setData('text/plain', 'tab:' + id);
   setTimeout(() => document.getElementById('ptab-' + id)?.classList.add('dragging'), 0);
 }
+
 function tabDragOver(e, id) {
-  // Only handle period reorder if dragging a tab, not a track
-  if (!e.dataTransfer.types.includes('text/period-id') &&
-      !e.dataTransfer.types.includes('Text')) return;
   e.preventDefault();
   e.stopPropagation();
   document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('drag-over'));
   document.getElementById('ptab-' + id)?.classList.add('drag-over');
 }
+
 function tabDragLeave(e) {
   e.currentTarget.classList.remove('drag-over');
 }
+
 function tabDrop(e, targetId) {
   e.preventDefault();
   e.stopPropagation();
@@ -1969,15 +2132,11 @@ function tabDrop(e, targetId) {
     t.classList.remove('dragging');
   });
 
-  // Check if we're dropping a track onto a tab
-  const trackIdx = e.dataTransfer.getData('text/track-index');
-  if (trackIdx !== '' && trackIdx !== null && tabDragSrc === null) {
-    moveTrackToPeriod(parseInt(trackIdx), targetId);
-    return;
-  }
-
-  // Otherwise reorder tabs
-  if (tabDragSrc && tabDragSrc !== targetId) {
+  if (dragType === 'track' && dragTrackIdx !== null) {
+    // Drop track onto tab → move to that period
+    moveTrackToPeriod(dragTrackIdx, targetId);
+  } else if (dragType === 'tab' && tabDragSrc && tabDragSrc !== targetId) {
+    // Reorder tabs
     const srcIdx = state.periods.findIndex(p => p.id === tabDragSrc);
     const tgtIdx = state.periods.findIndex(p => p.id === targetId);
     if (srcIdx >= 0 && tgtIdx >= 0) {
@@ -1987,10 +2146,16 @@ function tabDrop(e, targetId) {
       renderPeriodTabs();
     }
   }
+
+  dragType = null;
   tabDragSrc = null;
+  dragTrackIdx = null;
 }
+
 function tabDragEnd() {
+  dragType = null;
   tabDragSrc = null;
+  dragTrackIdx = null;
   document.querySelectorAll('.period-tab').forEach(t => {
     t.classList.remove('drag-over');
     t.classList.remove('dragging');
@@ -2126,7 +2291,8 @@ function renderQueue() {
       <div class="queue-item${isPlaying ? ' playing' : isLoaded ? ' loaded' : ''}${isPlayed && !isPlaying && !isLoaded ? ' played' : ''}"
            onclick="selectTrack(${i})" draggable="true"
            ondragstart="dragStart(event,${i})" ondragover="event.preventDefault()" ondrop="dragDrop(event,${i})"
-           ondragend="document.getElementById('periodTabs').classList.remove('drag-active'); dragSrc=null;">
+           ondragend="document.getElementById('periodTabs').classList.remove('drag-active'); dragSrc=null; dragType=null; dragTrackIdx=null;">
+        <span class="queue-num" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:${isPlaying ? 'var(--gold)' : 'var(--text-dim)'};width:22px;text-align:right;flex-shrink:0;">${i + 1}</span>
         <button class="queue-play-btn" onclick="event.stopPropagation(); playTrack(${i})" title="Spill">
           ${isPlaying
             ? `<span style="display:flex;align-items:flex-end;gap:2px;height:14px">
@@ -2161,14 +2327,18 @@ function renderQueue() {
 let dragSrc = null;
 function dragStart(e, i) {
   dragSrc = i;
+  dragType = 'track';
+  dragTrackIdx = i;
+  tabDragSrc = null;
   e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/track-index', String(i));
-  // Tell period tabs we're dragging a track
+  e.dataTransfer.setData('text/plain', 'track:' + i);
   document.getElementById('periodTabs').classList.add('drag-active');
 }
 function dragDrop(e, i) {
   document.getElementById('periodTabs').classList.remove('drag-active');
-  if (dragSrc === null || dragSrc === i) return;
+  dragType = null;
+  dragTrackIdx = null;
+  if (dragSrc === null || dragSrc === i) { dragSrc = null; return; }
   const item = getActiveQueue().splice(dragSrc, 1)[0];
   getActiveQueue().splice(i, 0, item);
   if (state.currentIndex === dragSrc) state.currentIndex = i;
@@ -2268,6 +2438,11 @@ function selectTrack(idx) {
     </div>
 
     <button class="save-btn" onclick="saveTrackSettings('${track.id}')">💾 Lagre innstillinger</button>
+    <button onclick="saveToLibrary('${track.id}')" id="libSaveBtn-${track.id}"
+      style="width:100%;margin-top:8px;background:none;border:1px solid var(--panel-border);color:var(--text-dim);padding:10px;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;"
+      onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'"
+      onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'"
+    >${state.library.find(l => l.id === '${track.id}') ? '★ I biblioteket' : '☆ Lagre til bibliotek'}</button>
   `;
   renderQueue();
 }
@@ -2751,6 +2926,193 @@ function updateHeaderSetlistName(name) {
   }
 }
 
+// ============================================================
+// LEFT PANEL TAB SWITCHING
+// ============================================================
+function switchLeftTab(tab) {
+  const isSearch = tab === 'search';
+  document.getElementById('leftSearch').style.display = isSearch ? 'flex' : 'none';
+  document.getElementById('leftSearch').style.flexDirection = 'column';
+  document.getElementById('leftSearch').style.flex = '1';
+  document.getElementById('leftSearch').style.overflow = 'hidden';
+  document.getElementById('leftLibrary').style.display = isSearch ? 'none' : 'flex';
+  document.getElementById('leftTabSearch').classList.toggle('active', isSearch);
+  document.getElementById('leftTabLibrary').classList.toggle('active', !isSearch);
+  if (!isSearch) renderLibrary();
+}
+
+// ============================================================
+// LIBRARY
+// ============================================================
+let librarySelection = new Set();
+
+function saveToLibrary(trackId) {
+  const track = getActiveQueue().find(t => t.id === trackId);
+  if (!track) return;
+
+  const settings = state.trackSettings[trackId] || {};
+  const existing = state.library.findIndex(l => l.id === trackId);
+
+  const entry = {
+    id: track.id,
+    name: track.name,
+    artist: track.artist,
+    duration: track.duration,
+    img: track.img,
+    uri: track.uri,
+    settings: JSON.parse(JSON.stringify(settings)),
+    savedAt: Date.now(),
+  };
+
+  if (existing >= 0) {
+    state.library[existing] = entry;
+    showToast(`"${track.name}" oppdatert i biblioteket ✓`, 'success');
+  } else {
+    state.library.push(entry);
+    showToast(`"${track.name}" lagret i biblioteket ✓`, 'success');
+  }
+
+  saveState();
+
+  // Update button text
+  const btn = document.getElementById(`libSaveBtn-${trackId}`);
+  if (btn) {
+    btn.textContent = '★ I biblioteket';
+    btn.style.color = 'var(--gold)';
+    btn.style.borderColor = 'var(--gold)';
+  }
+}
+
+function removeFromLibrary(trackId, e) {
+  e?.stopPropagation();
+  const entry = state.library.find(l => l.id === trackId);
+  if (!entry) return;
+  if (!confirm(`Fjerne "${entry.name}" fra biblioteket?`)) return;
+  state.library = state.library.filter(l => l.id !== trackId);
+  librarySelection.delete(trackId);
+  saveState();
+  renderLibrary();
+  showToast('Fjernet fra biblioteket', '');
+}
+
+function renderLibrary() {
+  const el = document.getElementById('libraryList');
+  const filter = (document.getElementById('librarySearch')?.value || '').toLowerCase();
+  const items = state.library.filter(l =>
+    !filter || l.name.toLowerCase().includes(filter) || l.artist.toLowerCase().includes(filter)
+  );
+
+  document.getElementById('libraryCount').textContent = `${state.library.length} låter`;
+
+  if (!items.length) {
+    el.innerHTML = state.library.length
+      ? '<div class="empty-state"><div class="big-icon">🔍</div><p>Ingen treff</p></div>'
+      : '<div class="empty-state"><div class="big-icon">📚</div><p>Lagre sanger til biblioteket fra redigeringspanelet</p></div>';
+    updateLibrarySelectionBar();
+    return;
+  }
+
+  el.innerHTML = items.map(l => {
+    const s = l.settings || {};
+    const inQueue = getActiveQueue().find(t => t.id === l.id);
+    const isSelected = librarySelection.has(l.id);
+    const catColor = getCatColor(s.category);
+    return `
+      <div class="lib-item${isSelected ? ' selected' : ''}" onclick="toggleLibrarySelect('${l.id}', event)"
+           ondblclick="addLibItemToQueue('${l.id}')">
+        <div class="lib-item-thumb">${l.img ? `<img src="${l.img}">` : '🎵'}</div>
+        <div class="lib-item-info">
+          <div class="lib-item-name">${esc(l.name)}</div>
+          <div class="lib-item-sub">
+            <span>${esc(l.artist)}</span>
+            ${s.category ? `<span style="color:${catColor}">${catEmoji(s.category)} ${s.category}</span>` : ''}
+            ${s.startTime > 0 ? `<span style="color:var(--green);font-size:10px">▶${fmtTime(s.startTime)}</span>` : ''}
+            ${s.endTime && s.endTime < l.duration ? `<span style="color:var(--red-line);font-size:10px">■${fmtTime(s.endTime)}</span>` : ''}
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:center;flex-shrink:0;">
+          <button class="add-btn${inQueue ? '' : ''}" style="width:26px;height:26px;${inQueue ? 'background:rgba(34,204,102,0.15);border-color:var(--green);color:var(--green);' : ''}"
+            onclick="event.stopPropagation(); addLibItemToQueue('${l.id}')" title="${inQueue ? 'Allerede i køen' : 'Legg til i kø'}">
+            ${inQueue ? '✓' : '+'}
+          </button>
+          <button style="background:none;border:none;color:var(--text-dim);font-size:11px;cursor:pointer;padding:2px;"
+            onclick="removeFromLibrary('${l.id}', event)" title="Fjern fra bibliotek">🗑</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  updateLibrarySelectionBar();
+}
+
+function toggleLibrarySelect(id, e) {
+  // Don't toggle if clicking buttons
+  if (e.target.tagName === 'BUTTON') return;
+  if (librarySelection.has(id)) librarySelection.delete(id);
+  else librarySelection.add(id);
+  renderLibrary();
+}
+
+function updateLibrarySelectionBar() {
+  const bar = document.getElementById('libSelectionInfo');
+  const count = librarySelection.size;
+  if (count > 0) {
+    bar.classList.add('visible');
+    document.getElementById('libSelectionCount').textContent = `${count} valgt`;
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+function clearLibrarySelection() {
+  librarySelection.clear();
+  renderLibrary();
+}
+
+function addLibItemToQueue(trackId) {
+  const entry = state.library.find(l => l.id === trackId);
+  if (!entry) return;
+  if (getActiveQueue().find(t => t.id === trackId)) {
+    showToast('Allerede i køen', 'error'); return;
+  }
+  const track = { id: entry.id, name: entry.name, artist: entry.artist,
+    duration: entry.duration, img: entry.img, uri: entry.uri };
+  getActivePeriod().queue.push(track);
+  // Restore saved settings
+  if (entry.settings && Object.keys(entry.settings).length) {
+    state.trackSettings[entry.id] = JSON.parse(JSON.stringify(entry.settings));
+  } else if (!state.trackSettings[entry.id]) {
+    state.trackSettings[entry.id] = { startTime: 0, endTime: entry.duration, category: '', note: '', fadeOut: 0 };
+  }
+  saveState();
+  renderQueue();
+  showToast(`+ ${entry.name}`, 'success');
+  renderLibrary(); // refresh in/queue indicator
+}
+
+function addSelectedToQueue() {
+  let added = 0;
+  librarySelection.forEach(id => {
+    const entry = state.library.find(l => l.id === id);
+    if (!entry || getActiveQueue().find(t => t.id === id)) return;
+    getActivePeriod().queue.push({ id: entry.id, name: entry.name, artist: entry.artist,
+      duration: entry.duration, img: entry.img, uri: entry.uri });
+    if (entry.settings && Object.keys(entry.settings).length) {
+      state.trackSettings[entry.id] = JSON.parse(JSON.stringify(entry.settings));
+    } else if (!state.trackSettings[entry.id]) {
+      state.trackSettings[entry.id] = { startTime: 0, endTime: entry.duration, category: '', note: '', fadeOut: 0 };
+    }
+    added++;
+  });
+  if (added > 0) {
+    saveState();
+    renderQueue();
+    showToast(`+${added} låter lagt til i kø ✓`, 'success');
+  }
+  clearLibrarySelection();
+}
+
+// ============================================================
 // SESSION RESET
 function resetSession() {
   if (!state.playedTracks.length) { showToast('Ingen avspilte låter å nullstille', ''); return; }
@@ -2789,7 +3151,7 @@ function saveState() {
   localStorage.setItem('hd_active_period', state.activePeriodId);
   localStorage.setItem('hd_settings', JSON.stringify(state.trackSettings));
   localStorage.setItem('hd_played', JSON.stringify(state.playedTracks));
-  localStorage.setItem('hd_setlists', JSON.stringify(state.savedSetlists));
+  localStorage.setItem('hd_library', JSON.stringify(state.library));
 }
 
 // Period helpers
