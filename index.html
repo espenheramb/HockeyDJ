@@ -1072,7 +1072,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v6</small></h1>
     </div>
     <div class="header-status">
       <button class="spotify-btn" id="connectBtn" onclick="startSpotifyLogin()">
@@ -1198,7 +1198,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>🏒 Hockey DJ</h2>
+    <h2>🏒 Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;">v6</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
 
     <div id="authStep1">
@@ -2049,11 +2049,14 @@ async function importPlaylistById(id) {
   if (!state.token) { showToast('Koble til Spotify først', 'error'); return; }
   try {
     showToast('Laster playlist...', '');
+    console.log('importPlaylistById - token starter med:', state.token.substring(0, 20));
+    console.log('importPlaylistById - token utløper om:', Math.round((state.tokenExpiry - Date.now()) / 1000 / 60), 'min');
 
     // Hent playlist-info uten fields-filter
     const info = await spotifyFetch(
       `https://api.spotify.com/v1/playlists/${id}`
     );
+    console.log('Playlist info OK:', info.name);
 
     // Hent spor uten fields-filter (unngår "Resource not found" bug)
     let url = `https://api.spotify.com/v1/playlists/${id}/tracks?limit=50`;
