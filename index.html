@@ -1072,7 +1072,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v7</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v8</small></h1>
     </div>
     <div class="header-status">
       <button class="spotify-btn" id="connectBtn" onclick="startSpotifyLogin()">
@@ -1198,7 +1198,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>🏒 Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;">v7</small></h2>
+    <h2>🏒 Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;">v8</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
 
     <div id="authStep1">
@@ -1581,6 +1581,9 @@ async function spotifyFetch(url) {
   }
   if (!state.token) throw new Error('Ikke innlogget');
 
+  console.log('spotifyFetch:', url.substring(0, 80));
+  console.log('Token gyldig i:', Math.round((state.tokenExpiry - Date.now()) / 1000 / 60), 'min');
+
   let res = await fetch(url, {
     headers: { Authorization: `Bearer ${state.token}` }
   });
@@ -1596,6 +1599,7 @@ async function spotifyFetch(url) {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
+    console.error('Spotify API feil:', res.status, JSON.stringify(err));
     throw new Error(err.error?.message || `HTTP ${res.status}`);
   }
   return res.json();
