@@ -1423,7 +1423,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v23</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v24</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -1522,7 +1522,9 @@
       </div>
       <!-- PERIOD TABS -->
       <div class="period-tabs" id="periodTabs"></div>
-      <div class="queue-list" id="queueList">
+      <div class="queue-list" id="queueList"
+           ondragover="queueListDragOver(event)"
+           ondrop="queueListDrop(event)">
         <div class="empty-state">
           <div class="big-icon">🏒</div>
           <p>Legg til låter fra søket til venstre</p>
@@ -2049,45 +2051,89 @@ async function doSearch() {
   }
 }
 
+// Cache for search results so we don't need JSON in onclick
+const searchResultCache = {};
+
 function renderTrackResults(tracks) {
   const el = document.getElementById('resultsList');
   if (!tracks.length) { el.innerHTML = '<div class="empty-state"><div class="big-icon">🔍</div><p>Ingen resultater</p></div>'; return; }
+
+  // Cache tracks by id
+  tracks.forEach(t => { searchResultCache[t.id] = t; });
+
   el.innerHTML = tracks.map(t => {
-    const track = {id:t.id,name:t.name,artist:t.artists[0].name,duration:Math.round(t.duration_ms/1000),img:t.album.images[2]?.url||t.album.images[0]?.url||"",uri:t.uri};
-    const inLib = state.library.find(l => l.id === t.id);
-    const inQueue = getActiveQueue().find(q => q.id === t.id);
+    const inLib = !!state.library.find(l => l.id === t.id);
+    const inQueue = !!getActiveQueue().find(q => q.id === t.id);
     return `
-    <div class="result-item" ondblclick='addTrackToQueue(${JSON.stringify(track)})'>
+    <div class="result-item" ondblclick="addSearchTrackById('${t.id}')">
       <div class="result-thumb">${t.album.images[2] ? `<img src="${t.album.images[2].url}">` : '🎵'}</div>
       <div class="result-info">
         <div class="result-name">${esc(t.name)}</div>
         <div class="result-sub">${esc(t.artists[0].name)} · ${fmtTime(Math.round(t.duration_ms/1000))}${inLib ? ' <span style="color:var(--gold)">★</span>' : ''}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;align-items:center;">
-        <button class="add-btn" style="${inQueue ? 'background:rgba(34,204,102,0.15);border-color:var(--green);color:var(--green);' : ''}"
-          onclick='addTrackToQueue(${JSON.stringify(track)})' title="Legg til i kø">${inQueue ? '✓' : '+'}</button>
-        <button style="background:none;border:none;cursor:pointer;font-size:14px;color:${inLib ? 'var(--gold)' : 'var(--text-dim)'};padding:0;line-height:1;transition:color .2s;"
-          onclick='addSearchResultToLibrary(${JSON.stringify(track)}, this)' title="${inLib ? 'I biblioteket' : 'Lagre til bibliotek'}">${inLib ? '★' : '☆'}</button>
+        <button class="add-btn" id="srq-${t.id}"
+          style="${inQueue ? 'background:rgba(34,204,102,0.15);border-color:var(--green);color:var(--green);' : ''}"
+          onclick="addSearchTrackById('${t.id}')" title="Legg til i kø">${inQueue ? '✓' : '+'}</button>
+        <button id="srl-${t.id}"
+          style="background:none;border:none;cursor:pointer;font-size:16px;color:${inLib ? 'var(--gold)' : 'var(--text-dim)'};padding:0;line-height:1;transition:color .2s;"
+          onclick="saveSearchTrackToLibrary('${t.id}')" title="${inLib ? 'I biblioteket' : 'Lagre til bibliotek'}">${inLib ? '★' : '☆'}</button>
       </div>
     </div>
   `}).join('');
 }
 
-function addSearchResultToLibrary(track, btn) {
-  const existing = state.library.findIndex(l => l.id === track.id);
+function addSearchTrackById(id) {
+  const t = searchResultCache[id];
+  if (!t) return;
+  const track = {
+    id: t.id,
+    name: t.name,
+    artist: t.artists[0].name,
+    duration: Math.round(t.duration_ms / 1000),
+    img: t.album.images[2]?.url || t.album.images[0]?.url || '',
+    uri: t.uri
+  };
+  if (getActiveQueue().find(q => q.id === id)) {
+    showToast('Allerede i køen', 'error'); return;
+  }
+  addToQueue(track);
+  showToast(`+ ${track.name}`, 'success');
+  // Update button
+  const btn = document.getElementById('srq-' + id);
+  if (btn) { btn.textContent = '✓'; btn.style.background = 'rgba(34,204,102,0.15)'; btn.style.borderColor = 'var(--green)'; btn.style.color = 'var(--green)'; }
+}
+
+function saveSearchTrackToLibrary(id) {
+  const t = searchResultCache[id];
+  if (!t) return;
+  const track = {
+    id: t.id,
+    name: t.name,
+    artist: t.artists[0].name,
+    duration: Math.round(t.duration_ms / 1000),
+    img: t.album.images[2]?.url || t.album.images[0]?.url || '',
+    uri: t.uri
+  };
+  const existing = state.library.findIndex(l => l.id === id);
   const entry = {
     ...track,
-    settings: state.trackSettings[track.id] || { startTime: 0, endTime: track.duration, category: '', note: '', fadeOut: 0 },
+    settings: state.trackSettings[id] || { startTime: 0, endTime: track.duration, category: '', note: '', fadeOut: 0 },
     savedAt: Date.now(),
   };
-  if (existing >= 0) {
-    state.library[existing] = entry;
-  } else {
-    state.library.push(entry);
-  }
+  if (existing >= 0) state.library[existing] = entry;
+  else state.library.push(entry);
   saveState();
-  if (btn) { btn.textContent = '★'; btn.style.color = 'var(--gold)'; }
+  // Update star button immediately
+  const btn = document.getElementById('srl-' + id);
+  if (btn) { btn.textContent = '★'; btn.style.color = 'var(--gold)'; btn.title = 'I biblioteket'; }
+  // Update sub text star indicator
   showToast(`"${track.name}" lagret i biblioteket ✓`, 'success');
+}
+
+function addSearchResultToLibrary(track, btn) {
+  // Legacy — redirect to new function
+  if (btn) saveSearchTrackToLibrary(track.id);
 }
 
 function renderPeriodTabs() {
@@ -2151,6 +2197,37 @@ function renamePeriodMenu(id) {
 }
 
 // Track what is being dragged: 'track' or 'tab'
+// Makes the entire period-tabs bar a drop target — highlights nearest tab
+function periodTabsBarDragOver(e) {
+  if (dragType !== 'library' && dragType !== 'track') return;
+  e.preventDefault();
+  const tabs = [...document.querySelectorAll('.period-tab')];
+  let closest = null, closestDist = Infinity;
+  tabs.forEach(tab => {
+    const rect = tab.getBoundingClientRect();
+    const center = rect.left + rect.width / 2;
+    const dist = Math.abs(e.clientX - center);
+    if (dist < closestDist) { closestDist = dist; closest = tab; }
+  });
+  tabs.forEach(t => t.classList.remove('drag-over'));
+  closest?.classList.add('drag-over');
+}
+
+function periodTabsBarDrop(e) {
+  e.preventDefault();
+  const highlighted = document.querySelector('.period-tab.drag-over');
+  document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('drag-over'));
+  if (!highlighted) return;
+  const targetId = highlighted.id.replace('ptab-', '');
+  tabDrop(e, targetId);
+}
+
+function periodTabsBarDragLeave(e) {
+  if (!e.currentTarget.contains(e.relatedTarget)) {
+    document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('drag-over'));
+  }
+}
+
 let dragType = null;
 let dragTrackIdx = null;
 let tabDragSrc = null;
@@ -2394,6 +2471,25 @@ function renderQueue() {
       </div>
     `;
   }).join('');
+}
+
+// Allow dropping library items anywhere in the queue list area
+function queueListDragOver(e) {
+  if (dragType === 'library') {
+    e.preventDefault();
+    e.currentTarget.style.background = 'rgba(240,180,41,0.06)';
+  }
+}
+
+function queueListDrop(e) {
+  e.currentTarget.style.background = '';
+  if (dragType !== 'library' || !libDragId) return;
+  e.preventDefault();
+  e.stopPropagation();
+  addLibItemToQueue(libDragId);
+  libDragId = null;
+  dragType = null;
+  document.getElementById('periodTabs').classList.remove('drag-active');
 }
 
 // Drag & drop reorder within period
@@ -3151,6 +3247,7 @@ function libDragEnd() {
   libDragId = null;
   if (dragType === 'library') dragType = null;
   document.getElementById('periodTabs').classList.remove('drag-active');
+  document.getElementById('queueList').style.background = '';
 }
 
 function toggleLibrarySelect(id, e) {
