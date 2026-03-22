@@ -970,7 +970,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v31</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v32</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -1047,7 +1047,7 @@
         </div>
       </div>
       <!-- QUICK ACCESS BAR -->
-      <div id="quickBar" style="padding:5px 10px;border-bottom:1px solid var(--border);background:var(--bg);flex-shrink:0;align-items:center;gap:6px;display:none;">
+      <div id="quickBar" style="padding:5px 10px;border-bottom:1px solid var(--border);background:var(--bg);flex-shrink:0;align-items:center;gap:6px;display:flex;">
         <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);flex-shrink:0;">Hurtig</span>
         <div id="quickBarBtns" style="display:flex;gap:5px;flex-wrap:wrap;flex:1;align-items:center;"></div>
         <button class="quick-btn-add" onclick="openQuickAddPicker()" id="quickAddBtn" title="Legg til hurtigknapp">+ Legg til</button>
@@ -1134,7 +1134,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v31</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v32</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
@@ -1258,7 +1258,7 @@
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v31';
+const APP_VERSION = 'v32';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
@@ -2406,22 +2406,112 @@ function selectTrack(idx) {
     >${state.library.find(l => l.id === '${track.id}') ? '★ I biblioteket' : '☆ Lagre til bibliotek'}</button>
   `;
   renderQueue();
+  // Upgrade to real waveform async
+  upgradeWaveform(track.id, track.duration);
+}
+const waveCache = {}; // trackId → Float32Array of loudness values (0–1)
+
+async function fetchWaveData(trackId) {
+  if (waveCache[trackId]) return waveCache[trackId];
+  if (!state.token) return null;
+  try {
+    const data = await spotifyFetch(`https://api.spotify.com/v1/audio-analysis/${trackId}`);
+    // segments array has start, duration, loudness_max (dB, typically -60 to 0)
+    const segments = data.segments || [];
+    if (!segments.length) return null;
+    // Build 200-point loudness curve
+    const points = 200;
+    const totalDur = data.track?.duration || segments[segments.length-1].start + segments[segments.length-1].duration;
+    const values = new Float32Array(points);
+    segments.forEach(seg => {
+      const startI = Math.floor(seg.start / totalDur * points);
+      const endI = Math.min(points - 1, Math.ceil((seg.start + seg.duration) / totalDur * points));
+      // Normalize loudness: -60dB → 0, 0dB → 1
+      const norm = Math.max(0, Math.min(1, (seg.loudness_max + 60) / 60));
+      for (let i = startI; i <= endI; i++) values[i] = Math.max(values[i], norm);
+    });
+    waveCache[trackId] = values;
+    return values;
+  } catch(e) {
+    console.warn('Audio analysis failed for', trackId, e.message);
+    return null;
+  }
 }
 
-function generateWaveBars(trackId, duration) {
-  const count = 60;
-  const s = state.trackSettings[trackId] || {};
+function buildWaveBarsHTML(trackId, duration, values, count, height, settings) {
+  const s = settings || state.trackSettings[trackId] || {};
   const startPct = (s.startTime || 0) / duration;
   const endPct = (s.endTime || duration) / duration;
   let bars = '';
   for (let i = 0; i < count; i++) {
     const pct = i / count;
-    const h = 15 + Math.round(Math.random() * 70);
-    let cls = 'wave-bar';
-    if (pct < startPct || pct > endPct) cls += ' past';
-    bars += `<div class="${cls}" style="height:${h}%"></div>`;
+    let h;
+    if (values) {
+      // Sample from loudness curve
+      const idx = Math.floor(pct * values.length);
+      h = Math.max(8, Math.round(values[idx] * 90 + 8));
+    } else {
+      // Fallback: seeded pseudo-random
+      const seed = trackId.split('').reduce((a,c) => a + c.charCodeAt(0), 0);
+      h = 10 + Math.round((Math.sin(seed + i * 2.1) * 0.5 + 0.5) * 80);
+    }
+    const inRange = pct >= startPct && pct <= endPct;
+    if (height === 'small') {
+      // Library modal style
+      const color = inRange ? 'var(--accent)' : 'var(--text-faint)';
+      const opacity = inRange ? '0.75' : '0.3';
+      bars += `<div style="flex:1;background:${color};border-radius:1px;height:${h}%;opacity:${opacity};"></div>`;
+    } else {
+      // Main editor style using CSS classes
+      let cls = 'wave-bar';
+      if (!inRange) cls += ' past';
+      bars += `<div class="${cls}" style="height:${h}%"></div>`;
+    }
   }
   return bars;
+}
+
+async function generateWaveBarsAsync(trackId, duration, elId, markersElId, count = 60, style = 'main') {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const s = state.trackSettings[trackId] || {};
+  // Show immediately with cached or fallback
+  const cached = waveCache[trackId];
+  el.innerHTML = buildWaveBarsHTML(trackId, duration, cached || null, count, style, s);
+  if (markersElId) {
+    const mel = document.getElementById(markersElId);
+    if (mel) mel.innerHTML = style === 'small' ? lmWaveMarkers(s, duration) : renderWaveMarkers(s, duration);
+  }
+  if (!cached && state.token) {
+    const values = await fetchWaveData(trackId);
+    if (values && document.getElementById(elId)) {
+      document.getElementById(elId).innerHTML = buildWaveBarsHTML(trackId, duration, values, count, style, s);
+    }
+  }
+}
+
+function generateWaveBars(trackId, duration) {
+  // Synchronous fallback (used on initial render, async will update)
+  const s = state.trackSettings[trackId] || {};
+  const values = waveCache[trackId] || null;
+  return buildWaveBarsHTML(trackId, duration, values, 60, 'main', s);
+}
+
+// Async version — call after rendering to upgrade bars
+function upgradeWaveform(trackId, duration) {
+  generateWaveBarsAsync(trackId, duration, 'waveformBars', 'waveformMarkers', 60, 'main');
+}
+
+// lmGenerateWave now also uses real data
+function lmGenerateWave(trackId, duration) {
+  const s = state.trackSettings[trackId] || {};
+  const values = waveCache[trackId] || null;
+  return buildWaveBarsHTML(trackId, duration, values, 80, 'small', s);
+}
+
+// Upgrade lib modal waveform
+function upgradeLmWaveform(trackId, duration) {
+  generateWaveBarsAsync(trackId, duration, 'lmWaveBars', 'lmWaveMarkers', 80, 'small');
 }
 
 function renderWaveMarkers(s, duration) {
@@ -3149,8 +3239,8 @@ function renderQuickBar() {
   if (!state.quickButtons.length) {
     btns.innerHTML = '';
     // Show bar only if in edit mode
-    if (!quickEditMode) { bar.style.display = 'none'; return; }
     bar.style.display = 'flex';
+    btns.innerHTML = '<span style="font-size:11px;color:var(--text-faint);font-family:\'Barlow Condensed\',sans-serif;">Ingen hurtigknapper ennå — klikk + Legg til</span>';
     return;
   }
 
@@ -3770,28 +3860,11 @@ function renderLmEditor(track) {
         onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"
         oninput="lmSetNote('${track.id}',this.value)">${esc(s.note||'')}</textarea>
     </div>`;
+  // Upgrade waveform with real data async
+  upgradeLmWaveform(track.id, track.duration);
 }
 
-// Waveform for library modal
-function lmGenerateWave(trackId, duration) {
-  const count = 80;
-  const s = state.trackSettings[trackId] || {};
-  const startPct = (s.startTime || 0) / duration;
-  const endPct = (s.endTime || duration) / duration;
-  // Use seeded random for consistent bars per track
-  const seed = trackId.split('').reduce((a,c) => a + c.charCodeAt(0), 0);
-  let bars = '';
-  for (let i = 0; i < count; i++) {
-    const pct = i / count;
-    const r = Math.sin(seed + i * 2.1) * 0.5 + 0.5;
-    const h = 10 + Math.round(r * 85);
-    const inRange = pct >= startPct && pct <= endPct;
-    const color = inRange ? 'var(--accent)' : 'var(--text-faint)';
-    const opacity = inRange ? '0.7' : '0.3';
-    bars += `<div style="flex:1;background:${color};border-radius:1px;height:${h}%;opacity:${opacity};"></div>`;
-  }
-  return bars;
-}
+// Waveform for library modal — lmGenerateWave defined above in shared waveform section
 
 function lmWaveMarkers(s, duration) {
   const startPct = ((s.startTime || 0) / duration * 100).toFixed(1);
