@@ -766,12 +766,149 @@
   /* ─── PLAYING ANIMATION ──────────────────────────────────── */
   @keyframes paAnim { from { height: 4px; } to { height: 14px; } }
 
+  /* ─── QUICK BTN ──────────────────────────────────────────── */
+  .quick-btn {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px; font-weight: 600;
+    padding: 5px 10px; border-radius: 4px;
+    cursor: pointer; transition: all 0.12s;
+    display: flex; align-items: center; gap: 6px;
+    white-space: nowrap;
+  }
+  .quick-btn:hover { background: var(--accent); border-color: var(--accent); color: white; }
+  .quick-btn img { width:20px; height:20px; border-radius:3px; object-fit:cover; flex-shrink:0; }
+  .quick-btn.playing { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
   /* ─── RESIZE HANDLE ──────────────────────────────────────── */
   #resizeHandle {
     width: 6px; background: var(--border);
     cursor: col-resize; transition: background 0.2s; flex-shrink: 0;
   }
   #resizeHandle:hover { background: var(--accent); }
+
+  /* ─── LIBRARY MODAL ─────────────────────────────────────── */
+  .lib-modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(6px);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .lib-modal-overlay.open { opacity: 1; pointer-events: all; }
+  .lib-modal {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    width: min(1200px, 96vw);
+    height: min(820px, 92vh);
+    display: grid;
+    grid-template-rows: 52px 1fr;
+    overflow: hidden;
+    transform: translateY(12px);
+    transition: transform 0.2s;
+  }
+  .lib-modal-overlay.open .lib-modal { transform: translateY(0); }
+  .lib-modal-header {
+    display: flex; align-items: center;
+    padding: 0 20px; gap: 0;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .lib-modal-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 15px;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text); margin-right: 20px; flex-shrink: 0;
+  }
+  .lib-modal-tabs { display: flex; flex: 1; }
+  .lib-modal-tab {
+    padding: 0 18px; height: 52px;
+    background: none; border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-dim);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .lib-modal-tab:hover { color: var(--text); }
+  .lib-modal-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+  .lib-modal-tab .tab-count {
+    background: var(--bg-raised); color: var(--text-dim);
+    font-size: 11px; padding: 1px 7px; border-radius: 10px;
+  }
+  .lib-modal-tab.active .tab-count { background: var(--accent-dim); color: var(--accent); }
+  .lib-modal-close {
+    background: none; border: none; color: var(--text-dim);
+    font-size: 20px; cursor: pointer; padding: 6px 8px;
+    border-radius: 4px; transition: all 0.15s; line-height: 1; margin-left: auto;
+  }
+  .lib-modal-close:hover { color: var(--text); background: var(--bg-raised); }
+  .lib-modal-body {
+    display: grid;
+    grid-template-columns: 320px 1fr 300px;
+    overflow: hidden;
+  }
+  .lib-modal-col {
+    display: flex; flex-direction: column;
+    overflow: hidden; border-right: 1px solid var(--border);
+  }
+  .lib-modal-col:last-child { border-right: none; }
+  .lib-modal-col-header {
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-dim);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .lib-modal-scroll { flex: 1; overflow-y: auto; }
+  .lib-modal-scroll::-webkit-scrollbar { width: 3px; }
+  .lib-modal-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .lm-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 14px; cursor: pointer;
+    border-left: 2px solid transparent; transition: all 0.12s;
+  }
+  .lm-item:hover { background: var(--bg-hover); border-left-color: var(--border); }
+  .lm-item.selected { background: var(--accent-dim); border-left-color: var(--accent); }
+  .lm-thumb {
+    width: 42px; height: 42px; border-radius: 4px;
+    background: var(--bg-raised); flex-shrink: 0; overflow: hidden;
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+  .lm-thumb img { width:100%; height:100%; object-fit:cover; border-radius:4px; }
+  .lm-info { flex: 1; min-width: 0; }
+  .lm-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lm-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .lm-editor { padding: 16px; overflow-y: auto; flex: 1; }
+  .lm-editor::-webkit-scrollbar { width: 3px; }
+  .lm-editor::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .lm-editor-art {
+    width: 100%; aspect-ratio: 1; max-height: 220px;
+    border-radius: 6px; overflow: hidden;
+    background: var(--bg-raised); border: 1px solid var(--border);
+    margin-bottom: 12px; display: flex; align-items: center; justify-content: center;
+    font-size: 48px; color: var(--text-faint);
+  }
+  .lm-editor-art img { width:100%; height:100%; object-fit:cover; }
+  .lm-editor-title { font-family: 'Barlow Condensed', sans-serif; font-size: 19px; font-weight: 700; }
+  .lm-editor-artist { font-size: 12px; color: var(--text-dim); margin-top: 3px; margin-bottom: 14px; }
+  .lm-section { margin-bottom: 14px; }
+  .lm-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 6px;
+  }
 
 </style>
 </head>
@@ -782,7 +919,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v26</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v29</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -885,10 +1022,19 @@
           <button class="hdr-btn hdr-btn-gold"  onclick="resetSession()"         title="Nullstill avspilt-markering">Reset</button>
           <button class="hdr-btn hdr-btn-green" onclick="openSaveSetlistModal()" title="Lagre spilleliste">Lagre</button>
           <button class="hdr-btn hdr-btn-blue"  onclick="openLoadSetlistModal()" title="Åpne lagret spilleliste">Åpne</button>
+          <button class="hdr-btn" onclick="openLibModal()" title="Søk og bibliotek" style="border-color:var(--accent);color:var(--accent);">Bibliotek</button>
         </div>
       </div>
+      <!-- QUICK ACCESS BAR -->
+      <div id="quickBar" style="padding:6px 10px;border-bottom:1px solid var(--border);background:var(--bg);flex-shrink:0;flex-wrap:wrap;align-items:center;gap:6px;display:none;">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);flex-shrink:0;">Hurtig</span>
+        <div id="quickBarBtns" style="display:flex;gap:5px;flex-wrap:wrap;flex:1;"></div>
+      </div>
       <!-- PERIOD TABS -->
-      <div class="period-tabs" id="periodTabs"></div>
+      <div class="period-tabs" id="periodTabs"
+           ondragover="periodTabsBarDragOver(event)"
+           ondrop="periodTabsBarDrop(event)"
+           ondragleave="periodTabsBarDragLeave(event)"></div>
       <div class="queue-list" id="queueList"
            ondragover="queueListDragOver(event)"
            ondrop="queueListDrop(event)">
@@ -965,7 +1111,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v26</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v29</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
@@ -1003,11 +1149,95 @@
 </div>
 <div class="toast" id="toast"></div>
 
+<!-- LIBRARY MODAL -->
+<div class="lib-modal-overlay" id="libModal" onclick="if(event.target===this)closeLibModal()">
+  <div class="lib-modal">
+    <div class="lib-modal-header">
+      <span class="lib-modal-title">Bibliotek</span>
+      <div class="lib-modal-tabs">
+        <button class="lib-modal-tab active" id="lmTabSearch" onclick="switchLibModalTab('search')">Søk</button>
+        <button class="lib-modal-tab" id="lmTabLibrary" onclick="switchLibModalTab('library')">
+          Bibliotek <span class="tab-count" id="lmLibCount">0</span>
+        </button>
+      </div>
+      <button class="lib-modal-close" onclick="closeLibModal()">&#x2715;</button>
+    </div>
+    <div class="lib-modal-body">
+
+      <!-- COL 1: Search or Library list -->
+      <div class="lib-modal-col">
+        <!-- SEARCH VIEW -->
+        <div id="lmSearchView" style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
+          <div class="lib-modal-col-header">
+            Søk i Spotify
+          </div>
+          <div style="padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0;">
+            <div class="search-input-wrap">
+              <input type="text" id="lmSearchInput" placeholder="Søk etter låter..."
+                onkeydown="if(event.key==='Enter') doLibModalSearch()">
+              <button onclick="doLibModalSearch()">Søk</button>
+            </div>
+          </div>
+          <div class="lib-modal-scroll" id="lmSearchResults">
+            <div class="empty-state"><div class="big-icon">—</div><p>Søk etter låter</p></div>
+          </div>
+        </div>
+        <!-- LIBRARY VIEW -->
+        <div id="lmLibraryView" style="display:none;flex-direction:column;height:100%;overflow:hidden;">
+          <div class="lib-modal-col-header">
+            <span>Lagrede sanger</span>
+          </div>
+          <div style="padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:6px;">
+            <div class="search-input-wrap">
+              <input type="text" id="lmLibFilter" placeholder="Filtrer..." oninput="renderLibModalList()">
+            </div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              <button class="lib-cat-filter active" data-lmcat="" onclick="setLmCatFilter('',this)">Alle</button>
+              <button class="lib-cat-filter" data-lmcat="goal" onclick="setLmCatFilter('goal',this)">Mål</button>
+              <button class="lib-cat-filter" data-lmcat="powerplay" onclick="setLmCatFilter('powerplay',this)">PP</button>
+              <button class="lib-cat-filter" data-lmcat="intro" onclick="setLmCatFilter('intro',this)">Intro</button>
+              <button class="lib-cat-filter" data-lmcat="pump" onclick="setLmCatFilter('pump',this)">Pump</button>
+              <button class="lib-cat-filter" data-lmcat="timeout" onclick="setLmCatFilter('timeout',this)">Timeout</button>
+              <button class="lib-cat-filter" data-lmcat="__none__" onclick="setLmCatFilter('__none__',this)">Ingen</button>
+            </div>
+          </div>
+          <div class="lib-modal-scroll" id="lmLibraryList">
+            <div class="empty-state"><div class="big-icon">—</div><p>Biblioteket er tomt</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COL 2: Editor -->
+      <div class="lib-modal-col" style="display:flex;flex-direction:column;">
+        <div class="lib-modal-col-header">
+          <span id="lmEditorColLabel">Velg en sang</span>
+          <div style="display:flex;gap:6px;" id="lmEditorColActions"></div>
+        </div>
+        <div class="lm-editor" id="lmEditor">
+          <div class="empty-state" style="height:100%;justify-content:center;">
+            <div class="big-icon">—</div>
+            <p>Klikk en sang for å redigere<br>start/stopp, kategori og notat</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- COL 3: Queue / period selector -->
+      <div class="lib-modal-col">
+        <div class="lib-modal-col-header">Legg til i periode</div>
+        <div class="lib-modal-scroll" id="lmPeriodList">
+          <div class="empty-state"><div class="big-icon">—</div><p>Velg en sang først</p></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <script>
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v26';
+const APP_VERSION = 'v29';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
@@ -1493,6 +1723,7 @@ function addSearchTrackById(id) {
     artist: t.artists[0].name,
     duration: Math.round(t.duration_ms / 1000),
     img: t.album.images[2]?.url || t.album.images[0]?.url || '',
+    imgLg: t.album.images[0]?.url || t.album.images[1]?.url || '',
     uri: t.uri
   };
   if (getActiveQueue().find(q => q.id === id)) {
@@ -1514,6 +1745,7 @@ function saveSearchTrackToLibrary(id) {
     artist: t.artists[0].name,
     duration: Math.round(t.duration_ms / 1000),
     img: t.album.images[2]?.url || t.album.images[0]?.url || '',
+    imgLg: t.album.images[0]?.url || t.album.images[1]?.url || '',
     uri: t.uri
   };
   const existing = state.library.findIndex(l => l.id === id);
@@ -1833,8 +2065,9 @@ function removeFromQueue(idx) {
 function renderQueue() {
   const el = document.getElementById('queueList');
   const totalAll = state.periods.reduce((sum, p) => sum + p.queue.length, 0);
+  renderQuickBar();
 
-  // All-tab: show all tracks across periods
+  // All-tab: flat list, each track once, with period labels
   if (state.activePeriodId === ALL_PERIOD_ID) {
     document.getElementById('queueCount').textContent = `${totalAll} låter totalt`;
     renderPeriodTabs();
@@ -1842,38 +2075,52 @@ function renderQueue() {
       el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Ingen låter ennå</p></div>';
       return;
     }
-    // Build flat list with period badges
-    let html = '';
-    let globalIdx = 0;
+
+    // Build map: trackId → [periodNames]
+    const trackPeriods = {};
     state.periods.forEach(p => {
-      if (!p.queue.length) return;
-      html += `<div style="padding:6px 12px 4px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);background:var(--rink);border-bottom:1px solid var(--panel-border);">${esc(p.name)}</div>`;
-      p.queue.forEach((t, i) => {
-        const s = state.trackSettings[t.id] || {};
-        const isPlayed = state.playedTracks.includes(t.id);
-        const catColor = getCatColor(s.category);
-        const startSecs = s.startTime || 0;
-        const endSecs = s.endTime || t.duration;
-        html += `
-          <div class="queue-item${isPlayed ? ' played' : ''}" style="opacity:${isPlayed?'0.6':'1'};">
-            <span style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--text-dim);width:22px;text-align:right;flex-shrink:0;">${i+1}</span>
-            <div class="track-thumb">${t.img ? `<img src="${t.img}">` : '🎵'}</div>
-            <div class="track-info">
-              <div class="track-name">${esc(t.name)}</div>
-              <div class="track-artist">
-                <span>${esc(t.artist)}</span>
-                ${s.category ? `<span style="color:${catColor};font-size:11px;margin-left:4px">${s.category}</span>` : ''}
-              </div>
-              <div class="track-times">
-                <span class="${startSecs > 0 ? 'time-tag start-tag' : 'time-tag'}">▶ ${fmtTime(startSecs)}</span>
-                <span class="${s.endTime && s.endTime < t.duration ? 'time-tag end-tag' : 'time-tag'}">■ ${fmtTime(endSecs)}</span>
-                ${isPlayed ? '<span class="played-tag">Spilt</span>' : ''}
-              </div>
-            </div>
-          </div>`;
+      p.queue.forEach(t => {
+        if (!trackPeriods[t.id]) trackPeriods[t.id] = { track: t, periods: [] };
+        trackPeriods[t.id].periods.push(p.name);
       });
     });
-    el.innerHTML = html;
+
+    // Flat sorted list (order: first appearance across periods)
+    const seen = new Set();
+    const flat = [];
+    state.periods.forEach(p => {
+      p.queue.forEach(t => {
+        if (!seen.has(t.id)) { seen.add(t.id); flat.push(t); }
+      });
+    });
+
+    el.innerHTML = flat.map((t, i) => {
+      const s = state.trackSettings[t.id] || {};
+      const isPlayed = state.playedTracks.includes(t.id);
+      const periods = trackPeriods[t.id]?.periods || [];
+      const isDuplicate = periods.length > 1;
+      const periodLabel = periods.join(' · ');
+      const startSecs = s.startTime || 0;
+      const endSecs = s.endTime || t.duration;
+      return `
+        <div class="queue-item${isPlayed ? ' played' : ''}">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--text-faint);width:20px;text-align:right;flex-shrink:0;">${i+1}</span>
+          <div class="track-thumb">${t.img ? `<img src="${t.img}">` : ''}</div>
+          <div class="track-info">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div class="track-name">${esc(t.name)}</div>
+              ${isDuplicate ? `<span title="Finnes i ${periods.length} perioder" style="color:var(--gold);font-size:12px;font-weight:700;flex-shrink:0;">!</span>` : ''}
+              ${s.category ? `<span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--accent);background:var(--accent-dim);padding:1px 6px;border-radius:3px;">${s.category}</span>` : ''}
+            </div>
+            <div class="track-artist">${esc(t.artist)}</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--text-faint);margin-top:2px;letter-spacing:0.3px;">${periodLabel}</div>
+          </div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--text-faint);flex-shrink:0;text-align:right;">
+            ${startSecs > 0 ? `<span style="color:var(--green)">${fmtTime(startSecs)}</span>` : ''}
+            ${s.endTime && s.endTime < t.duration ? `<span style="color:var(--red);margin-left:4px;">${fmtTime(endSecs)}</span>` : ''}
+          </div>
+        </div>`;
+    }).join('');
     return;
   }
 
@@ -1910,9 +2157,15 @@ function renderQueue() {
                </span>`
             : `<span style="color:${isLoaded ? 'var(--ice)' : isPlayed ? 'var(--text-dim)' : 'var(--text-dim)'}">▶</span>`}
         </button>
-        <div class="track-thumb">${t.img ? `<img src="${t.img}">` : '🎵'}</div>
+        <div class="track-thumb">${t.img ? `<img src="${t.img}">` : ''}</div>
         <div class="track-info">
-          <div class="track-name" style="${isPlayed && !isPlaying ? 'opacity:0.5' : ''}">${esc(t.name)}</div>
+          ${(() => {
+            const otherPeriods = state.periods.filter(p => p.id !== state.activePeriodId && p.queue.find(q => q.id === t.id));
+            const dupWarning = otherPeriods.length > 0
+              ? `<span title="Finnes også i: ${otherPeriods.map(p=>p.name).join(', ')}" style="color:var(--gold);font-size:11px;font-weight:700;cursor:help;">!</span>`
+              : '';
+            return `<div class="track-name" style="${isPlayed && !isPlaying ? 'opacity:0.5' : ''};display:flex;align-items:center;gap:5px;">${esc(t.name)}${dupWarning}</div>`;
+          })()}
           <div class="track-artist" style="display:flex;align-items:center;gap:6px;">
             <span style="${isPlayed && !isPlaying ? 'opacity:0.5' : ''}">${esc(t.artist)}</span>
             ${s.category ? `<span style="color:${catColor};font-size:10px">${s.category}</span>` : ''}
@@ -1990,6 +2243,17 @@ function dragStart(e, i) {
   e.dataTransfer.effectAllowed = 'move';
   e.dataTransfer.setData('text/plain', 'track:' + i);
   document.getElementById('periodTabs').classList.add('drag-active');
+
+  // Custom drag ghost: just the album art
+  const track = getActiveQueue()[i];
+  const ghost = document.createElement('div');
+  ghost.style.cssText = 'position:fixed;top:-200px;left:-200px;width:48px;height:48px;border-radius:4px;overflow:hidden;background:var(--bg-raised);border:1px solid var(--border);';
+  if (track?.img) {
+    ghost.innerHTML = `<img src="${track.img}" style="width:100%;height:100%;object-fit:cover;">`;
+  }
+  document.body.appendChild(ghost);
+  e.dataTransfer.setDragImage(ghost, 24, 24);
+  setTimeout(() => ghost.remove(), 0);
 }
 function dragDrop(e, i) {
   document.getElementById('periodTabs').classList.remove('drag-active');
@@ -2035,7 +2299,7 @@ function selectTrack(idx) {
   const s = state.trackSettings[track.id] || { startTime: 0, endTime: track.duration, category: '' };
 
   document.getElementById('editorContent').innerHTML = `
-    <div class="editor-thumb">${track.img ? `<img src="${track.img}">` : '🎵'}</div>
+    <div class="editor-thumb">${(track.imgLg || track.img) ? `<img src="${track.imgLg || track.img}">` : ''}</div>
     <div class="editor-title">${esc(track.name)}</div>
     <div class="editor-artist">${esc(track.artist)} · ${fmtTime(track.duration)}</div>
 
@@ -2368,7 +2632,7 @@ function stopTicker() { clearInterval(_ticker); _ticker = null; }
 // UI UPDATES
 // ============================================================
 function updatePlayerBar(track, s) {
-  document.getElementById('npThumb').innerHTML = track.img ? `<img src="${track.img}">` : '🎵';
+  document.getElementById('npThumb').innerHTML = (track.imgLg || track.img) ? `<img src="${track.imgLg || track.img}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">` : '';
   document.getElementById('npTitle').textContent = track.name;
   document.getElementById('npArtist').textContent = track.artist;
   const cat = s.category;
@@ -2749,6 +3013,17 @@ function libDragStart(e, id) {
   e.dataTransfer.effectAllowed = 'copy';
   e.dataTransfer.setData('text/plain', 'library:' + id);
   document.getElementById('periodTabs').classList.add('drag-active');
+
+  // Custom drag ghost: album art only
+  const entry = state.library.find(l => l.id === id);
+  const ghost = document.createElement('div');
+  ghost.style.cssText = 'position:fixed;top:-200px;left:-200px;width:48px;height:48px;border-radius:4px;overflow:hidden;background:var(--bg-raised);border:1px solid var(--border);';
+  if (entry?.img) {
+    ghost.innerHTML = `<img src="${entry.img}" style="width:100%;height:100%;object-fit:cover;">`;
+  }
+  document.body.appendChild(ghost);
+  e.dataTransfer.setDragImage(ghost, 24, 24);
+  setTimeout(() => ghost.remove(), 0);
 }
 
 function libDragEnd() {
@@ -2823,6 +3098,84 @@ function addSelectedToQueue() {
     showToast(`+${added} låter lagt til i kø ✓`, 'success');
   }
   clearLibrarySelection();
+}
+
+// ============================================================
+// ============================================================
+// QUICK ACCESS BAR
+// ============================================================
+function renderQuickBar() {
+  const bar = document.getElementById('quickBar');
+  const btns = document.getElementById('quickBarBtns');
+  if (!bar || !btns) return;
+
+  // Collect all tracks that have a category, deduplicated
+  const seen = new Set();
+  const items = [];
+  state.periods.forEach(p => {
+    p.queue.forEach(t => {
+      if (!seen.has(t.id)) {
+        seen.add(t.id);
+        const s = state.trackSettings[t.id] || {};
+        if (s.category) items.push({ track: t, settings: s });
+      }
+    });
+  });
+
+  if (!items.length) {
+    bar.style.display = 'none';
+    return;
+  }
+
+  bar.style.display = 'flex';
+
+  // Category order
+  const catOrder = ['goal','powerplay','intro','pump','timeout'];
+  items.sort((a, b) => {
+    const ai = catOrder.indexOf(a.settings.category);
+    const bi = catOrder.indexOf(b.settings.category);
+    return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+  });
+
+  btns.innerHTML = items.map(({track: t, settings: s}) => {
+    const label = s.note ? s.note.split(' ').slice(0,3).join(' ') : t.name.split(' ').slice(0,2).join(' ');
+    const isNowPlaying = state.isPlaying && getActivePeriodForTrack(t.id) !== null &&
+      state.periods.some(p => p.queue[state.currentIndex]?.id === t.id);
+    return `<button class="quick-btn${isNowPlaying ? ' playing' : ''}"
+      onclick="quickPlay('${t.id}')"
+      title="${esc(t.name)} — ${s.category}${s.note ? ' · ' + s.note : ''}">
+      ${t.img ? `<img src="${t.img}">` : ''}
+      <span>${esc(label)}</span>
+      <span style="font-size:10px;opacity:0.6;">${s.category}</span>
+    </button>`;
+  }).join('');
+}
+
+function getActivePeriodForTrack(trackId) {
+  for (const p of state.periods) {
+    if (p.queue.find(t => t.id === trackId)) return p;
+  }
+  return null;
+}
+
+async function quickPlay(trackId) {
+  // Find which period has this track and its index
+  for (const p of state.periods) {
+    const idx = p.queue.findIndex(t => t.id === trackId);
+    if (idx >= 0) {
+      // Temporarily switch to that period's context but don't change the UI tab
+      const prevPeriodId = state.activePeriodId;
+      state.activePeriodId = p.id;
+      await playTrack(idx);
+      state.currentPeriodId = p.id;
+      // Restore the tab the user was viewing
+      state.activePeriodId = prevPeriodId;
+      renderPeriodTabs();
+      renderQueue();
+      return;
+    }
+  }
+  showToast('Sang ikke funnet i noen periode', 'error');
 }
 
 // ============================================================
@@ -2958,6 +3311,378 @@ function toggleFullscreen() {
   } else {
     document.exitFullscreen().catch(() => {});
   }
+}
+
+// ============================================================
+// LIBRARY MODAL
+// ============================================================
+let lmActiveTab = 'search';
+let lmSelectedTrack = null; // { id, name, artist, duration, img, imgLg, uri, source: 'search'|'library' }
+let lmCatFilter = '';
+let lmSearchCache = [];
+
+function openLibModal() {
+  document.getElementById('libModal').classList.add('open');
+  renderLibModalList();
+  document.getElementById('lmLibCount').textContent = state.library.length;
+  document.getElementById('lmSearchInput').focus();
+  // Close on Escape
+  document.addEventListener('keydown', lmEscHandler);
+}
+
+function closeLibModal() {
+  document.getElementById('libModal').classList.remove('open');
+  document.removeEventListener('keydown', lmEscHandler);
+}
+
+function lmEscHandler(e) {
+  if (e.key === 'Escape') closeLibModal();
+}
+
+function switchLibModalTab(tab) {
+  lmActiveTab = tab;
+  document.getElementById('lmSearchView').style.display = tab === 'search' ? 'flex' : 'none';
+  document.getElementById('lmLibraryView').style.display = tab === 'library' ? 'flex' : 'none';
+  document.getElementById('lmTabSearch').classList.toggle('active', tab === 'search');
+  document.getElementById('lmTabLibrary').classList.toggle('active', tab === 'library');
+  if (tab === 'library') renderLibModalList();
+}
+
+function setLmCatFilter(cat, btn) {
+  lmCatFilter = cat;
+  document.querySelectorAll('[data-lmcat]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLibModalList();
+}
+
+// SEARCH
+async function doLibModalSearch() {
+  const q = document.getElementById('lmSearchInput').value.trim();
+  if (!q) return;
+  if (!state.token) { showToast('Logg inn med Spotify først', 'error'); return; }
+  const el = document.getElementById('lmSearchResults');
+  el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Søker...</p></div>';
+  try {
+    const data = await spotifyFetch(
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=20&market=NO`
+    );
+    const tracks = data.tracks?.items || [];
+    lmSearchCache = tracks;
+    if (!tracks.length) {
+      el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Ingen resultater</p></div>';
+      return;
+    }
+    el.innerHTML = tracks.map(t => {
+      const inLib = !!state.library.find(l => l.id === t.id);
+      return `
+        <div class="lm-item${lmSelectedTrack?.id === t.id ? ' selected' : ''}" id="lmsi-${t.id}"
+             onclick="lmSelectSearchTrack('${t.id}')">
+          <div class="lm-thumb">${t.album.images[2] ? `<img src="${t.album.images[2].url}">` : ''}</div>
+          <div class="lm-info">
+            <div class="lm-name">${esc(t.name)}</div>
+            <div class="lm-sub">${esc(t.artists[0].name)} · ${fmtTime(Math.round(t.duration_ms/1000))}${inLib ? ' ·  <span style="color:var(--gold)">★</span>' : ''}</div>
+          </div>
+        </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = `<div class="empty-state"><div class="big-icon">—</div><p>${e.message}</p></div>`;
+  }
+}
+
+function lmSelectSearchTrack(id) {
+  const t = lmSearchCache.find(t => t.id === id);
+  if (!t) return;
+  // Highlight
+  document.querySelectorAll('#lmSearchResults .lm-item').forEach(el => el.classList.remove('selected'));
+  document.getElementById('lmsi-' + id)?.classList.add('selected');
+  const track = {
+    id: t.id, name: t.name, artist: t.artists[0].name,
+    duration: Math.round(t.duration_ms/1000),
+    img: t.album.images[2]?.url || t.album.images[0]?.url || '',
+    imgLg: t.album.images[0]?.url || '',
+    uri: t.uri, source: 'search'
+  };
+  lmSelectedTrack = track;
+  // Check if already in library — if so, load existing settings
+  const libEntry = state.library.find(l => l.id === id);
+  if (libEntry) {
+    lmSelectedTrack = { ...track, ...libEntry, source: 'search' };
+    if (!state.trackSettings[id]) state.trackSettings[id] = libEntry.settings || { startTime: 0, endTime: track.duration, category: '', note: '', fadeOut: 0 };
+  } else {
+    if (!state.trackSettings[id]) state.trackSettings[id] = { startTime: 0, endTime: track.duration, category: '', note: '', fadeOut: 0 };
+  }
+  renderLmEditor(lmSelectedTrack);
+  renderLmPeriodList(lmSelectedTrack);
+}
+
+// LIBRARY LIST
+function renderLibModalList() {
+  const el = document.getElementById('lmLibraryList');
+  const filter = (document.getElementById('lmLibFilter')?.value || '').toLowerCase();
+  const items = state.library.filter(l => {
+    if (filter && !l.name.toLowerCase().includes(filter) && !l.artist.toLowerCase().includes(filter)) return false;
+    if (lmCatFilter === '__none__') return !l.settings?.category;
+    if (lmCatFilter) return l.settings?.category === lmCatFilter;
+    return true;
+  });
+  document.getElementById('lmLibCount').textContent = state.library.length;
+  if (!items.length) {
+    el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Ingen sanger</p></div>';
+    return;
+  }
+  el.innerHTML = items.map(l => {
+    const s = l.settings || {};
+    const inPeriods = state.periods.filter(p => p.queue.find(t => t.id === l.id));
+    return `
+      <div class="lm-item${lmSelectedTrack?.id === l.id ? ' selected' : ''}" id="lmli-${l.id}"
+           onclick="lmSelectLibTrack('${l.id}')">
+        <div class="lm-thumb">${l.img ? `<img src="${l.img}">` : ''}</div>
+        <div class="lm-info">
+          <div class="lm-name">${esc(l.name)}</div>
+          <div class="lm-sub">${esc(l.artist)}${s.category ? ` · <span style="color:var(--accent)">${s.category}</span>` : ''}</div>
+          ${inPeriods.length ? `<div style="font-size:10px;color:var(--text-faint);margin-top:2px;">${inPeriods.map(p=>esc(p.name)).join(' · ')}</div>` : ''}
+        </div>
+        <button onclick="event.stopPropagation();removeFromLibraryModal('${l.id}')"
+          style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:12px;padding:4px;transition:color .15s;flex-shrink:0;"
+          onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-faint)'">✕</button>
+      </div>`;
+  }).join('');
+}
+
+function lmSelectLibTrack(id) {
+  const entry = state.library.find(l => l.id === id);
+  if (!entry) return;
+  document.querySelectorAll('#lmLibraryList .lm-item').forEach(el => el.classList.remove('selected'));
+  document.getElementById('lmli-' + id)?.classList.add('selected');
+  lmSelectedTrack = { ...entry, source: 'library' };
+  if (!state.trackSettings[id]) state.trackSettings[id] = entry.settings || { startTime: 0, endTime: entry.duration, category: '', note: '', fadeOut: 0 };
+  else if (entry.settings) Object.assign(state.trackSettings[id], entry.settings);
+  renderLmEditor(lmSelectedTrack);
+  renderLmPeriodList(lmSelectedTrack);
+}
+
+function removeFromLibraryModal(id) {
+  const entry = state.library.find(l => l.id === id);
+  if (!entry) return;
+  if (!confirm(`Fjerne "${entry.name}" fra biblioteket?`)) return;
+  state.library = state.library.filter(l => l.id !== id);
+  if (lmSelectedTrack?.id === id) {
+    lmSelectedTrack = null;
+    document.getElementById('lmEditor').innerHTML = '<div class="empty-state" style="height:100%;justify-content:center;"><div class="big-icon">—</div><p>Velg en sang</p></div>';
+    document.getElementById('lmPeriodList').innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Velg en sang</p></div>';
+  }
+  saveState();
+  renderLibModalList();
+  renderLibrary(); // update sidebar too
+  showToast('Fjernet fra biblioteket', '');
+}
+
+// EDITOR
+function renderLmEditor(track) {
+  const s = state.trackSettings[track.id] || { startTime: 0, endTime: track.duration, category: '', note: '', fadeOut: 0 };
+  const inLib = !!state.library.find(l => l.id === track.id);
+
+  document.getElementById('lmEditorColLabel').textContent = track.name.length > 22 ? track.name.slice(0,22)+'…' : track.name;
+
+  // Actions
+  document.getElementById('lmEditorColActions').innerHTML = `
+    <button onclick="lmPlayTrack('${track.id}')"
+      style="background:none;border:1px solid var(--border);color:var(--text-dim);padding:4px 12px;border-radius:4px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;transition:all .15s;"
+      onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+      onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'"
+      id="lmPlayBtn">&#9654; Spill</button>
+    <button onclick="lmSaveToLibrary('${track.id}')"
+      style="background:${inLib ? 'var(--accent-dim)' : 'none'};border:1px solid ${inLib ? 'var(--accent)' : 'var(--border)'};color:${inLib ? 'var(--accent)' : 'var(--text-dim)'};padding:4px 12px;border-radius:4px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;transition:all .15s;"
+      id="lmSaveBtn">${inLib ? '★ Oppdater' : '☆ Lagre'}</button>`;
+
+  document.getElementById('lmEditor').innerHTML = `
+    <div class="lm-editor-art">${(track.imgLg || track.img) ? `<img src="${track.imgLg || track.img}">` : ''}</div>
+    <div class="lm-editor-title">${esc(track.name)}</div>
+    <div class="lm-editor-artist">${esc(track.artist)} · ${fmtTime(track.duration)}</div>
+
+    <div class="lm-section">
+      <div class="lm-label">Tidspunkter</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div>
+          <label style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--green);display:block;margin-bottom:4px;">Start</label>
+          <div style="display:flex;gap:4px;align-items:center;">
+            <button onclick="lmNudge('${track.id}','start',-1,${track.duration})" class="nudge-btn">−1</button>
+            <button onclick="lmNudge('${track.id}','start',-0.1,${track.duration})" class="nudge-btn">−.1</button>
+            <input type="text" id="lmStartInput" value="${fmtTimeFine(s.startTime)}"
+              onchange="lmUpdateTime('${track.id}','start',this.value,${track.duration})"
+              style="flex:1;background:var(--bg-raised);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:6px 8px;font-family:'Barlow Condensed',sans-serif;font-size:14px;outline:none;transition:border-color .2s;"
+              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+            <button onclick="lmNudge('${track.id}','start',0.1,${track.duration})" class="nudge-btn">+.1</button>
+            <button onclick="lmNudge('${track.id}','start',1,${track.duration})" class="nudge-btn">+1</button>
+          </div>
+        </div>
+        <div>
+          <label style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--red);display:block;margin-bottom:4px;">Stopp</label>
+          <div style="display:flex;gap:4px;align-items:center;">
+            <button onclick="lmNudge('${track.id}','end',-1,${track.duration})" class="nudge-btn">−1</button>
+            <button onclick="lmNudge('${track.id}','end',-0.1,${track.duration})" class="nudge-btn">−.1</button>
+            <input type="text" id="lmEndInput" value="${fmtTimeFine(s.endTime || track.duration)}"
+              onchange="lmUpdateTime('${track.id}','end',this.value,${track.duration})"
+              style="flex:1;background:var(--bg-raised);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:6px 8px;font-family:'Barlow Condensed',sans-serif;font-size:14px;outline:none;transition:border-color .2s;"
+              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+            <button onclick="lmNudge('${track.id}','end',0.1,${track.duration})" class="nudge-btn">+.1</button>
+            <button onclick="lmNudge('${track.id}','end',1,${track.duration})" class="nudge-btn">+1</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lm-section">
+      <div class="lm-label">Kategori</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;">
+        ${['goal','powerplay','intro','pump','timeout'].map(cat => `
+          <button onclick="lmSetCategory('${track.id}','${cat}',this)"
+            style="padding:5px 12px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);transition:all .12s;background:${s.category===cat?'var(--accent)':'none'};color:${s.category===cat?'white':'var(--text-dim)'};"
+            data-lmcat-pill="${cat}">${cat}</button>`).join('')}
+      </div>
+    </div>
+
+    <div class="lm-section">
+      <div class="lm-label">Fade ut (sekunder)</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input type="range" min="0" max="10" step="1" value="${s.fadeOut||0}" id="lmFadeSlider"
+          oninput="lmSetFade('${track.id}',this.value);document.getElementById('lmFadeVal').textContent=this.value+'s'"
+          style="-webkit-appearance:none;flex:1;height:3px;background:var(--bg-raised);border-radius:2px;outline:none;cursor:pointer;">
+        <span id="lmFadeVal" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--text-dim);width:28px;">${s.fadeOut||0}s</span>
+      </div>
+    </div>
+
+    <div class="lm-section">
+      <div class="lm-label">Notat</div>
+      <textarea id="lmNoteInput" placeholder="F.eks. mål, utvisning, icing..."
+        style="width:100%;background:var(--bg-raised);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:8px;font-family:'Barlow',sans-serif;font-size:13px;resize:vertical;min-height:52px;outline:none;transition:border-color .2s;"
+        onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"
+        oninput="lmSetNote('${track.id}',this.value)">${esc(s.note||'')}</textarea>
+    </div>`;
+}
+
+function lmNudge(trackId, type, delta, duration) {
+  const s = state.trackSettings[trackId];
+  if (!s) return;
+  if (type === 'start') {
+    s.startTime = Math.round(Math.max(0, Math.min((s.startTime||0)+delta, (s.endTime||duration)-0.1))*10)/10;
+    const el = document.getElementById('lmStartInput');
+    if (el) el.value = fmtTimeFine(s.startTime);
+  } else {
+    s.endTime = Math.round(Math.max((s.startTime||0)+0.1, Math.min((s.endTime||duration)+delta, duration))*10)/10;
+    const el = document.getElementById('lmEndInput');
+    if (el) el.value = fmtTimeFine(s.endTime);
+  }
+}
+
+function lmUpdateTime(trackId, type, val, duration) {
+  const secs = parseTimeInput(val);
+  if (isNaN(secs)) return;
+  const s = state.trackSettings[trackId];
+  if (!s) return;
+  if (type === 'start') s.startTime = Math.max(0, Math.min(secs, duration-0.1));
+  else s.endTime = Math.max(0.1, Math.min(secs, duration));
+}
+
+function lmSetCategory(trackId, cat, btn) {
+  const s = state.trackSettings[trackId];
+  if (!s) return;
+  const same = s.category === cat;
+  s.category = same ? '' : cat;
+  document.querySelectorAll('[data-lmcat-pill]').forEach(b => {
+    b.style.background = b.getAttribute('data-lmcat-pill') === s.category ? 'var(--accent)' : 'none';
+    b.style.color = b.getAttribute('data-lmcat-pill') === s.category ? 'white' : 'var(--text-dim)';
+  });
+}
+
+function lmSetFade(trackId, val) {
+  const s = state.trackSettings[trackId];
+  if (s) s.fadeOut = parseInt(val);
+}
+
+function lmSetNote(trackId, val) {
+  const s = state.trackSettings[trackId];
+  if (s) s.note = val;
+}
+
+function lmSaveToLibrary(trackId) {
+  const track = lmSelectedTrack;
+  if (!track) return;
+  const s = state.trackSettings[trackId] || {};
+  const existing = state.library.findIndex(l => l.id === trackId);
+  const entry = {
+    id: track.id, name: track.name, artist: track.artist,
+    duration: track.duration, img: track.img, imgLg: track.imgLg||'',
+    uri: track.uri,
+    settings: JSON.parse(JSON.stringify(s)),
+    savedAt: Date.now(),
+  };
+  if (existing >= 0) state.library[existing] = entry;
+  else state.library.push(entry);
+  saveState();
+  renderLibModalList();
+  renderLibrary();
+  showToast(`"${track.name}" lagret i biblioteket ✓`, 'success');
+  // Update save button
+  const btn = document.getElementById('lmSaveBtn');
+  if (btn) { btn.textContent = '★ Oppdater'; btn.style.background = 'var(--accent-dim)'; btn.style.borderColor = 'var(--accent)'; btn.style.color = 'var(--accent)'; }
+  document.getElementById('lmLibCount').textContent = state.library.length;
+}
+
+async function lmPlayTrack(trackId) {
+  // Play using the existing playback engine — search cache or library
+  const track = lmSelectedTrack;
+  if (!track || !track.uri) { showToast('Ingen sang valgt', 'error'); return; }
+  if (!state.player || !state.deviceId) { showToast('Spotify ikke klar', 'error'); return; }
+  const s = state.trackSettings[trackId] || {};
+  const startMs = (s.startTime || 0) * 1000;
+  try {
+    await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${state.deviceId}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${state.token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uris: [track.uri], position_ms: startMs })
+    });
+    showToast(`Spiller: ${track.name}`, 'success');
+  } catch(e) { showToast('Avspilling feilet', 'error'); }
+}
+
+// PERIOD LIST — lets you add selected track to any period
+function renderLmPeriodList(track) {
+  const el = document.getElementById('lmPeriodList');
+  if (!track) { el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Velg en sang</p></div>'; return; }
+  el.innerHTML = state.periods.map(p => {
+    const inPeriod = !!p.queue.find(t => t.id === track.id);
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border);gap:10px;">
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;">${esc(p.name)}</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">${p.queue.length} låter</div>
+        </div>
+        <button onclick="lmAddToPeriod('${track.id}','${p.id}')"
+          style="background:${inPeriod?'var(--bg-raised)':'var(--accent)'};border:1px solid ${inPeriod?'var(--border)':'var(--accent)'};color:${inPeriod?'var(--text-dim)':'white'};padding:5px 14px;border-radius:4px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:0.5px;transition:all .15s;white-space:nowrap;"
+          id="lmperiod-btn-${p.id}">
+          ${inPeriod ? 'Lagt til' : '+ Legg til'}
+        </button>
+      </div>`;
+  }).join('');
+}
+
+function lmAddToPeriod(trackId, periodId) {
+  const track = lmSelectedTrack;
+  const period = state.periods.find(p => p.id === periodId);
+  if (!track || !period) return;
+  if (period.queue.find(t => t.id === trackId)) {
+    showToast(`Allerede i ${period.name}`, 'error'); return;
+  }
+  period.queue.push({ id: track.id, name: track.name, artist: track.artist,
+    duration: track.duration, img: track.img, imgLg: track.imgLg||'', uri: track.uri });
+  const s = state.trackSettings[trackId];
+  if (!s) state.trackSettings[trackId] = { startTime: 0, endTime: track.duration, category: '', note: '', fadeOut: 0 };
+  saveState();
+  renderQueue();
+  renderLmPeriodList(track);
+  renderLibModalList();
+  showToast(`+ ${track.name} → ${period.name}`, 'success');
 }
 
 // ============================================================
