@@ -218,7 +218,7 @@
   /* MAIN LAYOUT */
   main {
     display: grid;
-    grid-template-columns: 320px 1fr 300px;
+    grid-template-columns: var(--left-panel-width, 420px) 1fr 300px;
     gap: 0;
     height: calc(100vh - 64px - 160px);
   }
@@ -1338,7 +1338,21 @@
   }
   .lib-selection-info.visible { display: flex; }
 
-  .lib-cat-filter {
+  .nudge-btn {
+    background: var(--rink-surface);
+    border: 1px solid var(--panel-border);
+    color: var(--text-dim);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .nudge-btn:hover { background: var(--active); border-color: var(--active); color: white; }
     background: none;
     border: 1px solid var(--panel-border);
     color: var(--text-dim);
@@ -1423,7 +1437,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v24</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);">v25</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -1508,6 +1522,14 @@
       </div>
     </div>
 
+    <!-- RESIZE HANDLE -->
+    <div id="resizeHandle" style="width:6px;background:var(--panel-border);cursor:col-resize;transition:background .2s;flex-shrink:0;position:relative;z-index:5;"
+         onmouseenter="this.style.background='var(--active)'"
+         onmouseleave="this.style.background='var(--panel-border)'"
+         onmousedown="startResize(event)">
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--panel-border);font-size:10px;user-select:none;">⋮⋮</div>
+    </div>
+
     <!-- CENTER: QUEUE -->
     <div class="queue-panel">
       <div class="panel-header">
@@ -1561,9 +1583,9 @@
     <div class="player-center">
       <div class="transport">
         <button class="ctrl-btn" onclick="prevTrack()" title="Forrige">⏮</button>
-        <button class="ctrl-btn" onclick="seek(-10)" title="-10s">⏪</button>
+        <button class="ctrl-btn" onclick="seek(-10)" title="-10 sekunder" style="font-size:11px;letter-spacing:0.5px;width:46px;">«−10</button>
         <button class="play-btn" id="playBtn" onclick="togglePlay()">▶</button>
-        <button class="ctrl-btn" onclick="seek(10)" title="+10s">⏩</button>
+        <button class="ctrl-btn" onclick="seek(10)" title="+10 sekunder" style="font-size:11px;letter-spacing:0.5px;width:46px;">+10»</button>
         <button class="ctrl-btn" onclick="nextTrack()" title="Neste">⏭</button>
       </div>
       <div class="progress-area">
@@ -2136,9 +2158,22 @@ function addSearchResultToLibrary(track, btn) {
   if (btn) saveSearchTrackToLibrary(track.id);
 }
 
+const ALL_PERIOD_ID = '__all__';
+
 function renderPeriodTabs() {
   const el = document.getElementById('periodTabs');
-  el.innerHTML = state.periods.map((p, i) => `
+  const totalAll = state.periods.reduce((sum, p) => sum + p.queue.length, 0);
+  const allTab = `
+    <button class="period-tab${state.activePeriodId === ALL_PERIOD_ID ? ' active' : ''}"
+            id="ptab-${ALL_PERIOD_ID}"
+            onclick="setActivePeriod('${ALL_PERIOD_ID}')"
+            title="Vis alle sanger på tvers av perioder"
+            style="${state.activePeriodId === ALL_PERIOD_ID ? '' : 'color:var(--text-dim)'}">
+      <span>Alle</span>
+      <span class="period-count">${totalAll}</span>
+    </button>`;
+
+  el.innerHTML = allTab + state.periods.map((p, i) => `
     <button class="period-tab${p.id === state.activePeriodId ? ' active' : ''}"
             id="ptab-${p.id}"
             onclick="setActivePeriod('${p.id}')"
@@ -2418,8 +2453,52 @@ function removeFromQueue(idx) {
 
 function renderQueue() {
   const el = document.getElementById('queueList');
-  const q = getActiveQueue();
   const totalAll = state.periods.reduce((sum, p) => sum + p.queue.length, 0);
+
+  // All-tab: show all tracks across periods
+  if (state.activePeriodId === ALL_PERIOD_ID) {
+    document.getElementById('queueCount').textContent = `${totalAll} låter totalt`;
+    renderPeriodTabs();
+    if (!totalAll) {
+      el.innerHTML = '<div class="empty-state"><div class="big-icon">🏒</div><p>Ingen låter ennå</p></div>';
+      return;
+    }
+    // Build flat list with period badges
+    let html = '';
+    let globalIdx = 0;
+    state.periods.forEach(p => {
+      if (!p.queue.length) return;
+      html += `<div style="padding:6px 12px 4px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);background:var(--rink);border-bottom:1px solid var(--panel-border);">${esc(p.name)}</div>`;
+      p.queue.forEach((t, i) => {
+        const s = state.trackSettings[t.id] || {};
+        const isPlayed = state.playedTracks.includes(t.id);
+        const catColor = getCatColor(s.category);
+        const startSecs = s.startTime || 0;
+        const endSecs = s.endTime || t.duration;
+        html += `
+          <div class="queue-item${isPlayed ? ' played' : ''}" style="opacity:${isPlayed?'0.6':'1'};">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--text-dim);width:22px;text-align:right;flex-shrink:0;">${i+1}</span>
+            <div class="track-thumb">${t.img ? `<img src="${t.img}">` : '🎵'}</div>
+            <div class="track-info">
+              <div class="track-name">${esc(t.name)}</div>
+              <div class="track-artist">
+                <span>${esc(t.artist)}</span>
+                ${s.category ? `<span style="color:${catColor};font-size:11px;margin-left:4px">${catEmoji(s.category)} ${s.category}</span>` : ''}
+              </div>
+              <div class="track-times">
+                <span class="${startSecs > 0 ? 'time-tag start-tag' : 'time-tag'}">▶ ${fmtTime(startSecs)}</span>
+                <span class="${s.endTime && s.endTime < t.duration ? 'time-tag end-tag' : 'time-tag'}">■ ${fmtTime(endSecs)}</span>
+                ${isPlayed ? '<span class="played-tag">✓ avspilt</span>' : ''}
+              </div>
+            </div>
+          </div>`;
+      });
+    });
+    el.innerHTML = html;
+    return;
+  }
+
+  const q = getActiveQueue();
   document.getElementById('queueCount').textContent = `${q.length} / ${totalAll} låter`;
   renderPeriodTabs();
   if (!q.length) {
@@ -2440,7 +2519,7 @@ function renderQueue() {
     return `
       <div class="queue-item${isPlaying ? ' playing' : isLoaded ? ' loaded' : ''}${isPlayed && !isPlaying && !isLoaded ? ' played' : ''}"
            onclick="selectTrack(${i})" draggable="true"
-           ondragstart="dragStart(event,${i})" ondragover="event.preventDefault()" ondrop="dragDrop(event,${i})"
+           ondragstart="dragStart(event,${i})" ondragover="event.preventDefault()" ondrop="handleQueueItemDrop(event,${i})"
            ondragend="document.getElementById('periodTabs').classList.remove('drag-active'); dragSrc=null; dragType=null; dragTrackIdx=null;">
         <span class="queue-num" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:${isPlaying ? 'var(--gold)' : 'var(--text-dim)'};width:22px;text-align:right;flex-shrink:0;">${i + 1}</span>
         <button class="queue-play-btn" onclick="event.stopPropagation(); playTrack(${i})" title="Spill">
@@ -2490,6 +2569,36 @@ function queueListDrop(e) {
   libDragId = null;
   dragType = null;
   document.getElementById('periodTabs').classList.remove('drag-active');
+}
+
+function handleQueueItemDrop(e, i) {
+  e.preventDefault();
+  if (dragType === 'library' && libDragId) {
+    // Insert library item at this position
+    const entry = state.library.find(l => l.id === libDragId);
+    if (!entry) return;
+    if (getActiveQueue().find(t => t.id === libDragId)) {
+      showToast('Allerede i køen', 'error');
+    } else {
+      const track = { id: entry.id, name: entry.name, artist: entry.artist,
+        duration: entry.duration, img: entry.img, uri: entry.uri };
+      getActivePeriod().queue.splice(i, 0, track);
+      if (!state.trackSettings[entry.id] && entry.settings) {
+        state.trackSettings[entry.id] = JSON.parse(JSON.stringify(entry.settings));
+      } else if (!state.trackSettings[entry.id]) {
+        state.trackSettings[entry.id] = { startTime: 0, endTime: entry.duration, category: '', note: '', fadeOut: 0 };
+      }
+      saveState();
+      renderQueue();
+      renderLibrary();
+      showToast(`+ ${entry.name}`, 'success');
+    }
+    libDragId = null;
+    dragType = null;
+    document.getElementById('periodTabs').classList.remove('drag-active');
+  } else {
+    dragDrop(e, i);
+  }
 }
 
 // Drag & drop reorder within period
@@ -2566,13 +2675,27 @@ function selectTrack(idx) {
       <div class="time-inputs">
         <div class="time-input-group">
           <label class="start-lbl">▶ Start</label>
-          <input type="text" id="startInput" value="${fmtTime(s.startTime)}" placeholder="0:00"
-            onchange="updateTimeFromInput('${track.id}','start',this.value,${track.duration})">
+          <div style="display:flex;align-items:center;gap:4px;">
+            <button onclick="nudgeTime('${track.id}','start',-1,${track.duration})" class="nudge-btn">−1</button>
+            <button onclick="nudgeTime('${track.id}','start',-0.1,${track.duration})" class="nudge-btn">−.1</button>
+            <input type="text" id="startInput" value="${fmtTimeFine(s.startTime)}" placeholder="0:00.0"
+              onchange="updateTimeFromInput('${track.id}','start',this.value,${track.duration})"
+              style="flex:1;min-width:0;">
+            <button onclick="nudgeTime('${track.id}','start',0.1,${track.duration})" class="nudge-btn">+.1</button>
+            <button onclick="nudgeTime('${track.id}','start',1,${track.duration})" class="nudge-btn">+1</button>
+          </div>
         </div>
-        <div class="time-input-group">
+        <div class="time-input-group" style="margin-top:8px;">
           <label class="end-lbl">■ Stopp</label>
-          <input type="text" id="endInput" value="${fmtTime(s.endTime || track.duration)}" placeholder="${fmtTime(track.duration)}"
-            onchange="updateTimeFromInput('${track.id}','end',this.value,${track.duration})">
+          <div style="display:flex;align-items:center;gap:4px;">
+            <button onclick="nudgeTime('${track.id}','end',-1,${track.duration})" class="nudge-btn">−1</button>
+            <button onclick="nudgeTime('${track.id}','end',-0.1,${track.duration})" class="nudge-btn">−.1</button>
+            <input type="text" id="endInput" value="${fmtTimeFine(s.endTime || track.duration)}" placeholder="${fmtTimeFine(track.duration)}"
+              onchange="updateTimeFromInput('${track.id}','end',this.value,${track.duration})"
+              style="flex:1;min-width:0;">
+            <button onclick="nudgeTime('${track.id}','end',0.1,${track.duration})" class="nudge-btn">+.1</button>
+            <button onclick="nudgeTime('${track.id}','end',1,${track.duration})" class="nudge-btn">+1</button>
+          </div>
         </div>
       </div>
       <button onclick="resetTrackPosition('${track.id}')" style="margin-top:8px;width:100%;background:none;border:1px solid var(--panel-border);color:var(--text-dim);padding:6px;border-radius:5px;font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--active)';this.style.color='var(--active)'" onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'">↩ Tilbakestill til startpunkt</button>
@@ -3197,6 +3320,11 @@ function renderLibrary() {
   el.innerHTML = items.map(l => {
     const s = l.settings || {};
     const inQueue = getActiveQueue().find(t => t.id === l.id);
+    // Find which periods this track is in
+    const inPeriods = state.periods.filter(p => p.queue.find(t => t.id === l.id));
+    const periodBadges = inPeriods.map(p =>
+      `<span style="background:rgba(26,127,196,0.2);color:var(--active);font-size:10px;padding:1px 5px;border-radius:8px;font-family:'Barlow Condensed',sans-serif;">${esc(p.name)}</span>`
+    ).join(' ');
     const isSelected = librarySelection.has(l.id);
     const catColor = getCatColor(s.category);
     return `
@@ -3215,6 +3343,7 @@ function renderLibrary() {
             ${s.startTime > 0 ? `<span style="color:var(--green)">▶${fmtTime(s.startTime)}</span>` : ''}
             ${s.endTime && s.endTime < l.duration ? `<span style="color:var(--red-line)">■${fmtTime(s.endTime)}</span>` : ''}
           </div>
+          ${inPeriods.length > 0 ? `<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px;">${periodBadges}</div>` : ''}
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;align-items:center;flex-shrink:0;">
           <button class="add-btn" style="width:28px;height:28px;${inQueue ? 'background:rgba(34,204,102,0.15);border-color:var(--green);color:var(--green);' : ''}"
@@ -3333,10 +3462,38 @@ function fmtTime(secs) {
   return `${m}:${s.toString().padStart(2,'0')}`;
 }
 
+function fmtTimeFine(secs) {
+  if (!secs && secs !== 0) return '0:00.0';
+  const m = Math.floor(secs / 60);
+  const s = Math.floor(secs % 60);
+  const tenths = Math.round((secs % 1) * 10);
+  return `${m}:${s.toString().padStart(2,'0')}.${tenths}`;
+}
+
+function nudgeTime(trackId, type, delta, duration) {
+  const s = state.trackSettings[trackId];
+  if (!s) return;
+  if (type === 'start') {
+    s.startTime = Math.round(Math.max(0, Math.min((s.startTime || 0) + delta, (s.endTime || duration) - 0.1)) * 10) / 10;
+    const el = document.getElementById('startInput');
+    if (el) el.value = fmtTimeFine(s.startTime);
+  } else {
+    s.endTime = Math.round(Math.max((s.startTime || 0) + 0.1, Math.min((s.endTime || duration) + delta, duration)) * 10) / 10;
+    const el = document.getElementById('endInput');
+    if (el) el.value = fmtTimeFine(s.endTime);
+  }
+  document.getElementById('waveformBars').innerHTML = generateWaveBars(trackId, duration);
+  document.getElementById('waveformMarkers').innerHTML = renderWaveMarkers(s, duration);
+}
+
 function parseTimeInput(val) {
+  // Handles: 1:23, 1:23.4, 83, 83.4
+  val = val.trim().replace(',', '.');
   const parts = val.split(':');
-  if (parts.length === 2) return parseInt(parts[0]) * 60 + parseInt(parts[1]);
-  return parseInt(val);
+  if (parts.length === 2) {
+    return parseFloat(parts[0]) * 60 + parseFloat(parts[1]);
+  }
+  return parseFloat(val);
 }
 
 function esc(s) {
@@ -3367,21 +3524,12 @@ function getActiveQueue() {
   return getActivePeriod().queue;
 }
 function setActivePeriod(id) {
-  // Stop playback if switching period
-  if (state.currentPeriodId !== id && state.isPlaying) {
-    if (state.player && !state.demoMode) state.player.pause();
-    state.isPlaying = false;
-    stopTicker();
-  }
+  // Only update the VIEW — never stop playback when switching tabs
   state.activePeriodId = id;
-  state.currentIndex = -1;
-  state.loadedIndex = -1;
-  state.currentPos = 0;
-  state.duration = 0;
   saveState();
   renderPeriodTabs();
   renderQueue();
-  updatePlayerUI();
+  // Don't reset currentIndex/loadedIndex — playback continues uninterrupted
 }
 
 function showToast(msg, type) {
@@ -3433,16 +3581,63 @@ function toggleFullscreen() {
   }
 }
 
-document.addEventListener('fullscreenchange', () => {
-  const btn = document.getElementById('fsBtn');
-  if (document.fullscreenElement) {
-    btn.textContent = '✕';
-    btn.title = 'Avslutt fullskjerm (F)';
-  } else {
-    btn.textContent = '⛶';
-    btn.title = 'Fullskjerm (F)';
+// ============================================================
+// RESIZABLE LEFT PANEL
+// ============================================================
+const RESIZE_KEY = 'hd_left_panel_width';
+let resizing = false;
+
+function startResize(e) {
+  resizing = true;
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';
+  e.preventDefault();
+}
+
+document.addEventListener('mousemove', e => {
+  if (!resizing) return;
+  const main = document.querySelector('main');
+  const rect = main.getBoundingClientRect();
+  const newWidth = Math.max(260, Math.min(600, e.clientX - rect.left));
+  document.documentElement.style.setProperty('--left-panel-width', newWidth + 'px');
+  localStorage.setItem(RESIZE_KEY, newWidth);
+});
+
+document.addEventListener('mouseup', () => {
+  if (resizing) {
+    resizing = false;
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    const handle = document.getElementById('resizeHandle');
+    if (handle) handle.style.background = 'var(--panel-border)';
   }
 });
-</script>
+
+// Restore saved width
+const savedWidth = localStorage.getItem(RESIZE_KEY);
+if (savedWidth) document.documentElement.style.setProperty('--left-panel-width', savedWidth + 'px');
+
+// ============================================================
+// ALL-PERIOD VIEW
+// ============================================================
+function getAllTracksView() {
+  // Collect all tracks across all periods with their period name
+  const seen = new Set();
+  const result = [];
+  state.periods.forEach(p => {
+    p.queue.forEach(t => {
+      if (!seen.has(t.id)) {
+        seen.add(t.id);
+        result.push({ track: t, periodName: p.name, periodId: p.id });
+      } else {
+        // Track appears in multiple periods
+        const existing = result.find(r => r.track.id === t.id);
+        if (existing) existing.periodName += ', ' + p.name;
+      }
+    });
+  });
+  return result;
+}
+
 </body>
 </html>
