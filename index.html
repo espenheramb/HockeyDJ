@@ -772,15 +772,66 @@
     border: 1px solid var(--border);
     color: var(--text-dim);
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 12px; font-weight: 600;
-    padding: 5px 10px; border-radius: 4px;
+    font-size: 13px; font-weight: 600;
+    padding: 5px 12px; border-radius: 4px;
     cursor: pointer; transition: all 0.12s;
-    display: flex; align-items: center; gap: 6px;
+    display: flex; align-items: center; gap: 7px;
+    white-space: nowrap; user-select: none;
+    position: relative;
+  }
+  .quick-btn:hover { background: var(--bg-hover); border-color: var(--text-dim); color: var(--text); }
+  .quick-btn:active { transform: scale(0.97); }
+  .quick-btn.active-now { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+  .quick-btn img { width:22px; height:22px; border-radius:3px; object-fit:cover; flex-shrink:0; }
+  .quick-btn .qb-key {
+    font-size: 10px; opacity: 0.5; font-weight: 400;
+    border: 1px solid currentColor; border-radius: 3px;
+    padding: 0px 4px; line-height: 1.6; flex-shrink: 0;
+  }
+  .quick-btn-edit .quick-btn {
+    cursor: grab; border-style: dashed; opacity: 0.85;
+  }
+  .quick-btn-edit .quick-btn:hover { border-color: var(--red); color: var(--red); }
+  .quick-btn-add {
+    background: none; border: 1px dashed var(--border);
+    color: var(--text-faint);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
+    padding: 5px 10px; border-radius: 4px;
+    cursor: pointer; transition: all 0.12s; white-space: nowrap;
+  }
+  .quick-btn-add:hover { border-color: var(--accent); color: var(--accent); }
+  .quick-edit-toggle {
+    background: none; border: 1px solid var(--border);
+    color: var(--text-faint);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px; font-weight: 600; letter-spacing: 1px;
+    padding: 3px 7px; border-radius: 3px; cursor: pointer; transition: all 0.15s;
     white-space: nowrap;
   }
-  .quick-btn:hover { background: var(--accent); border-color: var(--accent); color: white; }
-  .quick-btn img { width:20px; height:20px; border-radius:3px; object-fit:cover; flex-shrink:0; }
-  .quick-btn.playing { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+  .quick-edit-toggle:hover { border-color: var(--text-dim); color: var(--text-dim); }
+  .quick-edit-toggle.on { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+  /* Context menu */
+  .ctx-menu {
+    position: fixed; z-index: 300;
+    background: var(--bg-panel); border: 1px solid var(--border);
+    border-radius: 6px; padding: 5px;
+    min-width: 170px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .ctx-menu-label {
+    padding: 4px 10px; font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--text-faint); margin-bottom: 3px;
+  }
+  .ctx-menu-item {
+    display: block; width: 100%; text-align: left;
+    background: none; border: none; color: var(--text-dim);
+    padding: 7px 10px; border-radius: 4px; cursor: pointer;
+    font-size: 13px; transition: background 0.12s;
+  }
+  .ctx-menu-item:hover { background: var(--bg-hover); color: var(--text); }
+  .ctx-menu-item.danger:hover { background: rgba(224,82,82,0.12); color: var(--red); }
 
   /* ─── RESIZE HANDLE ──────────────────────────────────────── */
   #resizeHandle {
@@ -919,7 +970,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v29</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v31</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -945,61 +996,31 @@
   <!-- MAIN -->
   <main>
 
-    <!-- LEFT: SEARCH + LIBRARY -->
+    <!-- LEFT: SEARCH -->
     <div class="panel">
-      <div class="panel-header" style="padding-bottom:0;border-bottom:none;">
-        <div class="left-panel-tabs">
-          <button class="left-tab active" id="leftTabSearch" onclick="switchLeftTab('search')">Søk</button>
-          <button class="left-tab" id="leftTabLibrary" onclick="switchLeftTab('library')">Bibliotek</button>
+      <div class="panel-header">
+        <span class="panel-title">Søk</span>
+        <button onclick="openLibModal()" title="Åpne bibliotek"
+          style="background:none;border:1px solid var(--border);color:var(--text-dim);padding:4px 11px;border-radius:4px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:0.5px;transition:all .15s;display:flex;align-items:center;gap:6px;"
+          onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="flex-shrink:0;">
+            <rect x="1" y="1" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.3" fill="none"/>
+            <path d="M4 9L9 4M9 4H5.5M9 4V7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+          Bibliotek
+        </button>
+      </div>
+      <div class="search-box">
+        <div class="search-input-wrap">
+          <input type="text" id="searchInput" placeholder="Søk etter låter..." onkeydown="if(event.key==='Enter') doSearch()">
+          <button onclick="doSearch()">Søk</button>
         </div>
       </div>
-
-      <!-- SEARCH VIEW -->
-      <div id="leftSearch">
-        <div class="search-box">
-          <div class="search-input-wrap">
-            <input type="text" id="searchInput" placeholder="Søk etter låter..." onkeydown="if(event.key==='Enter') doSearch()">
-            <button onclick="doSearch()">Søk</button>
-          </div>
-        </div>
-        <div class="results-list" id="resultsList">
-          <div class="empty-state">
-            <div class="big-icon">—</div>
-            <p>Søk etter låter for å legge dem til i køen</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- LIBRARY VIEW -->
-      <div id="leftLibrary" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
-        <div style="padding:10px 12px;border-bottom:1px solid var(--panel-border);display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <input type="text" id="librarySearch" placeholder="Filtrer bibliotek..." oninput="renderLibrary()"
-              style="flex:1;background:var(--rink-surface);border:1px solid var(--panel-border);border-radius:5px;color:var(--text);padding:7px 10px;font-family:'Barlow',sans-serif;font-size:13px;outline:none;">
-            <span id="libraryCount" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--text-dim);white-space:nowrap;">0 låter</span>
-          </div>
-          <div style="display:flex;gap:4px;flex-wrap:wrap;">
-            <button class="lib-cat-filter active" data-cat="" onclick="setLibraryCatFilter('', this)">Alle</button>
-            <button class="lib-cat-filter" data-cat="goal" onclick="setLibraryCatFilter('goal', this)">🥅 Mål</button>
-            <button class="lib-cat-filter" data-cat="powerplay" onclick="setLibraryCatFilter('powerplay', this)">⚡ PP</button>
-            <button class="lib-cat-filter" data-cat="intro" onclick="setLibraryCatFilter('intro', this)">🎤 Intro</button>
-            <button class="lib-cat-filter" data-cat="pump" onclick="setLibraryCatFilter('pump', this)">🔥 Pump</button>
-            <button class="lib-cat-filter" data-cat="timeout" onclick="setLibraryCatFilter('timeout', this)">⏸ TO</button>
-            <button class="lib-cat-filter" data-cat="__none__" onclick="setLibraryCatFilter('__none__', this)">—</button>
-          </div>
-        </div>
-        <div class="lib-selection-info" id="libSelectionInfo">
-          <span id="libSelectionCount">0 valgt</span>
-          <div style="display:flex;gap:6px;">
-            <button class="hdr-btn hdr-btn-green" onclick="addSelectedToQueue()" style="font-size:10px;padding:3px 8px;">+ Legg til kø</button>
-            <button class="hdr-btn" onclick="clearLibrarySelection()" style="font-size:10px;padding:3px 8px;">✕ Fjern valg</button>
-          </div>
-        </div>
-        <div class="results-list" id="libraryList">
-          <div class="empty-state">
-            <div class="big-icon">—</div>
-            <p>Lagre sanger til biblioteket fra redigeringspanelet</p>
-          </div>
+      <div class="results-list" id="resultsList">
+        <div class="empty-state">
+          <div class="big-icon">—</div>
+          <p>Søk etter låter for å legge dem til i køen</p>
         </div>
       </div>
     </div>
@@ -1026,9 +1047,11 @@
         </div>
       </div>
       <!-- QUICK ACCESS BAR -->
-      <div id="quickBar" style="padding:6px 10px;border-bottom:1px solid var(--border);background:var(--bg);flex-shrink:0;flex-wrap:wrap;align-items:center;gap:6px;display:none;">
+      <div id="quickBar" style="padding:5px 10px;border-bottom:1px solid var(--border);background:var(--bg);flex-shrink:0;align-items:center;gap:6px;display:none;">
         <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);flex-shrink:0;">Hurtig</span>
-        <div id="quickBarBtns" style="display:flex;gap:5px;flex-wrap:wrap;flex:1;"></div>
+        <div id="quickBarBtns" style="display:flex;gap:5px;flex-wrap:wrap;flex:1;align-items:center;"></div>
+        <button class="quick-btn-add" onclick="openQuickAddPicker()" id="quickAddBtn" title="Legg til hurtigknapp">+ Legg til</button>
+        <button class="quick-edit-toggle" id="quickEditToggle" onclick="toggleQuickEditMode()" title="Rediger hurtigknapper">Rediger</button>
       </div>
       <!-- PERIOD TABS -->
       <div class="period-tabs" id="periodTabs"
@@ -1111,7 +1134,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v29</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v31</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
@@ -1152,53 +1175,51 @@
 <!-- LIBRARY MODAL -->
 <div class="lib-modal-overlay" id="libModal" onclick="if(event.target===this)closeLibModal()">
   <div class="lib-modal">
+
+    <!-- HEADER: unified search + tab switch + close -->
     <div class="lib-modal-header">
       <span class="lib-modal-title">Bibliotek</span>
+      <div style="flex:1;max-width:420px;margin:0 16px;">
+        <div class="search-input-wrap" style="background:var(--bg-raised);">
+          <input type="text" id="lmSearchInput" placeholder="Søk i Spotify og bibliotek..."
+            onkeydown="if(event.key==='Enter') doLibModalSearch()" oninput="lmFilterLibrary()">
+          <button onclick="doLibModalSearch()">Søk</button>
+        </div>
+      </div>
       <div class="lib-modal-tabs">
-        <button class="lib-modal-tab active" id="lmTabSearch" onclick="switchLibModalTab('search')">Søk</button>
+        <button class="lib-modal-tab active" id="lmTabSearch" onclick="switchLibModalTab('search')">
+          Spotify
+        </button>
         <button class="lib-modal-tab" id="lmTabLibrary" onclick="switchLibModalTab('library')">
           Bibliotek <span class="tab-count" id="lmLibCount">0</span>
         </button>
       </div>
       <button class="lib-modal-close" onclick="closeLibModal()">&#x2715;</button>
     </div>
+
+    <!-- BODY: 3 columns -->
     <div class="lib-modal-body">
 
-      <!-- COL 1: Search or Library list -->
+      <!-- COL 1: Spotify search OR Library list -->
       <div class="lib-modal-col">
-        <!-- SEARCH VIEW -->
+        <!-- SEARCH RESULTS -->
         <div id="lmSearchView" style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
-          <div class="lib-modal-col-header">
-            Søk i Spotify
-          </div>
-          <div style="padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0;">
-            <div class="search-input-wrap">
-              <input type="text" id="lmSearchInput" placeholder="Søk etter låter..."
-                onkeydown="if(event.key==='Enter') doLibModalSearch()">
-              <button onclick="doLibModalSearch()">Søk</button>
-            </div>
-          </div>
+          <div class="lib-modal-col-header">Resultater fra Spotify</div>
           <div class="lib-modal-scroll" id="lmSearchResults">
             <div class="empty-state"><div class="big-icon">—</div><p>Søk etter låter</p></div>
           </div>
         </div>
-        <!-- LIBRARY VIEW -->
+        <!-- LIBRARY LIST -->
         <div id="lmLibraryView" style="display:none;flex-direction:column;height:100%;overflow:hidden;">
           <div class="lib-modal-col-header">
-            <span>Lagrede sanger</span>
-          </div>
-          <div style="padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:6px;">
-            <div class="search-input-wrap">
-              <input type="text" id="lmLibFilter" placeholder="Filtrer..." oninput="renderLibModalList()">
-            </div>
-            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            <span id="lmLibHeaderCount">Bibliotek</span>
+            <div style="display:flex;gap:3px;flex-wrap:wrap;">
               <button class="lib-cat-filter active" data-lmcat="" onclick="setLmCatFilter('',this)">Alle</button>
               <button class="lib-cat-filter" data-lmcat="goal" onclick="setLmCatFilter('goal',this)">Mål</button>
               <button class="lib-cat-filter" data-lmcat="powerplay" onclick="setLmCatFilter('powerplay',this)">PP</button>
               <button class="lib-cat-filter" data-lmcat="intro" onclick="setLmCatFilter('intro',this)">Intro</button>
               <button class="lib-cat-filter" data-lmcat="pump" onclick="setLmCatFilter('pump',this)">Pump</button>
               <button class="lib-cat-filter" data-lmcat="timeout" onclick="setLmCatFilter('timeout',this)">Timeout</button>
-              <button class="lib-cat-filter" data-lmcat="__none__" onclick="setLmCatFilter('__none__',this)">Ingen</button>
             </div>
           </div>
           <div class="lib-modal-scroll" id="lmLibraryList">
@@ -1207,21 +1228,21 @@
         </div>
       </div>
 
-      <!-- COL 2: Editor -->
+      <!-- COL 2: Editor (waveform + settings) -->
       <div class="lib-modal-col" style="display:flex;flex-direction:column;">
         <div class="lib-modal-col-header">
-          <span id="lmEditorColLabel">Velg en sang</span>
+          <span id="lmEditorColLabel">Klikk en sang for å redigere</span>
           <div style="display:flex;gap:6px;" id="lmEditorColActions"></div>
         </div>
         <div class="lm-editor" id="lmEditor">
-          <div class="empty-state" style="height:100%;justify-content:center;">
+          <div class="empty-state" style="justify-content:center;padding-top:60px;">
             <div class="big-icon">—</div>
-            <p>Klikk en sang for å redigere<br>start/stopp, kategori og notat</p>
+            <p>Velg en sang fra søket eller biblioteket</p>
           </div>
         </div>
       </div>
 
-      <!-- COL 3: Queue / period selector -->
+      <!-- COL 3: Add to period -->
       <div class="lib-modal-col">
         <div class="lib-modal-col-header">Legg til i periode</div>
         <div class="lib-modal-scroll" id="lmPeriodList">
@@ -1237,7 +1258,7 @@
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v29';
+const APP_VERSION = 'v31';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
@@ -1255,6 +1276,8 @@ const state = {
   playedTracks: JSON.parse(localStorage.getItem('hd_played') || '[]'),
   savedSetlists: JSON.parse(localStorage.getItem('hd_setlists') || '[]'),
   library: JSON.parse(localStorage.getItem('hd_library') || '[]'), // Permanent sangbibliotek
+  // Hurtigknapper: [{ id, trackId, label, key, periodId }]
+  quickButtons: JSON.parse(localStorage.getItem('hd_quickbtns') || '[]'),
   loadedIndex: -1,
   currentIndex: -1,
   currentPeriodId: localStorage.getItem('hd_active_period') || 'p0',
@@ -1318,6 +1341,7 @@ window.onload = async () => {
   switchLeftTab('search');
   // Set version from constant so it's always in sync
   document.querySelectorAll('#headerVersion, #modalVersion').forEach(el => el.textContent = APP_VERSION);
+  renderQuickBar();
 };
 
 
@@ -1697,7 +1721,7 @@ function renderTrackResults(tracks) {
     const inQueue = !!getActiveQueue().find(q => q.id === t.id);
     return `
     <div class="result-item" ondblclick="addSearchTrackById('${t.id}')">
-      <div class="result-thumb">${t.album.images[2] ? `<img src="${t.album.images[2].url}">` : '🎵'}</div>
+      <div class="result-thumb">${t.album.images[1] ? `<img src="${t.album.images[1].url}">` : ''}</div>
       <div class="result-info">
         <div class="result-name">${esc(t.name)}</div>
         <div class="result-sub">${esc(t.artists[0].name)} · ${fmtTime(Math.round(t.duration_ms/1000))}${inLib ? ' <span style="color:var(--gold)">★</span>' : ''}</div>
@@ -1722,7 +1746,8 @@ function addSearchTrackById(id) {
     name: t.name,
     artist: t.artists[0].name,
     duration: Math.round(t.duration_ms / 1000),
-    img: t.album.images[2]?.url || t.album.images[0]?.url || '',
+    img: t.album.images[2]?.url || t.album.images[1]?.url || '',
+    imgMd: t.album.images[1]?.url || t.album.images[0]?.url || '',
     imgLg: t.album.images[0]?.url || t.album.images[1]?.url || '',
     uri: t.uri
   };
@@ -1744,7 +1769,8 @@ function saveSearchTrackToLibrary(id) {
     name: t.name,
     artist: t.artists[0].name,
     duration: Math.round(t.duration_ms / 1000),
-    img: t.album.images[2]?.url || t.album.images[0]?.url || '',
+    img: t.album.images[2]?.url || t.album.images[1]?.url || '',
+    imgMd: t.album.images[1]?.url || t.album.images[0]?.url || '',
     imgLg: t.album.images[0]?.url || t.album.images[1]?.url || '',
     uri: t.uri
   };
@@ -3104,78 +3130,235 @@ function addSelectedToQueue() {
 // ============================================================
 // QUICK ACCESS BAR
 // ============================================================
+let quickEditMode = false;
+
 function renderQuickBar() {
   const bar = document.getElementById('quickBar');
   const btns = document.getElementById('quickBarBtns');
   if (!bar || !btns) return;
 
-  // Collect all tracks that have a category, deduplicated
-  const seen = new Set();
-  const items = [];
-  state.periods.forEach(p => {
-    p.queue.forEach(t => {
-      if (!seen.has(t.id)) {
-        seen.add(t.id);
-        const s = state.trackSettings[t.id] || {};
-        if (s.category) items.push({ track: t, settings: s });
-      }
-    });
-  });
+  // Always show bar (even empty so user can add)
+  bar.style.display = 'flex';
 
-  if (!items.length) {
-    bar.style.display = 'none';
+  const editToggle = document.getElementById('quickEditToggle');
+  if (editToggle) editToggle.classList.toggle('on', quickEditMode);
+
+  const addBtn = document.getElementById('quickAddBtn');
+  if (addBtn) addBtn.style.display = quickEditMode ? 'block' : 'none';
+
+  if (!state.quickButtons.length) {
+    btns.innerHTML = '';
+    // Show bar only if in edit mode
+    if (!quickEditMode) { bar.style.display = 'none'; return; }
+    bar.style.display = 'flex';
     return;
   }
 
-  bar.style.display = 'flex';
-
-  // Category order
-  const catOrder = ['goal','powerplay','intro','pump','timeout'];
-  items.sort((a, b) => {
-    const ai = catOrder.indexOf(a.settings.category);
-    const bi = catOrder.indexOf(b.settings.category);
-    return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
-  });
-
-  btns.innerHTML = items.map(({track: t, settings: s}) => {
-    const label = s.note ? s.note.split(' ').slice(0,3).join(' ') : t.name.split(' ').slice(0,2).join(' ');
-    const isNowPlaying = state.isPlaying && getActivePeriodForTrack(t.id) !== null &&
-      state.periods.some(p => p.queue[state.currentIndex]?.id === t.id);
-    return `<button class="quick-btn${isNowPlaying ? ' playing' : ''}"
-      onclick="quickPlay('${t.id}')"
-      title="${esc(t.name)} — ${s.category}${s.note ? ' · ' + s.note : ''}">
-      ${t.img ? `<img src="${t.img}">` : ''}
-      <span>${esc(label)}</span>
-      <span style="font-size:10px;opacity:0.6;">${s.category}</span>
+  btns.innerHTML = state.quickButtons.map((qb, idx) => {
+    // Find track info
+    const track = findTrackAnywhere(qb.trackId);
+    if (!track) return '';
+    const isNow = state.isPlaying && isTrackCurrentlyPlaying(qb.trackId);
+    const keyLabel = qb.key ? `<span class="qb-key">${qb.key.toUpperCase()}</span>` : '';
+    return `<button
+      class="quick-btn${isNow ? ' active-now' : ''}"
+      id="qbtn-${qb.id}"
+      onclick="quickPlay('${qb.trackId}')"
+      oncontextmenu="quickBtnContextMenu(event,${idx})"
+      draggable="${quickEditMode}"
+      ondragstart="qbDragStart(event,${idx})"
+      ondragover="qbDragOver(event,${idx})"
+      ondrop="qbDrop(event,${idx})"
+      title="${esc(track.name)}${qb.key ? ' [' + qb.key.toUpperCase() + ']' : ''}\nHøyreklikk for å redigere">
+      ${track.img ? `<img src="${track.img}">` : ''}
+      <span>${esc(qb.label)}</span>
+      ${keyLabel}
     </button>`;
-  }).join('');
+  }).filter(Boolean).join('');
 }
 
-function getActivePeriodForTrack(trackId) {
+function findTrackAnywhere(trackId) {
   for (const p of state.periods) {
-    if (p.queue.find(t => t.id === trackId)) return p;
+    const t = p.queue.find(t => t.id === trackId);
+    if (t) return t;
   }
+  const lib = state.library.find(l => l.id === trackId);
+  if (lib) return lib;
   return null;
 }
 
+function isTrackCurrentlyPlaying(trackId) {
+  for (const p of state.periods) {
+    const idx = p.queue.findIndex(t => t.id === trackId);
+    if (idx >= 0 && p.id === state.currentPeriodId && idx === state.currentIndex) return true;
+  }
+  return false;
+}
+
 async function quickPlay(trackId) {
-  // Find which period has this track and its index
+  // Find the period with this track
   for (const p of state.periods) {
     const idx = p.queue.findIndex(t => t.id === trackId);
     if (idx >= 0) {
-      // Temporarily switch to that period's context but don't change the UI tab
       const prevPeriodId = state.activePeriodId;
       state.activePeriodId = p.id;
       await playTrack(idx);
       state.currentPeriodId = p.id;
-      // Restore the tab the user was viewing
+      // Don't autoplay after stop
+      // Restore view tab
       state.activePeriodId = prevPeriodId;
       renderPeriodTabs();
       renderQueue();
       return;
     }
   }
-  showToast('Sang ikke funnet i noen periode', 'error');
+  showToast('Sang ikke funnet — legg den til i en periode', 'error');
+}
+
+function toggleQuickEditMode() {
+  quickEditMode = !quickEditMode;
+  renderQuickBar();
+  const bar = document.getElementById('quickBar');
+  if (bar) {
+    bar.classList.toggle('quick-btn-edit', quickEditMode);
+    bar.style.display = 'flex';
+  }
+}
+
+// Quick bar context menu (right-click on button)
+function quickBtnContextMenu(e, idx) {
+  e.preventDefault();
+  e.stopPropagation();
+  const qb = state.quickButtons[idx];
+  if (!qb) return;
+  showCtxMenu(e.clientX, e.clientY, qb.label, [
+    { label: 'Endre navn', action: () => {
+      const name = prompt('Navn på knappen:', qb.label);
+      if (name?.trim()) { state.quickButtons[idx].label = name.trim(); saveState(); renderQuickBar(); }
+    }},
+    { label: `Tastaturtast: ${qb.key ? qb.key.toUpperCase() : '—'}`, action: () => {
+      const key = prompt('Tast (én bokstav eller F1–F12):', qb.key || '');
+      if (key !== null) {
+        const k = key.trim().toLowerCase();
+        // Check for conflict
+        const conflict = state.quickButtons.find((b, i) => i !== idx && b.key === k && k !== '');
+        if (conflict) { showToast(`Tasten "${k.toUpperCase()}" er allerede i bruk av "${conflict.label}"`, 'error'); return; }
+        state.quickButtons[idx].key = k;
+        saveState(); renderQuickBar();
+        showToast(`Tast satt til ${k ? k.toUpperCase() : '(ingen)'}`, 'success');
+      }
+    }},
+    { label: 'Slett', danger: true, action: () => {
+      state.quickButtons.splice(idx, 1);
+      saveState(); renderQuickBar();
+    }}
+  ]);
+}
+
+// Generic context menu
+function showCtxMenu(x, y, title, items) {
+  document.querySelectorAll('.ctx-menu').forEach(m => m.remove());
+  const menu = document.createElement('div');
+  menu.className = 'ctx-menu';
+  if (title) menu.innerHTML = `<div class="ctx-menu-label">${esc(title)}</div>`;
+  items.forEach(item => {
+    const btn = document.createElement('button');
+    btn.className = 'ctx-menu-item' + (item.danger ? ' danger' : '');
+    btn.textContent = item.label;
+    btn.onclick = () => { menu.remove(); item.action(); };
+    menu.appendChild(btn);
+  });
+  // Position
+  document.body.appendChild(menu);
+  const r = menu.getBoundingClientRect();
+  menu.style.left = Math.min(x, window.innerWidth - r.width - 8) + 'px';
+  menu.style.top = Math.min(y, window.innerHeight - r.height - 8) + 'px';
+  setTimeout(() => document.addEventListener('click', () => menu.remove(), { once: true }), 0);
+}
+
+// Drag reorder quick buttons
+let qbDragSrc = null;
+function qbDragStart(e, idx) { qbDragSrc = idx; e.dataTransfer.effectAllowed = 'move'; }
+function qbDragOver(e, idx) { e.preventDefault(); }
+function qbDrop(e, idx) {
+  e.preventDefault();
+  if (qbDragSrc === null || qbDragSrc === idx) return;
+  const [moved] = state.quickButtons.splice(qbDragSrc, 1);
+  state.quickButtons.splice(idx, 0, moved);
+  qbDragSrc = null;
+  saveState(); renderQuickBar();
+}
+
+// Open picker to add a quick button from library or categorised queue tracks
+function openQuickAddPicker() {
+  // Collect candidates: library tracks and categorised queue tracks
+  const candidates = new Map();
+  // Library tracks first
+  state.library.forEach(l => candidates.set(l.id, { id: l.id, name: l.name, artist: l.artist, img: l.img, category: l.settings?.category || '' }));
+  // Queue tracks with category
+  state.periods.forEach(p => p.queue.forEach(t => {
+    if (!candidates.has(t.id)) {
+      const s = state.trackSettings[t.id] || {};
+      if (s.category) candidates.set(t.id, { id: t.id, name: t.name, artist: t.artist, img: t.img, category: s.category });
+    }
+  }));
+  const list = [...candidates.values()];
+  if (!list.length) { showToast('Ingen sanger i biblioteket eller kø med kategori', 'error'); return; }
+
+  // Simple picker modal
+  document.querySelectorAll('.ctx-menu').forEach(m => m.remove());
+  const menu = document.createElement('div');
+  menu.className = 'ctx-menu';
+  menu.style.cssText += ';max-height:320px;overflow-y:auto;width:260px;';
+  menu.innerHTML = `<div class="ctx-menu-label">Velg sang til hurtigknapp</div>` +
+    list.map(c => `
+      <button class="ctx-menu-item" onclick="addQuickButton('${c.id}')">
+        <span style="display:flex;align-items:center;gap:8px;">
+          ${c.img ? `<img src="${c.img}" style="width:24px;height:24px;border-radius:3px;object-fit:cover;">` : ''}
+          <span>
+            <span style="display:block;font-weight:600;">${esc(c.name)}</span>
+            <span style="font-size:10px;opacity:0.6;">${c.category || c.artist}</span>
+          </span>
+        </span>
+      </button>`).join('');
+  document.body.appendChild(menu);
+  const addBtn = document.getElementById('quickAddBtn');
+  const r = addBtn?.getBoundingClientRect();
+  if (r) {
+    menu.style.top = (r.bottom + 6) + 'px';
+    menu.style.left = r.left + 'px';
+  }
+  setTimeout(() => document.addEventListener('click', () => menu.remove(), { once: true }), 0);
+}
+
+function addQuickButton(trackId) {
+  const track = findTrackAnywhere(trackId);
+  if (!track) return;
+  const s = state.trackSettings[trackId] || {};
+  // Default label: note or short name
+  const label = s.note?.trim().split(' ').slice(0,2).join(' ') || s.category || track.name.split(' ')[0];
+  const id = 'qb' + Date.now();
+  state.quickButtons.push({ id, trackId, label, key: '' });
+  saveState();
+  renderQuickBar();
+  // Show bar
+  document.getElementById('quickBar').style.display = 'flex';
+  showToast(`"${label}" lagt til hurtigknapper`, 'success');
+}
+
+// Keyboard shortcuts for quick buttons
+function handleQuickKeys(e) {
+  const tag = document.activeElement?.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+  const key = e.key.toLowerCase();
+  const qb = state.quickButtons.find(b => b.key === key);
+  if (qb) {
+    e.preventDefault();
+    quickPlay(qb.trackId);
+    // Flash the button
+    const btn = document.getElementById('qbtn-' + qb.id);
+    if (btn) { btn.style.background = 'var(--accent)'; btn.style.color = 'white'; setTimeout(() => { btn.style.background = ''; btn.style.color = ''; }, 300); }
+  }
 }
 
 // ============================================================
@@ -3246,6 +3429,7 @@ function saveState() {
   localStorage.setItem('hd_settings', JSON.stringify(state.trackSettings));
   localStorage.setItem('hd_played', JSON.stringify(state.playedTracks));
   localStorage.setItem('hd_library', JSON.stringify(state.library));
+  localStorage.setItem('hd_quickbtns', JSON.stringify(state.quickButtons));
 }
 
 // Period helpers
@@ -3287,6 +3471,10 @@ document.getElementById('autoplayPill').classList.toggle('on', state.autoplay);
 document.addEventListener('keydown', e => {
   const tag = document.activeElement?.tagName;
   if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+  // Quick button hotkeys (checked first)
+  handleQuickKeys(e);
+  if (e.defaultPrevented) return;
 
   if (e.code === 'Space') {
     e.preventDefault();
@@ -3377,7 +3565,7 @@ async function doLibModalSearch() {
       return `
         <div class="lm-item${lmSelectedTrack?.id === t.id ? ' selected' : ''}" id="lmsi-${t.id}"
              onclick="lmSelectSearchTrack('${t.id}')">
-          <div class="lm-thumb">${t.album.images[2] ? `<img src="${t.album.images[2].url}">` : ''}</div>
+          <div class="lm-thumb">${t.album.images[1] ? `<img src="${t.album.images[1].url}">` : ''}</div>
           <div class="lm-info">
             <div class="lm-name">${esc(t.name)}</div>
             <div class="lm-sub">${esc(t.artists[0].name)} · ${fmtTime(Math.round(t.duration_ms/1000))}${inLib ? ' ·  <span style="color:var(--gold)">★</span>' : ''}</div>
@@ -3398,7 +3586,8 @@ function lmSelectSearchTrack(id) {
   const track = {
     id: t.id, name: t.name, artist: t.artists[0].name,
     duration: Math.round(t.duration_ms/1000),
-    img: t.album.images[2]?.url || t.album.images[0]?.url || '',
+    img: t.album.images[2]?.url || t.album.images[1]?.url || '',
+    imgMd: t.album.images[1]?.url || t.album.images[0]?.url || '',
     imgLg: t.album.images[0]?.url || '',
     uri: t.uri, source: 'search'
   };
@@ -3418,7 +3607,7 @@ function lmSelectSearchTrack(id) {
 // LIBRARY LIST
 function renderLibModalList() {
   const el = document.getElementById('lmLibraryList');
-  const filter = (document.getElementById('lmLibFilter')?.value || '').toLowerCase();
+  const filter = (document.getElementById('lmSearchInput')?.value || '').toLowerCase();
   const items = state.library.filter(l => {
     if (filter && !l.name.toLowerCase().includes(filter) && !l.artist.toLowerCase().includes(filter)) return false;
     if (lmCatFilter === '__none__') return !l.settings?.category;
@@ -3426,6 +3615,8 @@ function renderLibModalList() {
     return true;
   });
   document.getElementById('lmLibCount').textContent = state.library.length;
+  const lmHdr = document.getElementById('lmLibHeaderCount');
+  if (lmHdr) lmHdr.textContent = `${items.length}${items.length !== state.library.length ? ' / '+state.library.length : ''} sanger`;
   if (!items.length) {
     el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Ingen sanger</p></div>';
     return;
@@ -3496,9 +3687,29 @@ function renderLmEditor(track) {
       id="lmSaveBtn">${inLib ? '★ Oppdater' : '☆ Lagre'}</button>`;
 
   document.getElementById('lmEditor').innerHTML = `
-    <div class="lm-editor-art">${(track.imgLg || track.img) ? `<img src="${track.imgLg || track.img}">` : ''}</div>
-    <div class="lm-editor-title">${esc(track.name)}</div>
-    <div class="lm-editor-artist">${esc(track.artist)} · ${fmtTime(track.duration)}</div>
+    <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:16px;">
+      <div style="width:80px;height:80px;border-radius:5px;overflow:hidden;background:var(--bg-raised);border:1px solid var(--border);flex-shrink:0;">
+        ${(track.imgLg || track.img) ? `<img src="${track.imgLg || track.img}" style="width:100%;height:100%;object-fit:cover;">` : ''}
+      </div>
+      <div style="flex:1;min-width:0;padding-top:2px;">
+        <div class="lm-editor-title" style="margin-bottom:3px;">${esc(track.name)}</div>
+        <div class="lm-editor-artist">${esc(track.artist)} · ${fmtTime(track.duration)}</div>
+      </div>
+    </div>
+
+    <div class="lm-section">
+      <div class="lm-label">Tidslinje <span style="font-size:10px;color:var(--text-faint);font-weight:400;letter-spacing:0;">klikk for å sette markør</span></div>
+      <div style="background:var(--bg-raised);border:1px solid var(--border);border-radius:5px;padding:10px 10px 8px;cursor:crosshair;"
+           id="lmWaveWrap" onclick="lmWaveformClick(event,'${track.id}',${track.duration})">
+        <div style="display:flex;align-items:center;gap:1px;height:48px;margin-bottom:6px;" id="lmWaveBars">${lmGenerateWave(track.id, track.duration)}</div>
+        <div style="position:relative;height:16px;" id="lmWaveMarkers">${lmWaveMarkers(s, track.duration)}</div>
+        <div style="display:flex;justify-content:space-between;margin-top:2px;">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--text-faint);">0:00</span>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--text-faint);">${fmtTime(Math.round(track.duration/2))}</span>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--text-faint);">${fmtTime(track.duration)}</span>
+        </div>
+      </div>
+    </div>
 
     <div class="lm-section">
       <div class="lm-label">Tidspunkter</div>
@@ -3561,6 +3772,65 @@ function renderLmEditor(track) {
     </div>`;
 }
 
+// Waveform for library modal
+function lmGenerateWave(trackId, duration) {
+  const count = 80;
+  const s = state.trackSettings[trackId] || {};
+  const startPct = (s.startTime || 0) / duration;
+  const endPct = (s.endTime || duration) / duration;
+  // Use seeded random for consistent bars per track
+  const seed = trackId.split('').reduce((a,c) => a + c.charCodeAt(0), 0);
+  let bars = '';
+  for (let i = 0; i < count; i++) {
+    const pct = i / count;
+    const r = Math.sin(seed + i * 2.1) * 0.5 + 0.5;
+    const h = 10 + Math.round(r * 85);
+    const inRange = pct >= startPct && pct <= endPct;
+    const color = inRange ? 'var(--accent)' : 'var(--text-faint)';
+    const opacity = inRange ? '0.7' : '0.3';
+    bars += `<div style="flex:1;background:${color};border-radius:1px;height:${h}%;opacity:${opacity};"></div>`;
+  }
+  return bars;
+}
+
+function lmWaveMarkers(s, duration) {
+  const startPct = ((s.startTime || 0) / duration * 100).toFixed(1);
+  const endPct = ((s.endTime || duration) / duration * 100).toFixed(1);
+  return `
+    <div style="position:absolute;top:-54px;left:${startPct}%;width:2px;height:50px;background:var(--green);border-radius:1px;transform:translateX(-50%);pointer-events:none;"></div>
+    <div style="position:absolute;top:0;left:${startPct}%;transform:translateX(-50%);font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--green);font-weight:700;">▶</div>
+    <div style="position:absolute;top:-54px;left:${endPct}%;width:2px;height:50px;background:var(--red);border-radius:1px;transform:translateX(-50%);pointer-events:none;"></div>
+    <div style="position:absolute;top:0;left:${endPct}%;transform:translateX(-50%);font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--red);font-weight:700;">■</div>`;
+}
+
+function lmWaveformClick(e, trackId, duration) {
+  const wrap = document.getElementById('lmWaveWrap');
+  const rect = wrap.getBoundingClientRect();
+  const pct = Math.max(0, Math.min((e.clientX - rect.left - 10) / (rect.width - 20), 1));
+  const time = Math.round(pct * duration * 10) / 10;
+  const s = state.trackSettings[trackId] || {};
+  const startPct = (s.startTime || 0) / duration;
+  const endPct = (s.endTime || duration) / duration;
+  const distToStart = Math.abs(pct - startPct);
+  const distToEnd = Math.abs(pct - endPct);
+  if (distToStart <= distToEnd) {
+    s.startTime = Math.min(time, (s.endTime || duration) - 0.1);
+    const el = document.getElementById('lmStartInput');
+    if (el) el.value = fmtTimeFine(s.startTime);
+  } else {
+    s.endTime = Math.max(time, (s.startTime || 0) + 0.1);
+    const el = document.getElementById('lmEndInput');
+    if (el) el.value = fmtTimeFine(s.endTime);
+  }
+  document.getElementById('lmWaveBars').innerHTML = lmGenerateWave(trackId, duration);
+  document.getElementById('lmWaveMarkers').innerHTML = lmWaveMarkers(s, duration);
+}
+
+// Library filter (live filter while typing in unified search when on library tab)
+function lmFilterLibrary() {
+  if (lmActiveTab === 'library') renderLibModalList();
+}
+
 function lmNudge(trackId, type, delta, duration) {
   const s = state.trackSettings[trackId];
   if (!s) return;
@@ -3573,6 +3843,11 @@ function lmNudge(trackId, type, delta, duration) {
     const el = document.getElementById('lmEndInput');
     if (el) el.value = fmtTimeFine(s.endTime);
   }
+  // Refresh waveform markers
+  const wb = document.getElementById('lmWaveBars');
+  const wm = document.getElementById('lmWaveMarkers');
+  if (wb) wb.innerHTML = lmGenerateWave(trackId, duration);
+  if (wm) wm.innerHTML = lmWaveMarkers(s, duration);
 }
 
 function lmUpdateTime(trackId, type, val, duration) {
@@ -3582,6 +3857,10 @@ function lmUpdateTime(trackId, type, val, duration) {
   if (!s) return;
   if (type === 'start') s.startTime = Math.max(0, Math.min(secs, duration-0.1));
   else s.endTime = Math.max(0.1, Math.min(secs, duration));
+  const wb = document.getElementById('lmWaveBars');
+  const wm = document.getElementById('lmWaveMarkers');
+  if (wb) wb.innerHTML = lmGenerateWave(trackId, duration);
+  if (wm) wm.innerHTML = lmWaveMarkers(s, duration);
 }
 
 function lmSetCategory(trackId, cat, btn) {
