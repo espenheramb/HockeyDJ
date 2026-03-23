@@ -994,7 +994,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v51</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v52</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -1206,7 +1206,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v51</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v52</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
@@ -1422,7 +1422,7 @@
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v51';
+const APP_VERSION = 'v52';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
@@ -1504,7 +1504,6 @@ window.onload = async () => {
   // Gjenopprett arrangementnavn
   const savedSetlistName = localStorage.getItem('hd_current_setlist_name');
   if (savedSetlistName) updateHeaderSetlistName(savedSetlistName);
-  switchLeftTab('search');
   // Set version from constant so it's always in sync
   document.querySelectorAll('#headerVersion, #modalVersion').forEach(el => el.textContent = APP_VERSION);
   renderQuickBar();
@@ -1978,12 +1977,9 @@ async function doSearch() {
   el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Søker...</p></div>';
 
   try {
-    const searchUrl = new URL('https://api.spotify.com/v1/search');
-    searchUrl.searchParams.set('q', q);
-    searchUrl.searchParams.set('type', 'track');
-    searchUrl.searchParams.set('limit', '20');
-    
-    const data = await spotifyFetch(searchUrl.toString());
+    const data = await spotifyFetch(
+      'https://api.spotify.com/v1/search?type=track&limit=20&q=' + encodeURIComponent(q)
+    );
     if (data.error) {
       throw new Error(data.error.message || 'Spotify-feil');
     }
@@ -3610,14 +3606,17 @@ function updateHeaderSetlistName(name) {
 // LEFT PANEL TAB SWITCHING
 // ============================================================
 function switchLeftTab(tab) {
+  const leftSearch = document.getElementById('leftSearch');
+  const leftLibrary = document.getElementById('leftLibrary');
+  if (!leftSearch || !leftLibrary) return; // elements don't exist in current layout
   const isSearch = tab === 'search';
-  document.getElementById('leftSearch').style.display = isSearch ? 'flex' : 'none';
-  document.getElementById('leftSearch').style.flexDirection = 'column';
-  document.getElementById('leftSearch').style.flex = '1';
-  document.getElementById('leftSearch').style.overflow = 'hidden';
-  document.getElementById('leftLibrary').style.display = isSearch ? 'none' : 'flex';
-  document.getElementById('leftTabSearch').classList.toggle('active', isSearch);
-  document.getElementById('leftTabLibrary').classList.toggle('active', !isSearch);
+  leftSearch.style.display = isSearch ? 'flex' : 'none';
+  leftSearch.style.flexDirection = 'column';
+  leftSearch.style.flex = '1';
+  leftSearch.style.overflow = 'hidden';
+  leftLibrary.style.display = isSearch ? 'none' : 'flex';
+  document.getElementById('leftTabSearch')?.classList.toggle('active', isSearch);
+  document.getElementById('leftTabLibrary')?.classList.toggle('active', !isSearch);
   if (!isSearch) renderLibrary();
 }
 
@@ -5361,12 +5360,9 @@ async function doLibModalSearch() {
   let spotifyTracks = [];
   if (state.token) {
     try {
-      const searchUrl = new URL('https://api.spotify.com/v1/search');
-      searchUrl.searchParams.set('q', q);
-      searchUrl.searchParams.set('type', 'track');
-      searchUrl.searchParams.set('limit', '15');
-      
-      const data = await spotifyFetch(searchUrl.toString());
+      const data = await spotifyFetch(
+        'https://api.spotify.com/v1/search?type=track&limit=15&q=' + encodeURIComponent(q)
+      );
       spotifyTracks = data.tracks?.items || [];
       lmSearchCache = spotifyTracks;
     } catch(e) { /* silently continue with library only */ }
