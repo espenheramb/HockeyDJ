@@ -994,7 +994,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v53</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v54</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -1206,7 +1206,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v53</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v54</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
@@ -1354,7 +1354,7 @@
             </div>
           </div>
         </div>
-        <!-- ARRANGEMENT EDITOR (col 2) -->
+        <!-- ARRANGEMENT EDITOR (col 2) — name + periods only -->
         <div id="lmArrDetailPanel" style="display:none;flex-direction:column;height:100%;">
           <div class="lib-modal-col-header">
             <span id="lmArrDetailTitle">Arrangement</span>
@@ -1369,24 +1369,21 @@
           </div>
           <!-- Periods editor -->
           <div style="flex:1;overflow-y:auto;padding:10px 14px;" id="lmArrPeriodsEditor">
-            <div class="lm-label" style="margin-bottom:8px;">Perioder <button onclick="lmAddPeriod()" style="background:var(--accent);border:none;color:#fff;padding:2px 8px;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;cursor:pointer;margin-left:8px;">+ Legg til</button></div>
+            <div class="lm-label" style="margin-bottom:8px;">Perioder
+              <button onclick="lmAddPeriod()" style="background:var(--accent);border:none;color:#fff;padding:2px 8px;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;cursor:pointer;margin-left:8px;">+ Legg til</button>
+            </div>
             <div id="lmPeriodRows"></div>
-          </div>
-          <!-- Quick buttons -->
-          <div style="padding:10px 14px;border-top:1px solid var(--border);flex-shrink:0;">
-            <div class="lm-label" style="margin-bottom:6px;">Hurtigknapper <button onclick="openQuickAddPicker()" style="background:none;border:1px solid var(--border);color:var(--text-dim);padding:2px 8px;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;cursor:pointer;margin-left:6px;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">+ Legg til</button></div>
-            <div id="lmQuickBtnsPreview" style="display:flex;gap:5px;flex-wrap:wrap;min-height:28px;"></div>
           </div>
           <!-- Save / load actions -->
           <div style="padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:6px;flex-shrink:0;">
             <button onclick="lmSaveArrangement()" class="hdr-btn hdr-btn-blue" style="flex:1;">Lagre</button>
             <button onclick="lmLoadArrangement(lmSelectedArrangement?.id)" class="hdr-btn hdr-btn-green" style="flex:1;" id="lmLoadBtn">Last inn i kø</button>
-            <button onclick="lmTogglePublic(lmSelectedArrangement?.id, !lmSelectedArrangement?.is_public)" class="hdr-btn" style="flex:1;" id="lmPublicBtn">Del offentlig</button>
+            <button onclick="lmTogglePublic(lmSelectedArrangement?.id, !lmSelectedArrangement?.is_public)" class="hdr-btn" style="flex:1;" id="lmPublicBtn">Del</button>
           </div>
         </div>
       </div>
 
-      <!-- COL 3: Song browser for arrangement / Add to period for songs -->
+      <!-- COL 3: Add to period for songs / empty for arrangements -->
       <div class="lib-modal-col">
         <!-- Songs mode (default) -->
         <div id="lmCol3Songs" style="display:flex;flex-direction:column;height:100%;">
@@ -1395,22 +1392,9 @@
             <div class="empty-state"><div class="big-icon">—</div><p>Velg en sang først</p></div>
           </div>
         </div>
-        <!-- Arrangement mode: song browser for adding to selected period -->
-        <div id="lmCol3Arr" style="display:none;flex-direction:column;height:100%;">
-          <div class="lib-modal-col-header">
-            <span id="lmCol3ArrTitle">Legg til sanger</span>
-          </div>
-          <div style="padding:6px 10px;border-bottom:1px solid var(--border);flex-shrink:0;">
-            <div class="search-input-wrap">
-              <input type="text" id="lmArrSongSearch" placeholder="Søk i bibliotek og kø..."
-                oninput="lmFilterArrSongs()">
-            </div>
-          </div>
-          <!-- Selected period indicator -->
-          <div id="lmArrActivePeriod" style="padding:5px 12px;font-size:11px;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid var(--border);flex-shrink:0;display:none;"></div>
-          <div class="lib-modal-scroll" id="lmArrSongList">
-            <div class="empty-state"><div class="big-icon">—</div><p>Velg en periode for å legge til sanger</p></div>
-          </div>
+        <!-- Arrangement mode: empty col3 -->
+        <div id="lmCol3Arr" style="display:none;flex-direction:column;height:100%;align-items:center;justify-content:center;">
+          <div class="empty-state"><div class="big-icon">—</div><p style="text-align:center;">Bygg spillelisten ved å<br>dra sanger fra Søk-panelet</p></div>
         </div>
       </div>
 
@@ -1422,7 +1406,7 @@
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v53';
+const APP_VERSION = 'v54';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
@@ -2214,6 +2198,8 @@ function addSearchResultToLibrary(track, btn) {
 
 const ALL_PERIOD_ID = '__all__';
 const CAT_LABELS = { goal:'Mål', powerplay:'Powerplay', intro:'Intro', pump:'Pump', timeout:'Timeout' };
+const searchResultCache = {}; // Spotify track cache by ID
+let lmSearchCache = []; // Library modal search cache
 function catLabel(cat) { return CAT_LABELS[cat] || cat; }
 
 function renderPeriodTabs() {
@@ -4811,7 +4797,7 @@ function toggleFullscreen() {
 let lmActiveTab = 'search';
 let lmSelectedTrack = null; // { id, name, artist, duration, img, imgLg, uri, source: 'search'|'library' }
 let lmCatFilter = '';
-let lmSearchCache = [];
+// lmSearchCache declared above
 
 function openLibModal() {
   document.getElementById('libModal').classList.add('open');
@@ -4930,7 +4916,6 @@ function renderLmArrEditor() {
   // Periods
   renderLmPeriodRows();
   // Quick buttons preview
-  renderLmQuickBtnsPreview();
   // Col 3
   if (lmEditingPeriodIdx !== null) {
     renderLmArrSongList();
@@ -4946,17 +4931,12 @@ function renderLmPeriodRows() {
          draggable="true"
          ondragstart="arrPeriodDragStart(${i})"
          ondragover="arrPeriodDragOver(event,${i})"
-         ondrop="arrPeriodDrop(event,${i})"
-         onclick="lmSelectPeriod(${i})"
-         style="${lmEditingPeriodIdx === i ? 'border-color:var(--accent);background:var(--accent-dim);' : ''}">
+         ondrop="arrPeriodDrop(event,${i})">
       <span style="color:var(--text-faint);cursor:grab;font-size:12px;flex-shrink:0;">⠿</span>
       <input class="arr-period-name" value="${esc(p.name)}"
-        onclick="event.stopPropagation()"
         onchange="lmRenamePeriod(${i}, this.value)"
         title="Klikk for å gi nytt navn">
       <span style="font-size:11px;color:var(--text-dim);flex-shrink:0;">${p.queue?.length || 0} låter</span>
-      <button onclick="event.stopPropagation();lmSelectPeriod(${i})"
-        style="background:var(--accent);border:none;color:#fff;padding:3px 8px;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">+ Sanger</button>
       <button onclick="event.stopPropagation();lmRemovePeriod(${i})"
         style="background:none;border:none;color:var(--text-faint);font-size:15px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;transition:color .12s;"
         onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-faint)'">✕</button>
@@ -5361,6 +5341,7 @@ async function doLibModalSearch() {
 
   // Fetch Spotify results
   let spotifyTracks = [];
+  let spotifyError = '';
   if (state.token) {
     try {
       const data = await spotifyFetch(
@@ -5368,7 +5349,10 @@ async function doLibModalSearch() {
       );
       spotifyTracks = data.tracks?.items || [];
       lmSearchCache = spotifyTracks;
-    } catch(e) { /* silently continue with library only */ }
+    } catch(e) {
+      spotifyError = e.message;
+      console.error('Library modal Spotify search failed:', e);
+    }
   }
 
   // Build merged results
@@ -5406,7 +5390,13 @@ async function doLibModalSearch() {
     }).join('');
   }
 
-  if (!html) html = '<div class="empty-state"><div class="big-icon">—</div><p>Ingen resultater</p></div>';
+  if (!html) {
+    if (spotifyError) {
+      html = `<div class="empty-state"><div class="big-icon">—</div><p>Spotify-feil: ${esc(spotifyError)}</p></div>`;
+    } else {
+      html = '<div class="empty-state"><div class="big-icon">—</div><p>Ingen resultater</p></div>';
+    }
+  }
   el.innerHTML = html;
 }
 
