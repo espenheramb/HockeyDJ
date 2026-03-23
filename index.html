@@ -1041,7 +1041,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v43</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v44</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -1069,21 +1069,56 @@
   <!-- MAIN -->
   <main>
 
-    <!-- LEFT: SEARCH -->
-    <div class="panel">
-      <div class="panel-header">
-        <span class="panel-title">Søk</span>
+    <!-- LEFT: SEARCH (collapsible) -->
+    <div class="panel" id="searchPanel">
+      <!-- COLLAPSED STATE: just icon -->
+      <div id="searchCollapsed" style="display:none;flex-direction:column;align-items:center;padding:12px 0;gap:10px;">
+        <button onclick="setSearchPanelState('normal')" title="Åpne søk"
+          style="background:none;border:none;color:var(--text-dim);font-size:20px;cursor:pointer;padding:8px;border-radius:6px;transition:all .15s;width:40px;height:40px;display:flex;align-items:center;justify-content:center;"
+          onmouseover="this.style.background='var(--bg-hover)';this.style.color='var(--text)'"
+          onmouseout="this.style.background='none';this.style.color='var(--text-dim)'">🔍</button>
       </div>
-      <div class="search-box">
-        <div class="search-input-wrap">
-          <input type="text" id="searchInput" placeholder="Søk etter låter..." onkeydown="if(event.key==='Enter') doSearch()">
-          <button onclick="doSearch()">Søk</button>
+      <!-- NORMAL + EXPANDED STATE -->
+      <div id="searchExpanded" style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
+        <div class="panel-header" style="flex-shrink:0;">
+          <span class="panel-title">Søk</span>
+          <div style="display:flex;gap:4px;align-items:center;">
+            <button id="expandSearchBtn" onclick="setSearchPanelState('expanded')" title="Ekspander panel"
+              style="display:none;background:none;border:1px solid var(--border);color:var(--text-dim);padding:3px 7px;border-radius:3px;cursor:pointer;font-size:12px;font-family:'Barlow Condensed',sans-serif;transition:all .15s;"
+              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">⤢</button>
+            <button id="collapseSearchBtn" onclick="setSearchPanelState('normal')" title="Normal bredde"
+              style="display:none;background:none;border:1px solid var(--border);color:var(--text-dim);padding:3px 7px;border-radius:3px;cursor:pointer;font-size:12px;font-family:'Barlow Condensed',sans-serif;transition:all .15s;"
+              onmouseover="this.style.borderColor='var(--text-dim)';this.style.color='var(--text)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">⤡</button>
+            <button onclick="setSearchPanelState('collapsed')" title="Skjul søkepanel"
+              style="background:none;border:1px solid var(--border);color:var(--text-dim);padding:3px 7px;border-radius:3px;cursor:pointer;font-size:11px;font-family:'Barlow Condensed',sans-serif;transition:all .15s;"
+              onmouseover="this.style.borderColor='var(--text-dim)';this.style.color='var(--text)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">‹</button>
+          </div>
         </div>
-      </div>
-      <div class="results-list" id="resultsList">
-        <div class="empty-state">
-          <div class="big-icon">—</div>
-          <p>Søk etter låter for å legge dem til i køen</p>
+        <!-- Category filter — only visible when expanded -->
+        <div id="searchCatFilter" style="display:none;padding:6px 10px;border-bottom:1px solid var(--border);flex-shrink:0;display:none;">
+          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            <button class="lib-cat-filter active" data-scat="" onclick="setSearchCat('',this)">Alle</button>
+            <button class="lib-cat-filter" data-scat="goal" onclick="setSearchCat('goal',this)">Mål</button>
+            <button class="lib-cat-filter" data-scat="powerplay" onclick="setSearchCat('powerplay',this)">PP</button>
+            <button class="lib-cat-filter" data-scat="intro" onclick="setSearchCat('intro',this)">Intro</button>
+            <button class="lib-cat-filter" data-scat="pump" onclick="setSearchCat('pump',this)">Pump</button>
+            <button class="lib-cat-filter" data-scat="timeout" onclick="setSearchCat('timeout',this)">Timeout</button>
+          </div>
+        </div>
+        <div class="search-box" style="flex-shrink:0;">
+          <div class="search-input-wrap">
+            <input type="text" id="searchInput" placeholder="Søk i Spotify og bibliotek..." onkeydown="if(event.key==='Enter') doSearch()">
+            <button onclick="doSearch()">Søk</button>
+          </div>
+        </div>
+        <div class="results-list" id="resultsList">
+          <div class="empty-state">
+            <div class="big-icon">—</div>
+            <p>Søk etter låter</p>
+          </div>
         </div>
       </div>
     </div>
@@ -1199,7 +1234,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v43</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v44</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
@@ -1512,7 +1547,7 @@
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v43';
+const APP_VERSION = 'v44';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
@@ -1606,6 +1641,8 @@ window.onload = async () => {
   // Check for ?import= URL parameter
   checkImportParam();
   updateDirtyIndicator();
+  // Init search panel state
+  setSearchPanelState('normal');
 };
 
 
@@ -1953,75 +1990,234 @@ async function spotifyFetch(url) {
   return res.json();
 }
 
+// ── SEARCH PANEL STATE ──────────────────────────────────────
+let searchPanelState = 'normal'; // 'collapsed' | 'normal' | 'expanded'
+let searchCatFilter = '';
+
+function setSearchPanelState(s) {
+  searchPanelState = s;
+  const panel = document.getElementById('searchPanel');
+  const collapsed = document.getElementById('searchCollapsed');
+  const expanded = document.getElementById('searchExpanded');
+  const expandBtn = document.getElementById('expandSearchBtn');
+  const collapseBtn = document.getElementById('collapseSearchBtn');
+  const catFilter = document.getElementById('searchCatFilter');
+
+  if (s === 'collapsed') {
+    panel.style.width = '44px';
+    panel.style.minWidth = '44px';
+    panel.style.maxWidth = '44px';
+    document.documentElement.style.setProperty('--left-panel-width', '44px');
+    collapsed.style.display = 'flex';
+    expanded.style.display = 'none';
+  } else if (s === 'normal') {
+    const w = localStorage.getItem('hd_left_panel_width') || '360';
+    const width = Math.max(260, parseInt(w));
+    panel.style.width = '';
+    panel.style.minWidth = '';
+    panel.style.maxWidth = '';
+    document.documentElement.style.setProperty('--left-panel-width', width + 'px');
+    collapsed.style.display = 'none';
+    expanded.style.display = 'flex';
+    expandBtn.style.display = 'inline';
+    collapseBtn.style.display = 'none';
+    catFilter.style.display = 'none';
+  } else if (s === 'expanded') {
+    document.documentElement.style.setProperty('--left-panel-width', '600px');
+    collapsed.style.display = 'none';
+    expanded.style.display = 'flex';
+    expandBtn.style.display = 'none';
+    collapseBtn.style.display = 'inline';
+    catFilter.style.display = 'block';
+    // Re-render with expanded layout if results exist
+    const q = document.getElementById('searchInput').value.trim();
+    if (q) doSearch();
+  }
+}
+
+function setSearchCat(cat, btn) {
+  searchCatFilter = cat;
+  document.querySelectorAll('[data-scat]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // Re-render current results with filter
+  const q = document.getElementById('searchInput').value.trim();
+  if (q) renderMergedResults();
+  else renderLibraryOnly();
+}
+
+// Render library-only results (no search query)
+function renderLibraryOnly() {
+  const el = document.getElementById('resultsList');
+  let lib = [...state.library];
+  if (searchCatFilter) lib = lib.filter(l => (state.trackSettings[l.id]?.category || l.settings?.category || '') === searchCatFilter);
+  if (!lib.length) {
+    el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Ingen sanger i biblioteket</p></div>';
+    return;
+  }
+  el.innerHTML = lib.map(t => renderSearchItem(t, null, 'library')).join('');
+}
+
 async function doSearch() {
   const q = document.getElementById('searchInput').value.trim();
-  if (!q) return;
-  if (!state.token) { showToast('Logg inn med Spotify først', 'error'); return; }
 
+  // If expanded with no query — show library
+  if (!q) {
+    if (searchPanelState === 'expanded') renderLibraryOnly();
+    return;
+  }
+
+  if (!state.token) { showToast('Logg inn med Spotify først', 'error'); return; }
   const el = document.getElementById('resultsList');
   el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Søker...</p></div>';
 
   try {
     const data = await spotifyFetch(
-      `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=10&market=NO`
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=20&market=NO`
     );
-    renderTrackResults(data.tracks?.items || []);
+    const spotify = data.tracks?.items || [];
+    spotify.forEach(t => { searchResultCache[t.id] = t; });
+    window._lastSpotifyResults = spotify;
+    renderMergedResults();
   } catch(e) {
     showToast(`Søk feilet: ${e.message}`, 'error');
     el.innerHTML = `<div class="empty-state"><div class="big-icon">—</div><p>${e.message}</p></div>`;
   }
 }
 
-// Cache for search results so we don't need JSON in onclick
-const searchResultCache = {};
+function renderMergedResults() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const spotify = window._lastSpotifyResults || [];
+  const el = document.getElementById('resultsList');
+  const cat = searchCatFilter;
+
+  // Library matches
+  let libMatches = state.library.filter(l => {
+    if (q && !l.name.toLowerCase().includes(q) && !l.artist.toLowerCase().includes(q)) return false;
+    if (cat) {
+      const c = state.trackSettings[l.id]?.category || l.settings?.category || '';
+      if (c !== cat) return false;
+    }
+    return true;
+  });
+
+  // Spotify results (filter by cat if needed)
+  let spotifyFiltered = spotify.filter(t => {
+    if (!cat) return true;
+    const c = state.trackSettings[t.id]?.category || '';
+    return c === cat;
+  });
+
+  const isExpanded = searchPanelState === 'expanded';
+
+  let html = '';
+
+  // Library section
+  if (libMatches.length) {
+    html += `<div style="padding:4px 10px 2px;font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);">Bibliotek</div>`;
+    html += libMatches.map(t => {
+      const s = state.trackSettings[t.id] || t.settings || {};
+      return renderSearchItem({ ...t, settings: s }, s, 'library');
+    }).join('');
+  }
+
+  // Spotify section
+  if (spotifyFiltered.length) {
+    if (libMatches.length) {
+      html += `<div style="height:1px;background:var(--border);margin:4px 0;"></div>`;
+    }
+    html += `<div style="padding:4px 10px 2px;font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);">Spotify</div>`;
+    html += spotifyFiltered.map(t => {
+      const track = {
+        id: t.id, name: t.name, artist: t.artists[0].name,
+        duration: Math.round(t.duration_ms/1000),
+        img: t.album.images[2]?.url || '', imgMd: t.album.images[1]?.url || '',
+        imgLg: t.album.images[0]?.url || '', uri: t.uri
+      };
+      const s = state.trackSettings[t.id] || {};
+      return renderSearchItem(track, s, 'spotify');
+    }).join('');
+  }
+
+  if (!html) {
+    el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Ingen resultater</p></div>';
+    return;
+  }
+  el.innerHTML = html;
+}
+
+function renderSearchItem(track, s, source) {
+  const inLib = source === 'library' || !!state.library.find(l => l.id === track.id);
+  const cat = s?.category || '';
+  const note = s?.note || '';
+  const startTime = s?.startTime || 0;
+  const endTime = s?.endTime;
+  const duration = track.duration || 0;
+  const hasCustomRange = startTime > 0 || (endTime && endTime < duration);
+  const isExpanded = searchPanelState === 'expanded';
+
+  const img = track.img || track.imgMd || '';
+  const inQueue = !!getActiveQueue().find(q => q.id === track.id);
+
+  return `
+    <div class="result-item" id="sri-${track.id}"
+         ondblclick="addSearchItemToQueue('${track.id}','${source}')"
+         draggable="true"
+         ondragstart="searchDragStart(event,'${track.id}','${source}')"
+         ondragend="searchDragEnd()"
+         style="${inQueue ? 'opacity:0.65;' : ''}"
+         title="Dobbeltklikk eller dra til kø">
+      <div class="result-thumb">${img ? `<img src="${img}">` : ''}</div>
+      <div class="result-info" style="flex:1;min-width:0;">
+        <div class="result-name" style="color:var(--text);">${esc(track.name)}</div>
+        <div class="result-sub" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <span>${esc(track.artist || '')}</span>
+          ${duration ? `<span style="color:var(--text-faint);">${fmtTime(duration)}</span>` : ''}
+          ${cat ? `<span style="color:var(--accent);font-size:10px;font-weight:700;">${catLabel(cat)}</span>` : ''}
+          ${isExpanded && hasCustomRange ? `<span style="color:var(--text-faint);font-size:10px;">${fmtTime(startTime)}–${fmtTime(endTime||duration)}</span>` : ''}
+          ${isExpanded && note ? `<span style="color:var(--text-faint);font-size:10px;font-style:italic;">"${esc(note.slice(0,30))}"</span>` : ''}
+        </div>
+      </div>
+      <button id="srl-${track.id}"
+        style="background:none;border:none;cursor:pointer;font-size:17px;color:${inLib ? 'var(--gold)' : 'var(--text-faint)'};padding:4px;flex-shrink:0;transition:color .15s;"
+        onclick="saveSearchTrackToLibrary('${track.id}')"
+        title="${inLib ? 'I biblioteket' : 'Lagre til bibliotek'}">${inLib ? '★' : '☆'}</button>
+    </div>`;
+}
+
+function addSearchItemToQueue(trackId, source) {
+  if (source === 'library') {
+    const entry = state.library.find(l => l.id === trackId);
+    if (entry) addLibItemToQueue(trackId);
+  } else {
+    addSearchTrackById(trackId);
+  }
+}
 
 function renderTrackResults(tracks) {
-  const el = document.getElementById('resultsList');
-  if (!tracks.length) { el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Ingen resultater</p></div>'; return; }
-
+  // Cache and hand off to unified renderer
   tracks.forEach(t => { searchResultCache[t.id] = t; });
-
-  el.innerHTML = tracks.map(t => {
-    const inLib = !!state.library.find(l => l.id === t.id);
-    return `
-    <div class="result-item" id="sri-${t.id}"
-         ondblclick="addSearchTrackById('${t.id}')"
-         draggable="true"
-         ondragstart="searchDragStart(event,'${t.id}')"
-         ondragend="searchDragEnd()"
-         title="Dobbeltklikk for å legge til · Dra til kø eller periode">
-      <div class="result-thumb">${t.album.images[1] ? `<img src="${t.album.images[1].url}">` : ''}</div>
-      <div class="result-info">
-        <div class="result-name">${esc(t.name)}</div>
-        <div class="result-sub">${esc(t.artists[0].name)} · ${fmtTime(Math.round(t.duration_ms/1000))}</div>
-      </div>
-      <button id="srl-${t.id}"
-        style="background:none;border:none;cursor:pointer;font-size:18px;color:${inLib ? 'var(--gold)' : 'var(--text-faint)'};padding:4px;line-height:1;transition:color .15s;flex-shrink:0;"
-        onclick="saveSearchTrackToLibrary('${t.id}')"
-        onmouseover="if(!this.classList.contains('in-lib'))this.style.color='var(--text-dim)'"
-        onmouseout="if(!this.classList.contains('in-lib'))this.style.color='var(--text-faint)'"
-        ${inLib ? 'class="in-lib"' : ''}
-        title="${inLib ? 'I biblioteket' : 'Lagre til bibliotek'}">${inLib ? '★' : '☆'}</button>
-    </div>
-  `}).join('');
+  window._lastSpotifyResults = tracks;
+  renderMergedResults();
 }
 
 // Drag from search results
 let searchDragId = null;
 
-function searchDragStart(e, trackId) {
+function searchDragStart(e, trackId, source) {
   searchDragId = trackId;
   dragType = 'search';
   e.dataTransfer.effectAllowed = 'copy';
   e.dataTransfer.setData('text/plain', 'search:' + trackId);
   document.getElementById('periodTabs').classList.add('drag-active');
 
-  // Ghost: album art only
-  const t = searchResultCache[trackId];
-  if (t) {
+  // Ghost: album art
+  const track = source === 'library'
+    ? state.library.find(l => l.id === trackId)
+    : searchResultCache[trackId];
+  const img = track?.img || track?.imgMd || (searchResultCache[trackId]?.album?.images?.[1]?.url);
+  if (img || track) {
     const ghost = document.createElement('div');
     ghost.style.cssText = 'position:fixed;top:-200px;left:-200px;width:48px;height:48px;border-radius:4px;overflow:hidden;background:var(--bg-raised);border:1px solid var(--border);';
-    const img = t.album.images[1]?.url || t.album.images[0]?.url;
     if (img) ghost.innerHTML = `<img src="${img}" style="width:100%;height:100%;object-fit:cover;">`;
     document.body.appendChild(ghost);
     e.dataTransfer.setDragImage(ghost, 24, 24);
@@ -2036,6 +2232,12 @@ function searchDragEnd() {
 }
 
 function addSearchTrackToState(id) {
+  // Check library first
+  const lib = state.library.find(l => l.id === id);
+  if (lib) return { id: lib.id, name: lib.name, artist: lib.artist,
+    duration: lib.duration, img: lib.img, imgMd: lib.imgMd || lib.img,
+    imgLg: lib.imgLg || lib.img, uri: lib.uri };
+  // Spotify cache
   const t = searchResultCache[id];
   if (!t) return null;
   return {
@@ -2097,6 +2299,8 @@ function addSearchResultToLibrary(track, btn) {
 }
 
 const ALL_PERIOD_ID = '__all__';
+const CAT_LABELS = { goal:'Mål', powerplay:'Powerplay', intro:'Intro', pump:'Pump', timeout:'Timeout' };
+function catLabel(cat) { return CAT_LABELS[cat] || cat; }
 
 function renderPeriodTabs() {
   const el = document.getElementById('periodTabs');
@@ -2646,26 +2850,25 @@ function dragDrop(e, i) {
 // ============================================================
 function selectTrack(idx) {
   const track = getActiveQueue()[idx];
+  if (!track) return;
   state.selectedTrackId = track.id;
 
-  // Last sangen klar uten å spille
-  // Bare oppdater lastet-indeks hvis ikke allerede spiller denne
-  if (state.currentIndex !== idx) {
+  // Update editor without stopping playback
+  // Only update loadedIndex if this track is not currently playing
+  const isCurrentlyPlaying = state.isPlaying &&
+    state.currentPeriodId === state.activePeriodId &&
+    state.currentIndex === idx;
+
+  if (!isCurrentlyPlaying) {
     state.loadedIndex = idx;
-    // Oppdater player bar til å vise den valgte sangen
     const s = state.trackSettings[track.id] || { startTime: 0, endTime: track.duration, category: '' };
-    updatePlayerBar(track, s);
-    // Stopp evt. pågående avspilling
-    if (state.isPlaying) {
-      if (state.player && !state.demoMode) state.player.pause();
-      state.isPlaying = false;
-      stopTicker();
-      updatePlayerUI();
+    // Only update player bar preview if nothing is playing
+    if (!state.isPlaying) {
+      updatePlayerBar(track, s);
+      state.currentPos = s.startTime || 0;
+      state.duration = track.duration;
+      updateProgressUI();
     }
-    state.currentPos = s.startTime || 0;
-    state.duration = track.duration;
-    updateProgressUI();
-    renderQueue();
   }
   const s = state.trackSettings[track.id] || { startTime: 0, endTime: track.duration, category: '' };
 
@@ -2681,6 +2884,7 @@ function selectTrack(idx) {
         <div class="waveform-markers" id="waveformMarkers">
           ${renderWaveMarkers(s, track.duration)}
         </div>
+        <div id="wavePlayCursor" style="display:none;position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,0.7);border-radius:1px;pointer-events:none;transform:translateX(-50%);transition:left 0.25s linear;z-index:10;"></div>
       </div>
     </div>
 
@@ -2728,9 +2932,9 @@ function selectTrack(idx) {
     <div class="editor-section">
       <div class="editor-label">Kategori</div>
       <div class="category-pills">
-        ${['goal','powerplay','intro','pump','timeout'].map(cat => `
+        ${[['goal','Mål'],['powerplay','Powerplay'],['intro','Intro'],['pump','Pump'],['timeout','Timeout']].map(([cat,label]) => `
           <div class="cat-pill${s.category===cat?' active':''}" data-cat="${cat}"
-               onclick="setCategory('${track.id}','${cat}',this)">${cat}</div>
+               onclick="setCategory('${track.id}','${cat}',this)">${label}</div>
         `).join('')}
       </div>
     </div>
@@ -3191,6 +3395,12 @@ function updateProgressUI() {
   document.getElementById('progressHandle').style.left = pct + '%';
   document.getElementById('currentTime').textContent = fmtTime(Math.round(state.currentPos));
   document.getElementById('totalTime').textContent = fmtTime(Math.round(state.duration));
+  // Update waveform play cursor
+  const cursor = document.getElementById('wavePlayCursor');
+  if (cursor && state.duration > 0) {
+    cursor.style.left = pct + '%';
+    cursor.style.display = 'block';
+  }
 }
 
 function toggleAutoplay() {
@@ -5217,6 +5427,7 @@ async function doLibModalSearch() {
 }
 
 function lmSelectSearchTrack(id) {
+  lmIsPlaying = false; updateLmPlayBtn(false);
   const t = lmSearchCache.find(t => t.id === id);
   if (!t) return;
   // Highlight
@@ -5280,6 +5491,7 @@ function renderLibModalList() {
 }
 
 function lmSelectLibTrack(id) {
+  lmIsPlaying = false; updateLmPlayBtn(false);
   const entry = state.library.find(l => l.id === id);
   if (!entry) return;
   document.querySelectorAll('#lmLibraryList .lm-item').forEach(el => el.classList.remove('selected'));
@@ -5385,10 +5597,10 @@ function renderLmEditor(track) {
     <div class="lm-section">
       <div class="lm-label">Kategori</div>
       <div style="display:flex;flex-wrap:wrap;gap:5px;">
-        ${['goal','powerplay','intro','pump','timeout'].map(cat => `
+        ${[['goal','Mål'],['powerplay','Powerplay'],['intro','Intro'],['pump','Pump'],['timeout','Timeout']].map(([cat,label]) => `
           <button onclick="lmSetCategory('${track.id}','${cat}',this)"
             style="padding:5px 12px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);transition:all .12s;background:${s.category===cat?'var(--accent)':'none'};color:${s.category===cat?'white':'var(--text-dim)'};"
-            data-lmcat-pill="${cat}">${cat}</button>`).join('')}
+            data-lmcat-pill="${cat}">${label}</button>`).join('')}
       </div>
     </div>
 
@@ -5530,10 +5742,22 @@ function lmSaveToLibrary(trackId) {
   document.getElementById('lmLibCount').textContent = state.library.length;
 }
 
+let lmIsPlaying = false;
+
 async function lmPlayTrack(trackId) {
-  // Play using the existing playback engine — search cache or library
   const track = lmSelectedTrack;
   if (!track || !track.uri) { showToast('Ingen sang valgt', 'error'); return; }
+
+  // Toggle pause if same track playing
+  if (lmIsPlaying) {
+    try {
+      if (state.player && !state.demoMode) await state.player.pause();
+      lmIsPlaying = false;
+      updateLmPlayBtn(false);
+    } catch(e) {}
+    return;
+  }
+
   if (!state.player || !state.deviceId) { showToast('Spotify ikke klar', 'error'); return; }
   const s = state.trackSettings[trackId] || {};
   const startMs = (s.startTime || 0) * 1000;
@@ -5543,8 +5767,32 @@ async function lmPlayTrack(trackId) {
       headers: { Authorization: `Bearer ${state.token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ uris: [track.uri], position_ms: startMs })
     });
+    lmIsPlaying = true;
+    updateLmPlayBtn(true);
     showToast(`Spiller: ${track.name}`, 'success');
+    // Auto-reset when stop time reached
+    const stopTime = (s.endTime || track.duration) * 1000;
+    const playDuration = stopTime - startMs;
+    if (playDuration > 0) {
+      setTimeout(() => {
+        if (lmIsPlaying) {
+          if (state.player && !state.demoMode) state.player.pause();
+          lmIsPlaying = false;
+          updateLmPlayBtn(false);
+        }
+      }, playDuration);
+    }
   } catch(e) { showToast('Avspilling feilet', 'error'); }
+}
+
+function updateLmPlayBtn(playing) {
+  const btn = document.getElementById('lmPlayBtn');
+  if (btn) {
+    btn.innerHTML = playing ? '&#9646;&#9646; Pause' : '&#9654; Spill';
+    btn.style.background = playing ? 'var(--bg-raised)' : 'none';
+    btn.style.borderColor = playing ? 'var(--text-dim)' : 'var(--accent)';
+    btn.style.color = playing ? 'var(--text)' : 'var(--accent)';
+  }
 }
 
 // PERIOD LIST — lets you add selected track to any period
