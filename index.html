@@ -850,55 +850,6 @@
   }
   #resizeHandle:hover { background: var(--accent); }
 
-  /* ─── GALLERY MODAL ─────────────────────────────────────── */
-  .gallery-modal {
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    width: min(900px, 96vw);
-    height: min(700px, 90vh);
-    display: grid;
-    grid-template-rows: 52px 1fr;
-    overflow: hidden;
-    transform: translateY(12px);
-    transition: transform 0.2s;
-  }
-  .lib-modal-overlay.open .gallery-modal { transform: translateY(0); }
-
-  .gallery-card {
-    background: var(--bg-raised);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 14px 16px;
-    transition: border-color 0.15s;
-    display: flex; flex-direction: column; gap: 8px;
-  }
-  .gallery-card:hover { border-color: var(--accent); }
-  .gallery-card-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700; font-size: 16px; color: var(--text);
-  }
-  .gallery-card-meta {
-    font-size: 11px; color: var(--text-dim);
-    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
-  }
-  .gallery-card-periods {
-    display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px;
-  }
-  .gallery-period-tag {
-    background: var(--bg); border: 1px solid var(--border);
-    border-radius: 3px; padding: 2px 7px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 11px; color: var(--text-dim);
-  }
-  .gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 12px; padding: 16px; overflow-y: auto;
-    align-content: start;
-  }
-  .gallery-grid::-webkit-scrollbar { width: 3px; }
-  .gallery-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
   .lib-modal-overlay {
     position: fixed; inset: 0;
     background: rgba(0,0,0,0.75);
@@ -1043,7 +994,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v47</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v48</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -1128,11 +1079,11 @@
     </div>
 
     <!-- RESIZE HANDLE -->
-    <div id="resizeHandle" style="width:6px;background:var(--panel-border);cursor:col-resize;transition:background .2s;flex-shrink:0;position:relative;z-index:5;"
-         onmouseenter="this.style.background='var(--active)'"
-         onmouseleave="this.style.background='var(--panel-border)'"
+    <div id="resizeHandle" style="width:6px;background:var(--border);cursor:col-resize;transition:background .2s;flex-shrink:0;position:relative;z-index:5;"
+         onmouseenter="this.style.background='var(--accent)'"
+         onmouseleave="this.style.background='var(--border)'"
          onmousedown="startResize(event)">
-      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--panel-border);font-size:10px;user-select:none;">⋮⋮</div>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--border);font-size:10px;user-select:none;">⋮⋮</div>
     </div>
 
     <!-- CENTER: QUEUE -->
@@ -1238,14 +1189,14 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v47</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v48</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
       <button class="modal-btn secondary" onclick="useDemoMode()">Bruk demo-modus (uten Spotify)</button>
       <p class="modal-note">Krever Spotify Premium for avspilling.</p>
       <p style="margin-top:10px;font-size:11px;color:var(--text-dim);text-align:center;">
-        Problemer med innlogging? <button onclick="forceLogout()" style="background:none;border:none;color:var(--active);cursor:pointer;font-size:11px;text-decoration:underline;padding:0;">Tøm lagret sesjon og prøv igjen</button>
+        Problemer med innlogging? <button onclick="forceLogout()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:11px;text-decoration:underline;padding:0;">Tøm lagret sesjon og prøv igjen</button>
       </p>
     </div>
   </div>
@@ -1275,103 +1226,6 @@
   </div>
 </div>
 <div class="toast" id="toast"></div>
-
-<!-- GALLERY MODAL -->
-<div class="lib-modal-overlay" id="galleryModal" onclick="if(event.target===this)closeGalleryModal()">
-  <div class="gallery-modal">
-    <div class="lib-modal-header">
-      <span class="lib-modal-title">Galleri</span>
-      <div class="lib-modal-tabs">
-        <button class="lib-modal-tab active" id="galTabBrowse" onclick="switchGalleryTab('browse')">Offentlige arrangementer</button>
-        <button class="lib-modal-tab" id="galTabMine" onclick="switchGalleryTab('mine')">Mine delte</button>
-        <button class="lib-modal-tab" id="galTabShare" onclick="switchGalleryTab('share')">Del arrangement</button>
-        <button class="lib-modal-tab" id="galTabSettings" onclick="switchGalleryTab('settings')">Innstillinger</button>
-      </div>
-      <button class="lib-modal-close" onclick="closeGalleryModal()">&#x2715;</button>
-    </div>
-
-    <div id="galContent" style="overflow:hidden;display:flex;flex-direction:column;height:100%;">
-
-      <!-- BROWSE TAB -->
-      <div id="galBrowseView" style="display:flex;flex-direction:column;height:100%;">
-        <div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-shrink:0;">
-          <div class="search-input-wrap" style="flex:1;">
-            <input type="text" id="galSearchInput" placeholder="Søk i offentlige arrangementer..." oninput="filterGallery()">
-          </div>
-          <button class="hdr-btn hdr-btn-blue" onclick="loadGallery()">Oppdater</button>
-        </div>
-        <div id="galBrowseGrid" class="gallery-grid">
-          <div class="empty-state" style="grid-column:1/-1;"><div class="big-icon">—</div><p>Klikk Oppdater for å laste offentlige arrangementer</p></div>
-        </div>
-      </div>
-
-      <!-- MINE TAB -->
-      <div id="galMineView" style="display:none;flex-direction:column;height:100%;">
-        <div id="galMineGrid" class="gallery-grid">
-          <div class="empty-state" style="grid-column:1/-1;"><div class="big-icon">—</div><p>Du har ikke delt noen arrangementer ennå</p></div>
-        </div>
-      </div>
-
-      <!-- SHARE TAB -->
-      <div id="galShareView" style="display:none;padding:24px;overflow-y:auto;">
-        <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;margin-bottom:16px;">Del et arrangement</h3>
-        <div class="lm-section">
-          <div class="lm-label">Velg arrangement</div>
-          <select id="galShareSelect" style="width:100%;background:var(--bg-raised);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:8px 10px;font-family:'Barlow',sans-serif;font-size:13px;outline:none;">
-            <option value="">— Velg arrangement —</option>
-          </select>
-        </div>
-        <div class="lm-section">
-          <div class="lm-label">Kategori (valgfritt)</div>
-          <input type="text" id="galShareCategory" placeholder="F.eks. Hockey, Turnering, U16..."
-            style="width:100%;background:var(--bg-raised);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:8px 10px;font-family:'Barlow',sans-serif;font-size:13px;outline:none;">
-        </div>
-        <div class="lm-section">
-          <div class="lm-label">Synlighet</div>
-          <div style="display:flex;gap:10px;">
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
-              <input type="radio" name="galVisibility" value="public" checked> Offentlig — vises i galleriet
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
-              <input type="radio" name="galVisibility" value="secret"> Privat — bare de med lenken
-            </label>
-          </div>
-        </div>
-        <button onclick="shareArrangement()" style="background:var(--accent);border:none;color:white;padding:10px 24px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:1px;cursor:pointer;transition:opacity .2s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-          Del arrangement
-        </button>
-        <div id="galShareResult" style="margin-top:16px;display:none;">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;">Lenke</div>
-          <div style="display:flex;gap:8px;">
-            <input type="text" id="galShareLink" readonly style="flex:1;background:var(--bg-raised);border:1px solid var(--green);border-radius:4px;color:var(--green);padding:8px 10px;font-family:'Barlow Condensed',sans-serif;font-size:13px;outline:none;">
-            <button onclick="copyGalLink()" style="background:var(--bg-raised);border:1px solid var(--border);color:var(--text-dim);padding:8px 12px;border-radius:4px;cursor:pointer;font-size:12px;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">Kopier</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- SETTINGS TAB -->
-      <div id="galSettingsView" style="display:none;padding:24px;overflow-y:auto;">
-        <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;margin-bottom:6px;">Sky-lagring</h3>
-        <p style="font-size:13px;color:var(--text-dim);margin-bottom:20px;line-height:1.6;">
-          Arrangementer og bibliotek lagres automatisk i skyen når du er innlogget med Spotify.
-          Data er knyttet til din Spotify-konto og synkroniseres på alle enheter.
-        </p>
-        <div id="galCloudStatus" style="background:var(--bg-raised);border:1px solid var(--border);border-radius:6px;padding:14px 16px;margin-bottom:20px;font-size:13px;"></div>
-        <div class="lm-section">
-          <div class="lm-label">Importer fra arrangement-ID</div>
-          <p style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">Har du fått en lenke eller ID til et arrangement?</p>
-          <div style="display:flex;gap:8px;">
-            <input type="text" id="galImportUrl" placeholder="Lim inn lenke eller arrangement-ID..."
-              style="flex:1;background:var(--bg-raised);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:8px 10px;font-family:'Barlow',sans-serif;font-size:13px;outline:none;transition:border-color .2s;"
-              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
-            <button onclick="importFromUrl()" style="background:var(--bg-raised);border:1px solid var(--border);color:var(--text-dim);padding:8px 14px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">Hent</button>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</div>
 
 <!-- LIBRARY MODAL -->
 <div class="lib-modal-overlay" id="libModal" onclick="if(event.target===this)closeLibModal()">
@@ -1551,7 +1405,7 @@
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v47';
+const APP_VERSION = 'v48';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
@@ -1575,9 +1429,8 @@ const state = {
   library: JSON.parse(localStorage.getItem('hd_library') || '[]'), // Permanent sangbibliotek
   // Hurtigknapper: [{ id, trackId, label, key, periodId }]
   quickButtons: JSON.parse(localStorage.getItem('hd_quickbtns') || '[]'),
-  githubToken: localStorage.getItem('hd_github_token') || '',
   _dirtyArrangements: new Set(),
-  _queueDirty: false, // true when queue has unsaved changes
+  _queueDirty: false,
   loadedIndex: -1,
   currentIndex: -1,
   currentPeriodId: localStorage.getItem('hd_active_period') || 'p0',
@@ -1595,12 +1448,6 @@ const state = {
 // INIT
 // ============================================================
 window.onload = async () => {
-  // Pre-fill client ID if saved
-  if (state.clientId) {
-    // Client ID is hardcoded, just store it
-    localStorage.setItem('spotify_client_id', SPOTIFY_CLIENT_ID);
-  }
-
   // Handle OAuth callback (token in URL hash)
   const params = new URLSearchParams(window.location.search);
   const hashParams = new URLSearchParams(window.location.hash.replace('#', ''));
@@ -1673,7 +1520,6 @@ async function startPKCEFlow() {
   const clientId = SPOTIFY_CLIENT_ID;
   localStorage.setItem('spotify_client_id', clientId);
   sessionStorage.setItem('spotify_client_id', clientId);
-  state.clientId = clientId;
 
   const verifier = await generateCodeVerifier();
   const challenge = await generateCodeChallenge(verifier);
@@ -2382,7 +2228,7 @@ function periodTabContextMenu(e, id) {
   const menu = document.createElement('div');
   menu.id = 'periodCtxMenu';
   menu.style.cssText = `position:fixed;top:${e.clientY}px;left:${e.clientX}px;
-    background:var(--panel);border:1px solid var(--panel-border);border-radius:8px;
+    background:var(--panel);border:1px solid var(--border);border-radius:8px;
     padding:6px;z-index:200;min-width:160px;box-shadow:0 4px 20px rgba(0,0,0,0.4);`;
 
   menu.innerHTML = `
@@ -2480,7 +2326,8 @@ function tabDrop(e, targetId) {
     } else {
       targetPeriod.queue.push(track);
       if (!state.trackSettings[track.id]) state.trackSettings[track.id] = { startTime: 0, endTime: track.duration, category: '', note: '', fadeOut: 0 };
-      saveState(); renderPeriodTabs(); renderQueue();
+      saveState(); markQueueDirty(); renderPeriodTabs(); renderQueue();
+      refreshSearchPanel();
       showToast(`"${track.name}" → ${targetPeriod.name} ✓`, 'success');
       const item = document.getElementById('sri-' + searchDragId);
       if (item) item.style.opacity = '0.6';
@@ -2501,10 +2348,11 @@ function tabDrop(e, targetId) {
       } else if (!state.trackSettings[entry.id]) {
         state.trackSettings[entry.id] = { startTime: 0, endTime: entry.duration, category: '', note: '', fadeOut: 0 };
       }
-      saveState();
+      saveState(); markQueueDirty();
       renderPeriodTabs();
       renderQueue();
       renderLibrary();
+      refreshSearchPanel();
       showToast(`"${entry.name}" → ${targetPeriod.name} ✓`, 'success');
     }
   } else if (dragType === 'track' && dragTrackIdx !== null) {
@@ -2741,7 +2589,7 @@ function renderQueue() {
                 <span style="width:3px;background:var(--gold);border-radius:1px;animation:paAnim .8s ease-in-out infinite alternate .2s;display:block"></span>
                 <span style="width:3px;background:var(--gold);border-radius:1px;animation:paAnim .8s ease-in-out infinite alternate .4s;display:block"></span>
                </span>`
-            : `<span style="color:${isLoaded ? 'var(--ice)' : isPlayed ? 'var(--text-dim)' : 'var(--text-dim)'}">▶</span>`}
+            : `<span style="color:${isLoaded ? 'var(--accent)' : isPlayed ? 'var(--text-dim)' : 'var(--text-dim)'}">▶</span>`}
         </button>
         <div class="track-thumb">${t.img ? `<img src="${t.img}">` : ''}</div>
         <div class="track-info">
@@ -2890,24 +2738,35 @@ function selectTrack(idx) {
   if (!track) return;
   state.selectedTrackId = track.id;
 
-  // Update editor without stopping playback
-  // Only update loadedIndex if this track is not currently playing
   const isCurrentlyPlaying = state.isPlaying &&
     state.currentPeriodId === state.activePeriodId &&
     state.currentIndex === idx;
 
   if (!isCurrentlyPlaying) {
     state.loadedIndex = idx;
-    const s = state.trackSettings[track.id] || { startTime: 0, endTime: track.duration, category: '' };
-    // Only update player bar preview if nothing is playing
     if (!state.isPlaying) {
+      const s = state.trackSettings[track.id] || {};
       updatePlayerBar(track, s);
       state.currentPos = s.startTime || 0;
       state.duration = track.duration;
       updateProgressUI();
     }
   }
-  const s = state.trackSettings[track.id] || { startTime: 0, endTime: track.duration, category: '' };
+  renderTrackEditor(track);
+  renderQueue();
+}
+
+// Render editor sidebar for any track — single source of truth
+function selectTrackInEditor(track) {
+  if (!track) return;
+  state.selectedTrackId = track.id;
+  renderTrackEditor(track);
+}
+
+function renderTrackEditor(track) {
+  if (!track) return;
+  const s = state.trackSettings[track.id] || { startTime: 0, endTime: track.duration, category: '', note: '', fadeOut: 0 };
+  const inLib = !!state.library.find(l => l.id === track.id);
 
   document.getElementById('editorContent').innerHTML = `
     <div class="editor-thumb">${(track.imgLg || track.img) ? `<img src="${track.imgLg || track.img}">` : ''}</div>
@@ -2918,9 +2777,7 @@ function selectTrack(idx) {
       <div class="editor-label">Tidslinje <span style="color:var(--text-dim);font-size:10px">klikk for å sette markør</span></div>
       <div class="waveform-wrap" id="waveformWrap" onclick="waveformClick(event,'${track.id}',${track.duration})">
         <div class="waveform" id="waveformBars">${generateWaveBars(track.id, track.duration)}</div>
-        <div class="waveform-markers" id="waveformMarkers">
-          ${renderWaveMarkers(s, track.duration)}
-        </div>
+        <div class="waveform-markers" id="waveformMarkers">${renderWaveMarkers(s, track.duration)}</div>
         <div id="wavePlayCursor" style="display:none;position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,0.7);border-radius:1px;pointer-events:none;transform:translateX(-50%);transition:left 0.25s linear;z-index:10;"></div>
       </div>
     </div>
@@ -2933,9 +2790,8 @@ function selectTrack(idx) {
           <div style="display:flex;align-items:center;gap:4px;">
             <button onclick="nudgeTime('${track.id}','start',-1,${track.duration})" class="nudge-btn">−1</button>
             <button onclick="nudgeTime('${track.id}','start',-0.1,${track.duration})" class="nudge-btn">−.1</button>
-            <input type="text" id="startInput" value="${fmtTimeFine(s.startTime)}" placeholder="0:00.0"
-              onchange="updateTimeFromInput('${track.id}','start',this.value,${track.duration})"
-              style="flex:1;min-width:0;">
+            <input type="text" id="startInput" value="${fmtTimeFine(s.startTime||0)}" placeholder="0:00.0"
+              onchange="updateTimeFromInput('${track.id}','start',this.value,${track.duration})" style="flex:1;min-width:0;">
             <button onclick="nudgeTime('${track.id}','start',0.1,${track.duration})" class="nudge-btn">+.1</button>
             <button onclick="nudgeTime('${track.id}','start',1,${track.duration})" class="nudge-btn">+1</button>
           </div>
@@ -2945,101 +2801,28 @@ function selectTrack(idx) {
           <div style="display:flex;align-items:center;gap:4px;">
             <button onclick="nudgeTime('${track.id}','end',-1,${track.duration})" class="nudge-btn">−1</button>
             <button onclick="nudgeTime('${track.id}','end',-0.1,${track.duration})" class="nudge-btn">−.1</button>
-            <input type="text" id="endInput" value="${fmtTimeFine(s.endTime || track.duration)}" placeholder="${fmtTimeFine(track.duration)}"
-              onchange="updateTimeFromInput('${track.id}','end',this.value,${track.duration})"
-              style="flex:1;min-width:0;">
+            <input type="text" id="endInput" value="${fmtTimeFine(s.endTime||track.duration)}" placeholder="${fmtTimeFine(track.duration)}"
+              onchange="updateTimeFromInput('${track.id}','end',this.value,${track.duration})" style="flex:1;min-width:0;">
             <button onclick="nudgeTime('${track.id}','end',0.1,${track.duration})" class="nudge-btn">+.1</button>
             <button onclick="nudgeTime('${track.id}','end',1,${track.duration})" class="nudge-btn">+1</button>
           </div>
         </div>
       </div>
-      <button onclick="resetTrackPosition('${track.id}')" style="margin-top:8px;width:100%;background:none;border:1px solid var(--panel-border);color:var(--text-dim);padding:6px;border-radius:5px;font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--active)';this.style.color='var(--active)'" onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'">Tilbakestill til startpunkt</button>
+      <button onclick="resetTrackPosition('${track.id}')" style="margin-top:8px;width:100%;background:none;border:1px solid var(--border);color:var(--text-dim);padding:6px;border-radius:5px;font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s;"
+        onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">Tilbakestill til startpunkt</button>
     </div>
 
     <div class="editor-section">
       <div class="editor-label">Fade ut <span style="color:var(--text-dim);font-size:10px">(sekunder før stopp)</span></div>
       <div style="display:flex;align-items:center;gap:10px;">
-        <input type="range" min="0" max="10" step="1" value="${s.fadeOut || 0}" id="fadeOutSlider"
-          oninput="updateFadeOut('${track.id}', this.value); document.getElementById('fadeOutVal').textContent = this.value + 's'"
-          style="-webkit-appearance:none;flex:1;height:4px;background:var(--rink-surface);border-radius:2px;outline:none;cursor:pointer;">
-        <span id="fadeOutVal" style="font-family:'Barlow Condensed',sans-serif;font-size:14px;color:var(--text-dim);width:28px;">${s.fadeOut || 0}s</span>
+        <input type="range" min="0" max="10" step="1" value="${s.fadeOut||0}" id="fadeOutSlider"
+          oninput="updateFadeOut('${track.id}',this.value);document.getElementById('fadeOutVal').textContent=this.value+'s'"
+          style="-webkit-appearance:none;flex:1;height:4px;background:var(--bg-raised);border-radius:2px;outline:none;cursor:pointer;">
+        <span id="fadeOutVal" style="font-family:'Barlow Condensed',sans-serif;font-size:14px;color:var(--text-dim);width:28px;">${s.fadeOut||0}s</span>
       </div>
     </div>
 
-    <div class="editor-section">
-      <div class="editor-label">Kategori</div>
-      <div class="category-pills">
-        ${[['goal','Mål'],['powerplay','Powerplay'],['intro','Intro'],['pump','Pump'],['timeout','Timeout']].map(([cat,label]) => `
-          <div class="cat-pill${s.category===cat?' active':''}" data-cat="${cat}"
-               onclick="setCategory('${track.id}','${cat}',this)">${label}</div>
-        `).join('')}
-      </div>
-    </div>
-
-    <div class="editor-section">
-      <div class="editor-label">Notat</div>
-      <textarea id="trackNote" placeholder="F.eks. spill etter mål, ved utvisning..."
-        style="width:100%;background:var(--rink-surface);border:1px solid var(--panel-border);border-radius:5px;color:var(--text);padding:8px 10px;font-family:'Barlow',sans-serif;font-size:12px;resize:vertical;min-height:56px;outline:none;transition:border-color .2s;"
-        onfocus="this.style.borderColor='var(--active)'" onblur="this.style.borderColor='var(--panel-border)'"
-        onchange="updateNote('${track.id}', this.value)">${esc(s.note || '')}</textarea>
-    </div>
-
-    <button class="save-btn" onclick="saveTrackSettings('${track.id}')">Lagre innstillinger</button>
-    <button onclick="saveToLibrary('${track.id}')" id="libSaveBtn-${track.id}"
-      style="width:100%;margin-top:8px;background:none;border:1px solid var(--panel-border);color:var(--text-dim);padding:10px;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;"
-      onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'"
-      onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'"
-    >${state.library.find(l => l.id === '${track.id}') ? '★ I biblioteket' : '☆ Lagre til bibliotek'}</button>
-  `;
-  renderQueue();
-  // Upgrade to real waveform async
-  upgradeWaveform(track.id, track.duration);
-}
-
-// Render editor sidebar for any track (used by quickPlay, library play etc.)
-function selectTrackInEditor(track) {
-  if (!track) return;
-  state.selectedTrackId = track.id;
-  const s = state.trackSettings[track.id] || { startTime: 0, endTime: track.duration, category: '', note: '', fadeOut: 0 };
-  document.getElementById('editorContent').innerHTML = `
-    <div class="editor-thumb">${(track.imgLg || track.img) ? `<img src="${track.imgLg || track.img}">` : ''}</div>
-    <div class="editor-title">${esc(track.name)}</div>
-    <div class="editor-artist">${esc(track.artist)} · ${fmtTime(track.duration)}</div>
-    <div class="editor-section">
-      <div class="editor-label">Tidslinje <span style="color:var(--text-dim);font-size:10px">klikk for å sette markør</span></div>
-      <div class="waveform-wrap" id="waveformWrap" onclick="waveformClick(event,'${track.id}',${track.duration})">
-        <div class="waveform" id="waveformBars">${generateWaveBars(track.id, track.duration)}</div>
-        <div class="waveform-markers" id="waveformMarkers">${renderWaveMarkers(s, track.duration)}</div>
-        <div id="wavePlayCursor" style="display:none;position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,0.7);border-radius:1px;pointer-events:none;transform:translateX(-50%);transition:left 0.25s linear;z-index:10;"></div>
-      </div>
-    </div>
-    <div class="editor-section">
-      <div class="editor-label">Tidspunkter</div>
-      <div class="time-inputs">
-        <div class="time-input-group">
-          <label class="start-lbl">▶ Start</label>
-          <div style="display:flex;align-items:center;gap:4px;">
-            <button class="nudge-btn" onclick="nudgeTime('${track.id}','start',-1,${track.duration})">−1</button>
-            <button class="nudge-btn" onclick="nudgeTime('${track.id}','start',-0.1,${track.duration})">−.1</button>
-            <input type="text" id="startInput" class="time-input" value="${fmtTimeFine(s.startTime||0)}"
-              onchange="updateTimeFromInput('${track.id}','start',this.value,${track.duration})">
-            <button class="nudge-btn" onclick="nudgeTime('${track.id}','start',0.1,${track.duration})">+.1</button>
-            <button class="nudge-btn" onclick="nudgeTime('${track.id}','start',1,${track.duration})">+1</button>
-          </div>
-        </div>
-        <div class="time-input-group">
-          <label class="end-lbl">■ Stopp</label>
-          <div style="display:flex;align-items:center;gap:4px;">
-            <button class="nudge-btn" onclick="nudgeTime('${track.id}','end',-1,${track.duration})">−1</button>
-            <button class="nudge-btn" onclick="nudgeTime('${track.id}','end',-0.1,${track.duration})">−.1</button>
-            <input type="text" id="endInput" class="time-input" value="${fmtTimeFine(s.endTime||track.duration)}"
-              onchange="updateTimeFromInput('${track.id}','end',this.value,${track.duration})">
-            <button class="nudge-btn" onclick="nudgeTime('${track.id}','end',0.1,${track.duration})">+.1</button>
-            <button class="nudge-btn" onclick="nudgeTime('${track.id}','end',1,${track.duration})">+1</button>
-          </div>
-        </div>
-      </div>
-    </div>
     <div class="editor-section">
       <div class="editor-label">Kategori</div>
       <div class="category-pills">
@@ -3048,25 +2831,26 @@ function selectTrackInEditor(track) {
                onclick="setCategory('${track.id}','${cat}',this)">${label}</div>`).join('')}
       </div>
     </div>
-    <div class="editor-section">
-      <div class="editor-label">Fade ut (sekunder fra stopp)</div>
-      <div style="display:flex;align-items:center;gap:10px;padding:4px 0;">
-        <input type="range" min="0" max="10" step="1" value="${s.fadeOut||0}" id="fadeSlider"
-          oninput="document.getElementById('fadeVal').textContent=this.value+'s'"
-          onchange="updateFade('${track.id}',this.value)" style="flex:1;">
-        <span id="fadeVal">${s.fadeOut||0}s</span>
-      </div>
-    </div>
+
     <div class="editor-section">
       <div class="editor-label">Notat</div>
       <textarea id="trackNote" placeholder="F.eks. spill etter mål, ved utvisning..."
-        style="width:100%;background:var(--rink-surface);border:1px solid var(--panel-border);border-radius:5px;color:var(--text);padding:8px 10px;font-family:'Barlow',sans-serif;font-size:12px;resize:vertical;min-height:56px;outline:none;"
-        onchange="updateNote('${track.id}', this.value)">${esc(s.note || '')}</textarea>
+        style="width:100%;background:var(--bg-raised);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:8px 10px;font-family:'Barlow',sans-serif;font-size:12px;resize:vertical;min-height:56px;outline:none;transition:border-color .2s;"
+        onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"
+        onchange="updateNote('${track.id}',this.value)">${esc(s.note||'')}</textarea>
     </div>
+
     <button class="save-btn" onclick="saveTrackSettings('${track.id}')">Lagre innstillinger</button>
+    <button onclick="saveToLibrary('${track.id}')" id="libSaveBtn-${track.id}"
+      style="width:100%;margin-top:8px;background:none;border:1px solid var(--border);color:var(--text-dim);padding:10px;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;"
+      onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'"
+      onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'"
+    >${inLib ? '★ I biblioteket' : '☆ Lagre til bibliotek'}</button>
   `;
   upgradeWaveform(track.id, track.duration);
-} // trackId → Float32Array (200 points, 0–1)
+}
+
+const waveCache = {}; // trackId → Float32Array (200 points, 0–1)
 
 async function fetchWaveData(trackId) {
   if (waveCache[trackId]) return waveCache[trackId];
@@ -3815,7 +3599,7 @@ function renderLibrary() {
     // Find which periods this track is in
     const inPeriods = state.periods.filter(p => p.queue.find(t => t.id === l.id));
     const periodBadges = inPeriods.map(p =>
-      `<span style="background:rgba(26,127,196,0.2);color:var(--active);font-size:10px;padding:1px 5px;border-radius:8px;font-family:'Barlow Condensed',sans-serif;">${esc(p.name)}</span>`
+      `<span style="background:rgba(26,127,196,0.2);color:var(--accent);font-size:10px;padding:1px 5px;border-radius:8px;font-family:'Barlow Condensed',sans-serif;">${esc(p.name)}</span>`
     ).join(' ');
     const isSelected = librarySelection.has(l.id);
     const catColor = getCatColor(s.category);
@@ -4272,70 +4056,16 @@ function handleQuickKeys(e) {
 }
 
 // ============================================================
-// GALLERI — GitHub Gist
 // ============================================================
 // Public gists are tagged with a special filename so we can find them
 const GIST_FILENAME = 'hockeydj-arrangement.json';
-let galleryCache = [];
-let myGistsCache = [];
 
-function openGalleryModal() {
-  document.getElementById('galleryModal').classList.add('open');
-  document.addEventListener('keydown', galEscHandler);
-  populateShareSelect();
-  // Show cloud status
-  const el = document.getElementById('galCloudStatus');
-  if (el) {
-    const user = state.user;
-    el.innerHTML = user
-      ? `<span style="color:var(--green);">✓ Innlogget som ${esc(user.display_name || user.id)}</span><br><span style="color:var(--text-dim);font-size:11px;margin-top:4px;display:block;">Data synkroniseres automatisk til skyen</span>`
-      : `<span style="color:var(--text-dim);">Ikke innlogget — logg inn med Spotify for skylagring</span>`;
-  }
-  // Load browse tab
-  loadGallery();
-}
 
-function closeGalleryModal() {
-  document.getElementById('galleryModal').classList.remove('open');
-  document.removeEventListener('keydown', galEscHandler);
-}
 
-function galEscHandler(e) { if (e.key === 'Escape') closeGalleryModal(); }
 
-function switchGalleryTab(tab) {
-  ['browse','mine','share','settings'].forEach(t => {
-    const tabId = 'galTab' + t.charAt(0).toUpperCase() + t.slice(1);
-    const viewId = 'gal' + t.charAt(0).toUpperCase() + t.slice(1) + 'View';
-    document.getElementById(tabId)?.classList.toggle('active', t === tab);
-    const el = document.getElementById(viewId);
-    if (el) el.style.display = t === tab ? (tab === 'browse' || tab === 'mine' ? 'flex' : 'block') : 'none';
-  });
-  if (tab === 'mine') loadMySbArrangements();
-  if (tab === 'browse') loadGallery();
-}
 
-function saveGithubToken() {
-  const token = document.getElementById('galTokenInput').value.trim();
-  state.githubToken = token;
-  localStorage.setItem('hd_github_token', token);
-  updateTokenStatus();
-  showToast(token ? 'GitHub token lagret ✓' : 'Token fjernet', 'success');
-}
 
-function updateTokenStatus() {
-  const el = document.getElementById('galTokenStatus');
-  if (el) el.textContent = state.githubToken ? '✓ Token lagret — klar til å dele' : 'Ikke konfigurert — kun lesing tilgjengelig';
-  el && (el.style.color = state.githubToken ? 'var(--green)' : 'var(--text-dim)');
-}
 
-function populateShareSelect() {
-  const sel = document.getElementById('galShareSelect');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">— Velg arrangement —</option>' +
-    state.savedSetlists.map(s =>
-      `<option value="${s.id}">${esc(s.name)} (${s.count} låter, ${s.date})</option>`
-    ).join('');
-}
 
 // ── BROWSE ──────────────────────────────────────────────────
 async function loadGallery() {
@@ -4403,97 +4133,11 @@ async function importFromSb(arrangementId) {
 }
 
 // ── MINE ────────────────────────────────────────────────────
-async function loadMySbArrangements() {
-  const grid = document.getElementById('galMineGrid');
-  if (!state.user?.id) {
-    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="big-icon">—</div><p>Logg inn for å se dine arrangementer</p></div>';
-    return;
-  }
-  grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="big-icon">—</div><p>Laster...</p></div>';
-  try {
-    const rows = await fetch(
-      `${SUPABASE_URL}/rest/v1/arrangements?spotify_user_id=eq.${encodeURIComponent(state.user.id)}&order=updated_at.desc`,
-      { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` } }
-    ).then(r => r.json());
 
-    if (!rows?.length) {
-      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="big-icon">—</div><p>Ingen arrangementer lagret ennå</p></div>';
-      return;
-    }
-    grid.innerHTML = rows.map(row => {
-      const periods = (row.period_names || []).slice(0,4).join(' · ');
-      return `
-        <div class="gallery-card">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
-            <div class="gallery-card-title">${esc(row.name)}</div>
-            <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;padding:2px 8px;border-radius:3px;flex-shrink:0;${row.is_public ? 'background:rgba(52,196,114,0.15);color:var(--green)' : 'background:var(--bg-raised);color:var(--text-dim);border:1px solid var(--border);'}">
-              ${row.is_public ? 'Offentlig' : 'Privat'}
-            </span>
-          </div>
-          <div class="gallery-card-meta">
-            <span>${row.song_count} låter</span>
-            <span>${row.updated_at?.slice(0,10) || ''}</span>
-          </div>
-          ${periods ? `<div style="font-size:11px;color:var(--text-faint);margin-top:2px;">${esc(periods)}</div>` : ''}
-          <div style="display:flex;gap:6px;margin-top:8px;">
-            <button onclick="sbTogglePub('${row.id}',${!row.is_public})"
-              style="flex:1;background:none;border:1px solid var(--border);color:var(--text-dim);padding:5px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;"
-              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
-              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">${row.is_public ? 'Gjør privat' : 'Gjør offentlig'}</button>
-            <button onclick="deleteSbArrangement('${row.id}')"
-              style="background:none;border:1px solid var(--border);color:var(--text-dim);padding:5px 8px;border-radius:4px;font-size:11px;cursor:pointer;transition:all .15s;"
-              onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
-              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">Slett</button>
-          </div>
-        </div>`;
-    }).join('');
-  } catch(e) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="big-icon">—</div><p>Feil: ${e.message}</p></div>`;
-  }
-}
 
-async function sbTogglePub(id, makePublic) {
-  await sbTogglePublic(id, makePublic);
-  showToast(makePublic ? 'Gjort offentlig ✓' : 'Gjort privat ✓', 'success');
-  loadMySbArrangements();
-}
-
-async function deleteSbArrangement(id) {
-  const sl = state.savedSetlists.find(s => s.id === id);
-  const name = sl?.name || 'arrangementet';
-  if (!confirm(`Slette "${name}" fra skyen?`)) return;
-  await sbDeleteArrangement(id);
-  showToast('Slettet fra sky ✓', 'success');
-  loadMySbArrangements();
-}
 
 // ── SHARE ────────────────────────────────────────────────────
-async function shareArrangement() {
-  const id = document.getElementById('galShareSelect').value;
-  if (!id) { showToast('Velg et arrangement', 'error'); return; }
-  const sl = state.savedSetlists.find(s => s.id === id);
-  if (!sl) { showToast('Arrangement ikke funnet', 'error'); return; }
-  const isPublic = document.querySelector('input[name="galVisibility"]:checked')?.value === 'public';
 
-  // Make sure it's saved to cloud first
-  await sbSaveArrangement({ ...sl, is_public: isPublic });
-  if (isPublic) await sbTogglePublic(id, true);
-
-  // Update local record
-  const idx = state.savedSetlists.findIndex(s => s.id === id);
-  if (idx >= 0) state.savedSetlists[idx].is_public = isPublic;
-  saveLocalState();
-
-  const link = `${window.location.origin}${window.location.pathname}?import=${id}`;
-  document.getElementById('galShareResult').style.display = 'block';
-  document.getElementById('galShareLink').value = link;
-  showToast(`"${sl.name}" ${isPublic ? 'delt offentlig' : 'lagret privat'} ✓`, 'success');
-}
-
-function copyGalLink() {
-  const val = document.getElementById('galShareLink').value;
-  navigator.clipboard.writeText(val).then(() => showToast('Lenke kopiert ✓', 'success'));
-}
 
 async function importFromUrl() {
   const val = document.getElementById('galImportUrl').value.trim();
@@ -4636,7 +4280,7 @@ function esc(s) {
 }
 
 function getCatColor(cat) {
-  return { goal:'var(--gold)', powerplay:'var(--active)', intro:'var(--green)', pump:'#ff4455', timeout:'#888' }[cat] || 'var(--text-dim)';
+  return { goal:'var(--gold)', powerplay:'var(--accent)', intro:'var(--green)', pump:'#ff4455', timeout:'#888' }[cat] || 'var(--text-dim)';
 }
 
 function catEmoji(cat) {
@@ -6001,7 +5645,7 @@ document.addEventListener('mouseup', () => {
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
     const handle = document.getElementById('resizeHandle');
-    if (handle) handle.style.background = 'var(--panel-border)';
+    if (handle) handle.style.background = 'var(--border)';
   }
 });
 
