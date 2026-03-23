@@ -1018,17 +1018,21 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v37</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v41</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
+      <button onclick="openLibModal()" title="Bibliotek — sanger og arrangementer"
+        style="background:none;border:1px solid var(--accent);color:var(--accent);padding:5px 14px;border-radius:4px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:0.5px;transition:all .15s;"
+        onmouseover="this.style.background='var(--accent-dim)'"
+        onmouseout="this.style.background='none'">Bibliotek</button>
       <button onclick="toggleFullscreen()" title="Fullskjerm (F)"
         id="fsBtn"
-        style="background:none;border:1px solid var(--panel-border);color:var(--text-dim);font-size:16px;width:36px;height:36px;border-radius:6px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;flex-shrink:0;"
-        onmouseover="this.style.borderColor='var(--ice-dim)';this.style.color='var(--ice)'"
-        onmouseout="this.style.borderColor='var(--panel-border)';this.style.color='var(--text-dim)'">⛶</button>
+        style="background:none;border:1px solid var(--border);color:var(--text-dim);font-size:16px;width:36px;height:36px;border-radius:6px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;flex-shrink:0;"
+        onmouseover="this.style.borderColor='var(--text-dim)';this.style.color='var(--text)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">⛶</button>
       <button class="spotify-btn" id="connectBtn" onclick="startSpotifyLogin()">
-        <span>♪</span> Logg inn med Spotify
+        Logg inn med Spotify
       </button>
       <div class="user-profile" id="userProfile" onclick="showUserMenu()">
         <div class="user-avatar" id="userAvatar">🎧</div>
@@ -1048,16 +1052,6 @@
     <div class="panel">
       <div class="panel-header">
         <span class="panel-title">Søk</span>
-        <button onclick="openLibModal()" title="Åpne bibliotek"
-          style="background:none;border:1px solid var(--border);color:var(--text-dim);padding:4px 11px;border-radius:4px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:0.5px;transition:all .15s;display:flex;align-items:center;gap:6px;"
-          onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
-          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="flex-shrink:0;">
-            <rect x="1" y="1" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.3" fill="none"/>
-            <path d="M4 9L9 4M9 4H5.5M9 4V7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-          </svg>
-          Bibliotek
-        </button>
       </div>
       <div class="search-box">
         <div class="search-input-wrap">
@@ -1085,19 +1079,15 @@
     <div class="queue-panel">
       <div class="panel-header">
         <span class="panel-title">Spillekø</span>
-        <div style="display:flex;align-items:center;gap:6px;">
+        <div style="display:flex;align-items:center;gap:8px;">
           <span class="queue-count-badge" id="queueCount">0 låter</span>
-          <button class="hdr-btn hdr-btn-red"   onclick="newSetlist()"           title="Nytt arrangement">Nytt</button>
-          <button class="hdr-btn hdr-btn-gold"  onclick="resetSession()"         title="Nullstill avspilt-markering">Reset</button>
-          <button class="hdr-btn hdr-btn-green" onclick="openSaveSetlistModal()" title="Lagre arrangement">Lagre</button>
-          <button class="hdr-btn hdr-btn-blue"  onclick="openLoadSetlistModal()" title="Åpne lagret arrangement">Åpne</button>
-          <button class="hdr-btn" onclick="openLibModal()" title="Søk og bibliotek" style="border-color:var(--accent);color:var(--accent);">Bibliotek</button>
-          <button class="hdr-btn" onclick="openGalleryModal()" title="Galleri — del og hent arrangementer">Galleri</button>
-          <button class="hdr-btn" onclick="exportData()" title="Eksporter alle arrangementer og bibliotek til fil">Eksporter</button>
-          <label class="hdr-btn" title="Importer arrangementer og bibliotek fra fil" style="cursor:pointer;display:flex;align-items:center;">
-            Importer
-            <input type="file" accept=".json" onchange="importData(event)" style="display:none;">
-          </label>
+          <span id="dirtyIndicator" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--gold);letter-spacing:0.5px;">● endret</span>
+          <button id="quickSaveBtn" onclick="quickSaveArrangement()" style="display:none;background:none;border:1px solid var(--gold);color:var(--gold);font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px;cursor:pointer;transition:all .15s;letter-spacing:0.5px;"
+            onmouseover="this.style.background='rgba(212,168,67,0.12)'" onmouseout="this.style.background='none'"
+            title="Lagre endringer til nåværende arrangement">Lagre</button>
+          <button onclick="resetSession()" title="Nullstill avspilt-markering"
+            style="background:none;border:none;color:var(--text-faint);font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:0.5px;cursor:pointer;padding:2px 6px;border-radius:3px;transition:color .15s;"
+            onmouseover="this.style.color='var(--text-dim)'" onmouseout="this.style.color='var(--text-faint)'">↺ reset</button>
         </div>
       </div>
       <!-- QUICK ACCESS BAR -->
@@ -1188,7 +1178,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v37</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v41</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
@@ -1342,7 +1332,10 @@
           Spotify
         </button>
         <button class="lib-modal-tab" id="lmTabLibrary" onclick="switchLibModalTab('library')">
-          Bibliotek <span class="tab-count" id="lmLibCount">0</span>
+          Sanger <span class="tab-count" id="lmLibCount">0</span>
+        </button>
+        <button class="lib-modal-tab" id="lmTabArrangements" onclick="switchLibModalTab('arrangements')">
+          Arrangementer <span class="tab-count" id="lmArrCount">0</span>
         </button>
       </div>
       <button class="lib-modal-close" onclick="closeLibModal()">&#x2715;</button>
@@ -1351,7 +1344,7 @@
     <!-- BODY: 3 columns -->
     <div class="lib-modal-body">
 
-      <!-- COL 1: Spotify search OR Library list -->
+      <!-- COL 1: Spotify search OR Library list OR Arrangements -->
       <div class="lib-modal-col">
         <!-- SEARCH RESULTS -->
         <div id="lmSearchView" style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
@@ -1377,18 +1370,70 @@
             <div class="empty-state"><div class="big-icon">—</div><p>Biblioteket er tomt</p></div>
           </div>
         </div>
+        <!-- ARRANGEMENTS LIST -->
+        <div id="lmArrangementsView" style="display:none;flex-direction:column;height:100%;overflow:hidden;">
+          <div class="lib-modal-col-header">
+            <span id="lmArrHeaderCount">Mine arrangementer</span>
+          </div>
+          <div class="lib-modal-scroll" id="lmArrList">
+            <div class="empty-state"><div class="big-icon">—</div><p>Laster...</p></div>
+          </div>
+          <!-- Toolbar at bottom -->
+          <div style="padding:8px 12px;border-top:1px solid var(--border);display:flex;gap:5px;flex-wrap:wrap;flex-shrink:0;background:var(--bg-panel);">
+            <button onclick="lmNewArrangement()" class="hdr-btn hdr-btn-red" style="font-size:11px;padding:4px 10px;" title="Start nytt arrangement">Nytt</button>
+            <button onclick="lmSaveCurrentArrangement()" class="hdr-btn hdr-btn-green" style="font-size:11px;padding:4px 10px;" title="Lagre nåværende arrangement">Lagre</button>
+            <button onclick="lmOpenExplore()" class="hdr-btn hdr-btn-blue" style="font-size:11px;padding:4px 10px;" title="Utforsk offentlige arrangementer">Utforsk</button>
+            <button onclick="lmExportData()" class="hdr-btn" style="font-size:11px;padding:4px 10px;" title="Eksporter til fil">Eksporter</button>
+            <label class="hdr-btn" style="font-size:11px;padding:4px 10px;cursor:pointer;" title="Importer fra fil">
+              Importer
+              <input type="file" accept=".json" onchange="importData(event);closeLibModal()" style="display:none;">
+            </label>
+            <button onclick="lmPasteLink()" class="hdr-btn" style="font-size:11px;padding:4px 10px;" title="Lim inn delingslenke">Lim inn lenke</button>
+          </div>
+        </div>
+        <!-- EXPLORE VIEW -->
+        <div id="lmExploreView" style="display:none;flex-direction:column;height:100%;overflow:hidden;">
+          <div class="lib-modal-col-header">
+            <span>Offentlige arrangementer</span>
+            <button onclick="switchLibModalTab('arrangements')" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:12px;">← Tilbake</button>
+          </div>
+          <div style="padding:6px 10px;border-bottom:1px solid var(--border);flex-shrink:0;">
+            <div class="search-input-wrap">
+              <input type="text" id="lmExploreSearch" placeholder="Søk i offentlige..." oninput="lmFilterExplore()">
+            </div>
+          </div>
+          <div class="lib-modal-scroll" id="lmExploreList">
+            <div class="empty-state"><div class="big-icon">—</div><p>Laster offentlige arrangementer...</p></div>
+          </div>
+        </div>
       </div>
 
-      <!-- COL 2: Editor (waveform + settings) -->
+      <!-- COL 2: Song Editor OR Arrangement Detail -->
       <div class="lib-modal-col" style="display:flex;flex-direction:column;">
-        <div class="lib-modal-col-header">
-          <span id="lmEditorColLabel">Klikk en sang for å redigere</span>
-          <div style="display:flex;gap:6px;" id="lmEditorColActions"></div>
+        <!-- SONG EDITOR (default) -->
+        <div id="lmSongEditorPanel" style="display:flex;flex-direction:column;height:100%;">
+          <div class="lib-modal-col-header">
+            <span id="lmEditorColLabel">Klikk en sang for å redigere</span>
+            <div style="display:flex;gap:6px;" id="lmEditorColActions"></div>
+          </div>
+          <div class="lm-editor" id="lmEditor">
+            <div class="empty-state" style="justify-content:center;padding-top:60px;">
+              <div class="big-icon">—</div>
+              <p>Velg en sang fra søket eller biblioteket</p>
+            </div>
+          </div>
         </div>
-        <div class="lm-editor" id="lmEditor">
-          <div class="empty-state" style="justify-content:center;padding-top:60px;">
-            <div class="big-icon">—</div>
-            <p>Velg en sang fra søket eller biblioteket</p>
+        <!-- ARRANGEMENT DETAIL -->
+        <div id="lmArrDetailPanel" style="display:none;flex-direction:column;height:100%;">
+          <div class="lib-modal-col-header">
+            <span id="lmArrDetailTitle">Arrangement</span>
+            <div style="display:flex;gap:6px;" id="lmArrDetailActions"></div>
+          </div>
+          <div class="lm-editor" id="lmArrDetail">
+            <div class="empty-state" style="justify-content:center;padding-top:60px;">
+              <div class="big-icon">—</div>
+              <p>Velg et arrangement</p>
+            </div>
           </div>
         </div>
       </div>
@@ -1409,7 +1454,7 @@
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v37';
+const APP_VERSION = 'v41';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
@@ -1435,6 +1480,7 @@ const state = {
   quickButtons: JSON.parse(localStorage.getItem('hd_quickbtns') || '[]'),
   githubToken: localStorage.getItem('hd_github_token') || '',
   _dirtyArrangements: new Set(),
+  _queueDirty: false, // true when queue has unsaved changes
   loadedIndex: -1,
   currentIndex: -1,
   currentPeriodId: localStorage.getItem('hd_active_period') || 'p0',
@@ -1501,6 +1547,7 @@ window.onload = async () => {
   renderQuickBar();
   // Check for ?import= URL parameter
   checkImportParam();
+  updateDirtyIndicator();
 };
 
 
@@ -1872,54 +1919,89 @@ const searchResultCache = {};
 
 function renderTrackResults(tracks) {
   const el = document.getElementById('resultsList');
-  if (!tracks.length) { el.innerHTML = '<div class="empty-state"><div class="big-icon">Søk</div><p>Ingen resultater</p></div>'; return; }
+  if (!tracks.length) { el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Ingen resultater</p></div>'; return; }
 
-  // Cache tracks by id
   tracks.forEach(t => { searchResultCache[t.id] = t; });
 
   el.innerHTML = tracks.map(t => {
     const inLib = !!state.library.find(l => l.id === t.id);
-    const inQueue = !!getActiveQueue().find(q => q.id === t.id);
     return `
-    <div class="result-item" ondblclick="addSearchTrackById('${t.id}')">
+    <div class="result-item" id="sri-${t.id}"
+         ondblclick="addSearchTrackById('${t.id}')"
+         draggable="true"
+         ondragstart="searchDragStart(event,'${t.id}')"
+         ondragend="searchDragEnd()"
+         title="Dobbeltklikk for å legge til · Dra til kø eller periode">
       <div class="result-thumb">${t.album.images[1] ? `<img src="${t.album.images[1].url}">` : ''}</div>
       <div class="result-info">
         <div class="result-name">${esc(t.name)}</div>
-        <div class="result-sub">${esc(t.artists[0].name)} · ${fmtTime(Math.round(t.duration_ms/1000))}${inLib ? ' <span style="color:var(--gold)">★</span>' : ''}</div>
+        <div class="result-sub">${esc(t.artists[0].name)} · ${fmtTime(Math.round(t.duration_ms/1000))}</div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:4px;align-items:center;">
-        <button class="add-btn" id="srq-${t.id}"
-          style="${inQueue ? 'background:rgba(34,204,102,0.15);border-color:var(--green);color:var(--green);' : ''}"
-          onclick="addSearchTrackById('${t.id}')" title="Legg til i kø">${inQueue ? '✓' : '+'}</button>
-        <button id="srl-${t.id}"
-          style="background:none;border:none;cursor:pointer;font-size:16px;color:${inLib ? 'var(--gold)' : 'var(--text-dim)'};padding:0;line-height:1;transition:color .2s;"
-          onclick="saveSearchTrackToLibrary('${t.id}')" title="${inLib ? 'I biblioteket' : 'Lagre til bibliotek'}">${inLib ? '★' : '☆'}</button>
-      </div>
+      <button id="srl-${t.id}"
+        style="background:none;border:none;cursor:pointer;font-size:18px;color:${inLib ? 'var(--gold)' : 'var(--text-faint)'};padding:4px;line-height:1;transition:color .15s;flex-shrink:0;"
+        onclick="saveSearchTrackToLibrary('${t.id}')"
+        onmouseover="if(!this.classList.contains('in-lib'))this.style.color='var(--text-dim)'"
+        onmouseout="if(!this.classList.contains('in-lib'))this.style.color='var(--text-faint)'"
+        ${inLib ? 'class="in-lib"' : ''}
+        title="${inLib ? 'I biblioteket' : 'Lagre til bibliotek'}">${inLib ? '★' : '☆'}</button>
     </div>
   `}).join('');
 }
 
-function addSearchTrackById(id) {
+// Drag from search results
+let searchDragId = null;
+
+function searchDragStart(e, trackId) {
+  searchDragId = trackId;
+  dragType = 'search';
+  e.dataTransfer.effectAllowed = 'copy';
+  e.dataTransfer.setData('text/plain', 'search:' + trackId);
+  document.getElementById('periodTabs').classList.add('drag-active');
+
+  // Ghost: album art only
+  const t = searchResultCache[trackId];
+  if (t) {
+    const ghost = document.createElement('div');
+    ghost.style.cssText = 'position:fixed;top:-200px;left:-200px;width:48px;height:48px;border-radius:4px;overflow:hidden;background:var(--bg-raised);border:1px solid var(--border);';
+    const img = t.album.images[1]?.url || t.album.images[0]?.url;
+    if (img) ghost.innerHTML = `<img src="${img}" style="width:100%;height:100%;object-fit:cover;">`;
+    document.body.appendChild(ghost);
+    e.dataTransfer.setDragImage(ghost, 24, 24);
+    setTimeout(() => ghost.remove(), 0);
+  }
+}
+
+function searchDragEnd() {
+  searchDragId = null;
+  if (dragType === 'search') dragType = null;
+  document.getElementById('periodTabs').classList.remove('drag-active');
+}
+
+function addSearchTrackToState(id) {
   const t = searchResultCache[id];
-  if (!t) return;
-  const track = {
-    id: t.id,
-    name: t.name,
+  if (!t) return null;
+  return {
+    id: t.id, name: t.name,
     artist: t.artists[0].name,
     duration: Math.round(t.duration_ms / 1000),
     img: t.album.images[2]?.url || t.album.images[1]?.url || '',
     imgMd: t.album.images[1]?.url || t.album.images[0]?.url || '',
-    imgLg: t.album.images[0]?.url || t.album.images[1]?.url || '',
+    imgLg: t.album.images[0]?.url || '',
     uri: t.uri
   };
+}
+
+function addSearchTrackById(id) {
+  const track = addSearchTrackToState(id);
+  if (!track) return;
   if (getActiveQueue().find(q => q.id === id)) {
     showToast('Allerede i køen', 'error'); return;
   }
   addToQueue(track);
   showToast(`+ ${track.name}`, 'success');
-  // Update button
-  const btn = document.getElementById('srq-' + id);
-  if (btn) { btn.textContent = '✓'; btn.style.background = 'rgba(34,204,102,0.15)'; btn.style.borderColor = 'var(--green)'; btn.style.color = 'var(--green)'; }
+  // Mark as in-queue visually
+  const item = document.getElementById('sri-' + id);
+  if (item) item.style.opacity = '0.6';
 }
 
 function saveSearchTrackToLibrary(id) {
@@ -2032,7 +2114,7 @@ function renamePeriodMenu(id) {
 // Track what is being dragged: 'track' or 'tab'
 // Makes the entire period-tabs bar a drop target — highlights nearest tab
 function periodTabsBarDragOver(e) {
-  if (dragType !== 'library' && dragType !== 'track') return;
+  if (dragType !== 'library' && dragType !== 'track' && dragType !== 'search') return;
   e.preventDefault();
   const tabs = [...document.querySelectorAll('.period-tab')];
   let closest = null, closestDist = Infinity;
@@ -2093,7 +2175,22 @@ function tabDrop(e, targetId) {
     t.classList.remove('dragging');
   });
 
-  if (dragType === 'library' && libDragId) {
+  if (dragType === 'search' && searchDragId) {
+    const targetPeriod = state.periods.find(p => p.id === targetId);
+    if (!targetPeriod) return;
+    const track = addSearchTrackToState(searchDragId);
+    if (!track) return;
+    if (targetPeriod.queue.find(t => t.id === searchDragId)) {
+      showToast(`Allerede i ${targetPeriod.name}`, 'error');
+    } else {
+      targetPeriod.queue.push(track);
+      if (!state.trackSettings[track.id]) state.trackSettings[track.id] = { startTime: 0, endTime: track.duration, category: '', note: '', fadeOut: 0 };
+      saveState(); renderPeriodTabs(); renderQueue();
+      showToast(`"${track.name}" → ${targetPeriod.name} ✓`, 'success');
+      const item = document.getElementById('sri-' + searchDragId);
+      if (item) item.style.opacity = '0.6';
+    }
+  } else if (dragType === 'library' && libDragId) {
     // Drop library item onto tab → add to that period
     const targetPeriod = state.periods.find(p => p.id === targetId);
     if (!targetPeriod) return;
@@ -2217,6 +2314,7 @@ function moveTrackToPeriod(trackIdx, targetPeriodId) {
   renderPeriodTabs();
   renderQueue();
   showToast(`Flyttet til ${targetPeriod.name} ✓`, 'success');
+  markQueueDirty();
 }
 
 // ============================================================
@@ -2234,6 +2332,7 @@ function addToQueue(track) {
     state.trackSettings[track.id] = { startTime: 0, endTime: track.duration, category: '', note: '', fadeOut: 0 };
   }
   saveState();
+  markQueueDirty();
   renderQueue();
 }
 
@@ -2242,6 +2341,7 @@ function removeFromQueue(idx) {
   q.splice(idx, 1);
   if (state.currentIndex >= idx) state.currentIndex = Math.max(-1, state.currentIndex - 1);
   saveState();
+  markQueueDirty();
   renderQueue();
   if (state.selectedTrackId && !q.find(t => t.id === state.selectedTrackId)) {
     state.selectedTrackId = null;
@@ -2373,26 +2473,51 @@ function renderQueue() {
 
 // Allow dropping library items anywhere in the queue list area
 function queueListDragOver(e) {
-  if (dragType === 'library') {
+  if (dragType === 'library' || dragType === 'search') {
     e.preventDefault();
-    e.currentTarget.style.background = 'rgba(240,180,41,0.06)';
+    e.currentTarget.style.background = 'rgba(79,142,247,0.04)';
   }
 }
 
 function queueListDrop(e) {
   e.currentTarget.style.background = '';
-  if (dragType !== 'library' || !libDragId) return;
   e.preventDefault();
   e.stopPropagation();
-  addLibItemToQueue(libDragId);
-  libDragId = null;
-  dragType = null;
-  document.getElementById('periodTabs').classList.remove('drag-active');
+  if (dragType === 'search' && searchDragId) {
+    const track = addSearchTrackToState(searchDragId);
+    if (track && !getActiveQueue().find(t => t.id === searchDragId)) {
+      addToQueue(track);
+      showToast(`+ ${track.name}`, 'success');
+      const item = document.getElementById('sri-' + searchDragId);
+      if (item) item.style.opacity = '0.6';
+    }
+    searchDragId = null; dragType = null;
+    document.getElementById('periodTabs').classList.remove('drag-active');
+  } else if (dragType === 'library' && libDragId) {
+    addLibItemToQueue(libDragId);
+    libDragId = null; dragType = null;
+    document.getElementById('periodTabs').classList.remove('drag-active');
+  }
 }
 
 function handleQueueItemDrop(e, i) {
   e.preventDefault();
-  if (dragType === 'library' && libDragId) {
+  if (dragType === 'search' && searchDragId) {
+    const track = addSearchTrackToState(searchDragId);
+    if (!track) return;
+    if (getActiveQueue().find(t => t.id === searchDragId)) {
+      showToast('Allerede i køen', 'error');
+    } else {
+      getActivePeriod().queue.splice(i, 0, track);
+      if (!state.trackSettings[track.id]) state.trackSettings[track.id] = { startTime: 0, endTime: track.duration, category: '', note: '', fadeOut: 0 };
+      saveState(); renderQueue();
+      showToast(`+ ${track.name}`, 'success');
+      const item = document.getElementById('sri-' + searchDragId);
+      if (item) item.style.opacity = '0.6';
+    }
+    searchDragId = null; dragType = null;
+    document.getElementById('periodTabs').classList.remove('drag-active');
+  } else if (dragType === 'library' && libDragId) {
     // Insert library item at this position
     const entry = state.library.find(l => l.id === libDragId);
     if (!entry) return;
@@ -2454,6 +2579,7 @@ function dragDrop(e, i) {
   else if (state.currentIndex < dragSrc && state.currentIndex >= i) state.currentIndex++;
   dragSrc = null;
   saveState();
+  markQueueDirty();
   renderQueue();
 }
 
@@ -3038,10 +3164,11 @@ function saveSetlistNew() {
   state.savedSetlists.push(sl);
   state._dirtyArrangements.add(sl.id);
   saveState();
-  sbSaveArrangement(sl); // immediate cloud save
+  sbSaveArrangement(sl);
   closeSaveSetlistModal();
   showToast(`"${name}" lagret ✓`, 'success');
   updateHeaderSetlistName(name);
+  clearDirty();
 }
 
 // Keep old name for backward compat
@@ -3056,10 +3183,11 @@ function saveSetlistOverwrite(id) {
   state.savedSetlists[idx] = newData;
   state._dirtyArrangements.add(id);
   saveState();
-  sbSaveArrangement(newData); // immediate cloud save
+  sbSaveArrangement(newData);
   closeSaveSetlistModal();
   showToast(`"${oldName}" oppdatert ✓`, 'success');
   updateHeaderSetlistName(oldName);
+  clearDirty();
 }
 
 function openLoadSetlistModal() {
@@ -3119,6 +3247,7 @@ function loadSetlist(id) {
   closeLoadSetlistModal();
   showToast(`"${sl.name}" lastet inn ✓`, 'success');
   updateHeaderSetlistName(sl.name);
+  clearDirty();
 }
 
 function deleteSetlist(id) {
@@ -3161,6 +3290,7 @@ function newSetlist() {
   document.getElementById('editorContent').innerHTML = `<div class="empty-state" style="height:100%"><div class="big-icon">—</div><p>Klikk på en låt for å redigere</p></div>`;
   showToast('Nytt arrangement klar ✓', 'success');
   updateHeaderSetlistName('');
+  clearDirty();
 }
 
 function updateHeaderSetlistName(name) {
@@ -4247,6 +4377,45 @@ function saveState() {
   scheduleSbSync();
 }
 
+function markQueueDirty() {
+  state._queueDirty = true;
+  updateDirtyIndicator();
+}
+
+function clearDirty() {
+  state._queueDirty = false;
+  updateDirtyIndicator();
+}
+
+function updateDirtyIndicator() {
+  const indicator = document.getElementById('dirtyIndicator');
+  const saveBtn = document.getElementById('quickSaveBtn');
+  const hasCurrent = !!localStorage.getItem('hd_current_setlist_name');
+  if (indicator) indicator.style.display = state._queueDirty ? 'inline' : 'none';
+  if (saveBtn) saveBtn.style.display = (state._queueDirty && hasCurrent) ? 'inline' : 'none';
+}
+
+async function quickSaveArrangement() {
+  // Find the currently loaded arrangement and overwrite it
+  const currentName = localStorage.getItem('hd_current_setlist_name');
+  if (!currentName) { openSaveSetlistModal(); return; }
+  const existing = state.savedSetlists.find(s => s.name === currentName);
+  if (existing) {
+    const newData = buildSetlistData(currentName);
+    newData.id = existing.id;
+    const idx = state.savedSetlists.indexOf(existing);
+    state.savedSetlists[idx] = newData;
+    state._dirtyArrangements.add(existing.id);
+    saveState();
+    await sbSaveArrangement(newData);
+    clearDirty();
+    showToast(`"${currentName}" lagret ✓`, 'success');
+  } else {
+    // No match — open save modal for new name
+    openSaveSetlistModal();
+  }
+}
+
 function saveLocalState() {
   localStorage.setItem('hd_periods', JSON.stringify(state.periods));
   localStorage.setItem('hd_active_period', state.activePeriodId);
@@ -4357,8 +4526,8 @@ function openLibModal() {
   document.getElementById('libModal').classList.add('open');
   renderLibModalList();
   document.getElementById('lmLibCount').textContent = state.library.length;
+  document.getElementById('lmArrCount').textContent = state.savedSetlists.length;
   document.getElementById('lmSearchInput').focus();
-  // Close on Escape
   document.addEventListener('keydown', lmEscHandler);
 }
 
@@ -4373,11 +4542,242 @@ function lmEscHandler(e) {
 
 function switchLibModalTab(tab) {
   lmActiveTab = tab;
-  document.getElementById('lmSearchView').style.display = tab === 'search' ? 'flex' : 'none';
-  document.getElementById('lmLibraryView').style.display = tab === 'library' ? 'flex' : 'none';
-  document.getElementById('lmTabSearch').classList.toggle('active', tab === 'search');
-  document.getElementById('lmTabLibrary').classList.toggle('active', tab === 'library');
-  if (tab === 'library') renderLibModalList();
+  // Col 1 views
+  ['lmSearchView','lmLibraryView','lmArrangementsView','lmExploreView'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  // Col 2 panels
+  const isArr = tab === 'arrangements' || tab === 'explore';
+  document.getElementById('lmSongEditorPanel').style.display = isArr ? 'none' : 'flex';
+  document.getElementById('lmArrDetailPanel').style.display = isArr ? 'flex' : 'none';
+  // Tab active state
+  ['Search','Library','Arrangements'].forEach(t => {
+    document.getElementById('lmTab' + t)?.classList.toggle('active', tab === t.toLowerCase());
+  });
+  // Show correct view
+  if (tab === 'search') { document.getElementById('lmSearchView').style.display = 'flex'; }
+  else if (tab === 'library') { document.getElementById('lmLibraryView').style.display = 'flex'; renderLibModalList(); }
+  else if (tab === 'arrangements') { document.getElementById('lmArrangementsView').style.display = 'flex'; loadLmArrangements(); }
+  else if (tab === 'explore') { document.getElementById('lmExploreView').style.display = 'flex'; loadLmExplore(); }
+}
+
+// ── ARRANGEMENT TAB ──────────────────────────────────────────
+let lmExploreCache = [];
+
+async function loadLmArrangements() {
+  const el = document.getElementById('lmArrList');
+  el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Laster...</p></div>';
+  // Combine local + cloud
+  const local = state.savedSetlists;
+  document.getElementById('lmArrCount').textContent = local.length;
+  document.getElementById('lmArrHeaderCount').textContent = `${local.length} arrangementer`;
+  if (!local.length) {
+    el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Ingen arrangementer ennå — lagre ett fra spillekøen</p></div>';
+    return;
+  }
+  el.innerHTML = [...local].reverse().map(sl => {
+    const periods = sl.periods?.map(p => p.name).slice(0,3).join(' · ') || '';
+    const isPublic = sl.is_public;
+    return `
+      <div class="lm-item${lmSelectedArrangement?.id === sl.id ? ' selected' : ''}"
+           id="lmarr-${sl.id}" onclick="lmSelectArrangement('${sl.id}')">
+        <div class="lm-info">
+          <div class="lm-name">${esc(sl.name)}</div>
+          <div class="lm-sub">
+            ${sl.count || 0} låter · ${sl.date || ''}
+            ${isPublic ? '<span style="color:var(--green);margin-left:4px;">● Offentlig</span>' : ''}
+          </div>
+          ${periods ? `<div style="font-size:10px;color:var(--text-faint);margin-top:2px;">${esc(periods)}</div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+let lmSelectedArrangement = null;
+
+function lmSelectArrangement(id) {
+  const sl = state.savedSetlists.find(s => s.id === id);
+  if (!sl) return;
+  lmSelectedArrangement = sl;
+  // Highlight
+  document.querySelectorAll('#lmArrList .lm-item').forEach(el => el.classList.remove('selected'));
+  document.getElementById('lmarr-' + id)?.classList.add('selected');
+  renderLmArrDetail(sl);
+}
+
+function renderLmArrDetail(sl) {
+  document.getElementById('lmArrDetailTitle').textContent = sl.name;
+  const isPublic = sl.is_public;
+
+  document.getElementById('lmArrDetailActions').innerHTML = `
+    <button onclick="lmLoadArrangement('${sl.id}')"
+      style="background:var(--accent);border:none;color:white;padding:4px 12px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:opacity .15s;"
+      onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">Last inn</button>`;
+
+  const periods = sl.periods || [];
+  document.getElementById('lmArrDetail').innerHTML = `
+    <div style="margin-bottom:16px;">
+      <div class="lm-label">Perioder</div>
+      ${periods.length ? periods.map(p => `
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:13px;">${esc(p.name)}</span>
+          <span style="font-size:12px;color:var(--text-dim);">${p.queue?.length || 0} låter</span>
+        </div>`).join('') : '<p style="color:var(--text-dim);font-size:12px;">Ingen perioder</p>'}
+    </div>
+    <div style="margin-bottom:16px;">
+      <div class="lm-label">Info</div>
+      <div style="font-size:12px;color:var(--text-dim);line-height:1.8;">
+        <div>Totalt: <strong style="color:var(--text);">${sl.count || 0} låter</strong></div>
+        <div>Lagret: <strong style="color:var(--text);">${sl.date || '—'}</strong></div>
+        <div>Synlighet: <strong style="color:${isPublic ? 'var(--green)' : 'var(--text)'};">${isPublic ? 'Offentlig' : 'Privat'}</strong></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button onclick="lmLoadArrangement('${sl.id}')"
+        style="width:100%;background:var(--accent);border:none;color:white;padding:9px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;cursor:pointer;transition:opacity .2s;"
+        onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Last inn i spillekø</button>
+      <button onclick="lmTogglePublic('${sl.id}',${!isPublic})"
+        style="width:100%;background:none;border:1px solid var(--border);color:var(--text-dim);padding:8px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:all .15s;"
+        onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">${isPublic ? 'Gjør privat' : 'Del offentlig'}</button>
+      <button onclick="lmShareArrangement('${sl.id}')"
+        style="width:100%;background:none;border:1px solid var(--border);color:var(--text-dim);padding:8px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:all .15s;"
+        onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">Kopier delingslenke</button>
+      <button onclick="lmDeleteArrangement('${sl.id}')"
+        style="width:100%;background:none;border:1px solid var(--border);color:var(--text-dim);padding:8px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:all .15s;"
+        onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">Slett arrangement</button>
+    </div>`;
+}
+
+function lmLoadArrangement(id) {
+  loadSetlist(id);
+  closeLibModal();
+}
+
+async function lmTogglePublic(id, makePublic) {
+  await sbTogglePublic(id, makePublic);
+  const idx = state.savedSetlists.findIndex(s => s.id === id);
+  if (idx >= 0) state.savedSetlists[idx].is_public = makePublic;
+  saveLocalState();
+  showToast(makePublic ? 'Delt offentlig ✓' : 'Gjort privat ✓', 'success');
+  lmSelectedArrangement = state.savedSetlists.find(s => s.id === id);
+  loadLmArrangements();
+  if (lmSelectedArrangement) renderLmArrDetail(lmSelectedArrangement);
+}
+
+async function lmShareArrangement(id) {
+  const sl = state.savedSetlists.find(s => s.id === id);
+  if (!sl) return;
+  if (!sl.is_public) {
+    if (confirm(`"${sl.name}" er privat. Gjøre den offentlig og kopiere delingslenke?`)) {
+      await lmTogglePublic(id, true);
+    } else return;
+  }
+  const link = `${window.location.origin}${window.location.pathname}?import=${id}`;
+  navigator.clipboard.writeText(link).then(() => showToast('Delingslenke kopiert ✓', 'success'));
+}
+
+async function lmDeleteArrangement(id) {
+  const sl = state.savedSetlists.find(s => s.id === id);
+  if (!sl || !confirm(`Slette "${sl.name}"?`)) return;
+  state.savedSetlists = state.savedSetlists.filter(s => s.id !== id);
+  sbDeleteArrangement(id);
+  saveLocalState();
+  lmSelectedArrangement = null;
+  document.getElementById('lmArrDetail').innerHTML = '<div class="empty-state" style="justify-content:center;padding-top:60px;"><div class="big-icon">—</div><p>Velg et arrangement</p></div>';
+  document.getElementById('lmArrDetailTitle').textContent = 'Arrangement';
+  document.getElementById('lmArrDetailActions').innerHTML = '';
+  loadLmArrangements();
+  showToast('Arrangement slettet', '');
+}
+
+function lmSaveCurrentArrangement() {
+  closeLibModal();
+  openSaveSetlistModal();
+}
+
+function lmNewArrangement() {
+  closeLibModal();
+  newSetlist();
+}
+
+function lmExportData() {
+  closeLibModal();
+  exportData();
+}
+
+function lmOpenExplore() {
+  lmActiveTab = 'explore';
+  document.getElementById('lmArrangementsView').style.display = 'none';
+  document.getElementById('lmExploreView').style.display = 'flex';
+  loadLmExplore();
+}
+
+async function loadLmExplore() {
+  const el = document.getElementById('lmExploreList');
+  el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Laster...</p></div>';
+  lmExploreCache = await sbLoadPublicArrangements();
+  renderLmExplore(lmExploreCache);
+}
+
+function lmFilterExplore() {
+  const q = document.getElementById('lmExploreSearch').value.toLowerCase();
+  const filtered = q ? lmExploreCache.filter(r =>
+    r.name.toLowerCase().includes(q) || (r.spotify_display_name || '').toLowerCase().includes(q)
+  ) : lmExploreCache;
+  renderLmExplore(filtered);
+}
+
+function renderLmExplore(rows) {
+  const el = document.getElementById('lmExploreList');
+  if (!rows.length) {
+    el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Ingen offentlige arrangementer ennå</p></div>';
+    return;
+  }
+  el.innerHTML = rows.map(row => {
+    const periods = (row.period_names || []).slice(0,3).join(' · ');
+    const isOwn = row.spotify_user_id === state.user?.id;
+    return `
+      <div class="lm-item" onclick="lmSelectExploreArr('${row.id}','${esc(row.name)}','${esc(row.spotify_display_name||'')}',${row.song_count||0},'${esc(periods)}')">
+        <div class="lm-info">
+          <div class="lm-name">${esc(row.name)}${isOwn ? ' <span style="color:var(--text-faint);font-size:10px;">(din)</span>' : ''}</div>
+          <div class="lm-sub">av ${esc(row.spotify_display_name || row.spotify_user_id)} · ${row.song_count || 0} låter</div>
+          ${periods ? `<div style="font-size:10px;color:var(--text-faint);margin-top:2px;">${esc(periods)}</div>` : ''}
+        </div>
+        <button onclick="event.stopPropagation();importFromSb('${row.id}')"
+          style="background:var(--accent);border:none;color:white;padding:4px 10px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0;">Hent</button>
+      </div>`;
+  }).join('');
+}
+
+function lmSelectExploreArr(id, name, owner, count, periods) {
+  document.getElementById('lmArrDetailTitle').textContent = name;
+  document.getElementById('lmArrDetailActions').innerHTML = `
+    <button onclick="importFromSb('${id}')"
+      style="background:var(--accent);border:none;color:white;padding:4px 12px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Hent</button>`;
+  document.getElementById('lmArrDetail').innerHTML = `
+    <div style="margin-bottom:16px;">
+      <div class="lm-label">Info</div>
+      <div style="font-size:12px;color:var(--text-dim);line-height:1.8;">
+        <div>Navn: <strong style="color:var(--text);">${esc(name)}</strong></div>
+        <div>Av: <strong style="color:var(--text);">${esc(owner)}</strong></div>
+        <div>Perioder: <strong style="color:var(--text);">${esc(periods) || '—'}</strong></div>
+        <div>Antall låter: <strong style="color:var(--text);">${count}</strong></div>
+      </div>
+    </div>
+    <button onclick="importFromSb('${id}')" style="width:100%;background:var(--accent);border:none;color:white;padding:9px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;cursor:pointer;transition:opacity .2s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Hent arrangement</button>`;
+}
+
+function lmPasteLink() {
+  const val = prompt('Lim inn delingslenke eller arrangement-ID:');
+  if (!val?.trim()) return;
+  const match = val.match(/[?&]import=([^&\s]+)/) || val.trim().match(/^([a-zA-Z0-9_-]{8,})$/);
+  const id = match?.[1] || val.trim();
+  if (id) importFromSb(id);
+  else showToast('Ugyldig lenke', 'error');
 }
 
 function setLmCatFilter(cat, btn) {
