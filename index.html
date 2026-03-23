@@ -8,19 +8,19 @@
 <style>
   /* ─── DESIGN TOKENS ─────────────────────────────────────── */
   :root {
-    --bg:       #111214;
-    --bg-panel: #18191c;
-    --bg-raised:#1e2023;
-    --bg-hover: #25272b;
-    --border:   #2a2d32;
-    --text:     #e8e9ea;
-    --text-dim: #6b7280;
-    --text-faint:#3f4450;
-    --accent:   #4f8ef7;
-    --accent-dim:rgba(79,142,247,0.12);
-    --green:    #34c472;
-    --red:      #e05252;
-    --gold:     #d4a843;
+    --bg:        #0f1012;
+    --bg-panel:  #16181b;
+    --bg-raised: #1c1e22;
+    --bg-hover:  #23262b;
+    --border:    #2e3138;
+    --text:      #f0f1f2;
+    --text-dim:  #8b95a3;
+    --text-faint:#4a5160;
+    --accent:    #4a8ff5;
+    --accent-dim:rgba(74,143,245,0.14);
+    --green:     #2ecc72;
+    --red:       #e05252;
+    --gold:      #d4a843;
     --left-panel-width: 360px;
   }
 
@@ -651,18 +651,26 @@
 
   /* ─── HEADER BUTTONS ─────────────────────────────────────── */
   .hdr-btn {
-    background: none; border: 1px solid var(--border);
+    background: var(--bg-raised); border: 1px solid var(--border);
     color: var(--text-dim);
     font-size: 12px; font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
-    padding: 5px 11px; border-radius: 4px;
+    font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+    padding: 5px 12px; border-radius: 4px;
     cursor: pointer; transition: all 0.15s; white-space: nowrap;
   }
-  .hdr-btn:hover { color: var(--text); border-color: var(--text-dim); }
-  .hdr-btn-red:hover   { border-color: var(--red);   color: var(--red); }
-  .hdr-btn-gold:hover  { border-color: var(--gold);  color: var(--gold); }
-  .hdr-btn-green:hover { border-color: var(--green); color: var(--green); }
-  .hdr-btn-blue:hover  { border-color: var(--accent); color: var(--accent); }
+  .hdr-btn:hover { color: var(--text); border-color: var(--text-dim); background: var(--bg-hover); }
+  .hdr-btn-primary {
+    background: var(--accent); border-color: var(--accent); color: #fff;
+  }
+  .hdr-btn-primary:hover { background: #3a7fe8; border-color: #3a7fe8; color: #fff; }
+  .hdr-btn-red   { border-color: var(--red);    color: var(--red); }
+  .hdr-btn-red:hover   { background: rgba(224,82,82,0.12); color: var(--red); border-color: var(--red); }
+  .hdr-btn-gold  { border-color: var(--gold);   color: var(--gold); }
+  .hdr-btn-gold:hover  { background: rgba(212,168,67,0.12); color: var(--gold); border-color: var(--gold); }
+  .hdr-btn-green { border-color: var(--green);  color: var(--green); }
+  .hdr-btn-green:hover { background: rgba(46,204,114,0.12); color: var(--green); border-color: var(--green); }
+  .hdr-btn-blue  { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .hdr-btn-blue:hover  { background: #3a7fe8; border-color: #3a7fe8; color: #fff; }
 
   .queue-count-badge {
     font-family: 'Barlow Condensed', sans-serif;
@@ -714,12 +722,12 @@
     width: 100%; padding: 10px; border-radius: 4px; border: none;
     font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
     font-size: 14px; letter-spacing: 1.5px; text-transform: uppercase;
-    cursor: pointer; transition: opacity 0.15s; margin-bottom: 8px;
+    cursor: pointer; transition: all 0.15s; margin-bottom: 8px;
   }
   .modal-btn.primary { background: var(--accent); color: white; }
-  .modal-btn.primary:hover { opacity: 0.85; }
-  .modal-btn.secondary { background: var(--bg-raised); color: var(--text-dim); border: 1px solid var(--border); }
-  .modal-btn.secondary:hover { color: var(--text); border-color: var(--text-dim); }
+  .modal-btn.primary:hover { background: #3a7fe8; }
+  .modal-btn.secondary { background: var(--bg-raised); color: var(--text); border: 1px solid var(--border); }
+  .modal-btn.secondary:hover { background: var(--bg-hover); border-color: var(--text-dim); }
   .modal-note { font-size: 11px; color: var(--text-faint); margin-top: 10px; }
 
   /* ─── SETLIST ITEMS ──────────────────────────────────────── */
@@ -977,7 +985,7 @@
     padding: 9px 14px; cursor: pointer;
     border-left: 2px solid transparent; transition: all 0.12s;
   }
-  .lm-item:hover { background: var(--bg-hover); border-left-color: var(--border); }
+  .lm-item:hover { background: var(--bg-hover); border-left-color: var(--text-faint); }
   .lm-item.selected { background: var(--accent-dim); border-left-color: var(--accent); }
   .lm-thumb {
     width: 42px; height: 42px; border-radius: 4px;
@@ -986,7 +994,7 @@
   }
   .lm-thumb img { width:100%; height:100%; object-fit:cover; border-radius:4px; }
   .lm-info { flex: 1; min-width: 0; }
-  .lm-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lm-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .lm-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   .lm-editor { padding: 16px; overflow-y: auto; flex: 1; }
@@ -1000,16 +1008,30 @@
     font-size: 48px; color: var(--text-faint);
   }
   .lm-editor-art img { width:100%; height:100%; object-fit:cover; }
-  .lm-editor-title { font-family: 'Barlow Condensed', sans-serif; font-size: 19px; font-weight: 700; }
+  .lm-editor-title { font-family: 'Barlow Condensed', sans-serif; font-size: 19px; font-weight: 700; color: var(--text); }
   .lm-editor-artist { font-size: 12px; color: var(--text-dim); margin-top: 3px; margin-bottom: 14px; }
   .lm-section { margin-bottom: 14px; }
   .lm-label {
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
-    color: var(--text-dim); margin-bottom: 6px;
+    color: var(--text-dim); margin-bottom: 6px; font-weight: 700;
   }
 
-</style>
+  /* ─── ARRANGEMENT EDITOR ─────────────────────────────────── */
+  .arr-period-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; border-radius: 4px;
+    background: var(--bg-raised); border: 1px solid var(--border);
+    margin-bottom: 5px; cursor: grab; transition: background 0.12s;
+  }
+  .arr-period-row:hover { background: var(--bg-hover); }
+  .arr-period-row.drag-over { border-color: var(--accent); background: var(--accent-dim); }
+  .arr-period-name {
+    flex: 1; background: none; border: none; color: var(--text);
+    font-family: 'Barlow', sans-serif; font-size: 13px; font-weight: 600;
+    outline: none; cursor: text;
+  }
+  .arr-period-name:focus { background: var(--bg); border-radius: 3px; padding: 1px 4px; }
 </head>
 <body>
 <div id="app">
@@ -1018,14 +1040,12 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v41</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v43</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
       <button onclick="openLibModal()" title="Bibliotek — sanger og arrangementer"
-        style="background:none;border:1px solid var(--accent);color:var(--accent);padding:5px 14px;border-radius:4px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:0.5px;transition:all .15s;"
-        onmouseover="this.style.background='var(--accent-dim)'"
-        onmouseout="this.style.background='none'">Bibliotek</button>
+        class="hdr-btn hdr-btn-primary">Bibliotek</button>
       <button onclick="toggleFullscreen()" title="Fullskjerm (F)"
         id="fsBtn"
         style="background:none;border:1px solid var(--border);color:var(--text-dim);font-size:16px;width:36px;height:36px;border-radius:6px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;flex-shrink:0;"
@@ -1178,7 +1198,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v41</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v43</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
@@ -1423,26 +1443,63 @@
             </div>
           </div>
         </div>
-        <!-- ARRANGEMENT DETAIL -->
+        <!-- ARRANGEMENT EDITOR (col 2) -->
         <div id="lmArrDetailPanel" style="display:none;flex-direction:column;height:100%;">
           <div class="lib-modal-col-header">
             <span id="lmArrDetailTitle">Arrangement</span>
             <div style="display:flex;gap:6px;" id="lmArrDetailActions"></div>
           </div>
-          <div class="lm-editor" id="lmArrDetail">
-            <div class="empty-state" style="justify-content:center;padding-top:60px;">
-              <div class="big-icon">—</div>
-              <p>Velg et arrangement</p>
-            </div>
+          <!-- Arrangement name -->
+          <div style="padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;">
+            <input type="text" id="lmArrNameInput" placeholder="Navn på arrangement..."
+              style="width:100%;background:var(--bg-raised);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:8px 10px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;outline:none;transition:border-color .15s;"
+              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"
+              oninput="lmArrNameChanged()">
+          </div>
+          <!-- Periods editor -->
+          <div style="flex:1;overflow-y:auto;padding:10px 14px;" id="lmArrPeriodsEditor">
+            <div class="lm-label" style="margin-bottom:8px;">Perioder <button onclick="lmAddPeriod()" style="background:var(--accent);border:none;color:#fff;padding:2px 8px;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;cursor:pointer;margin-left:8px;">+ Legg til</button></div>
+            <div id="lmPeriodRows"></div>
+          </div>
+          <!-- Quick buttons -->
+          <div style="padding:10px 14px;border-top:1px solid var(--border);flex-shrink:0;">
+            <div class="lm-label" style="margin-bottom:6px;">Hurtigknapper <button onclick="openQuickAddPicker()" style="background:none;border:1px solid var(--border);color:var(--text-dim);padding:2px 8px;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;cursor:pointer;margin-left:6px;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">+ Legg til</button></div>
+            <div id="lmQuickBtnsPreview" style="display:flex;gap:5px;flex-wrap:wrap;min-height:28px;"></div>
+          </div>
+          <!-- Save / load actions -->
+          <div style="padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:6px;flex-shrink:0;">
+            <button onclick="lmSaveArrangement()" class="hdr-btn hdr-btn-blue" style="flex:1;">Lagre</button>
+            <button onclick="lmLoadArrangement(lmSelectedArrangement?.id)" class="hdr-btn hdr-btn-green" style="flex:1;" id="lmLoadBtn">Last inn i kø</button>
+            <button onclick="lmTogglePublic(lmSelectedArrangement?.id, !lmSelectedArrangement?.is_public)" class="hdr-btn" style="flex:1;" id="lmPublicBtn">Del offentlig</button>
           </div>
         </div>
       </div>
 
-      <!-- COL 3: Add to period -->
+      <!-- COL 3: Song browser for arrangement / Add to period for songs -->
       <div class="lib-modal-col">
-        <div class="lib-modal-col-header">Legg til i periode</div>
-        <div class="lib-modal-scroll" id="lmPeriodList">
-          <div class="empty-state"><div class="big-icon">—</div><p>Velg en sang først</p></div>
+        <!-- Songs mode (default) -->
+        <div id="lmCol3Songs" style="display:flex;flex-direction:column;height:100%;">
+          <div class="lib-modal-col-header">Legg til i periode</div>
+          <div class="lib-modal-scroll" id="lmPeriodList">
+            <div class="empty-state"><div class="big-icon">—</div><p>Velg en sang først</p></div>
+          </div>
+        </div>
+        <!-- Arrangement mode: song browser for adding to selected period -->
+        <div id="lmCol3Arr" style="display:none;flex-direction:column;height:100%;">
+          <div class="lib-modal-col-header">
+            <span id="lmCol3ArrTitle">Legg til sanger</span>
+          </div>
+          <div style="padding:6px 10px;border-bottom:1px solid var(--border);flex-shrink:0;">
+            <div class="search-input-wrap">
+              <input type="text" id="lmArrSongSearch" placeholder="Søk i bibliotek og kø..."
+                oninput="lmFilterArrSongs()">
+            </div>
+          </div>
+          <!-- Selected period indicator -->
+          <div id="lmArrActivePeriod" style="padding:5px 12px;font-size:11px;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid var(--border);flex-shrink:0;display:none;"></div>
+          <div class="lib-modal-scroll" id="lmArrSongList">
+            <div class="empty-state"><div class="big-icon">—</div><p>Velg en periode for å legge til sanger</p></div>
+          </div>
         </div>
       </div>
 
@@ -1454,7 +1511,7 @@
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v41';
+const APP_VERSION = 'v43';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
@@ -2771,24 +2828,51 @@ function buildFallbackWave(trackId) {
 function buildWaveBarsHTML(trackId, duration, values, count, style, settings) {
   const s = settings || state.trackSettings[trackId] || {};
   const startPct = (s.startTime || 0) / duration;
-  const endPct   = (s.endTime   || duration) / duration;
+  const endPct   = (s.endTime != null ? s.endTime : duration) / duration;
+  const hasCustomRange = (s.startTime > 0) || (s.endTime != null && s.endTime < duration);
   let bars = '';
+
   for (let i = 0; i < count; i++) {
     const pct = i / count;
-    const idx = Math.floor(pct * values.length);
-    const raw = values[idx];
-    const h   = Math.max(8, Math.round(raw * 88 + 8));
     const inRange = pct >= startPct && pct <= endPct;
+
+    // Height: use audio data if available, else flat with slight variation at edges
+    let h;
+    if (values) {
+      const idx = Math.floor(pct * values.length);
+      h = Math.max(8, Math.round(values[idx] * 88 + 8));
+    } else {
+      // Flat fallback — consistent height, dip slightly outside range
+      h = inRange ? 40 : 20;
+    }
+
     if (style === 'small') {
       const color   = inRange ? 'var(--accent)' : 'var(--text-faint)';
       const opacity = inRange ? '0.8' : '0.22';
       bars += `<div style="flex:1;background:${color};border-radius:1px;height:${h}%;opacity:${opacity};"></div>`;
     } else {
-      let cls = 'wave-bar' + (inRange ? '' : ' past');
+      // Main editor: color outside-range bars differently based on whether they're before or after
+      let cls = 'wave-bar';
+      if (!inRange) cls += ' past';
       bars += `<div class="${cls}" style="height:${h}%"></div>`;
     }
   }
   return bars;
+}
+
+// Redraw bars without re-fetching (just apply new start/stop to existing data)
+function redrawWaveform(trackId, duration) {
+  const s = state.trackSettings[trackId] || {};
+  const values = waveCache[trackId] || null;
+  const el = document.getElementById('waveformBars');
+  if (el) el.innerHTML = buildWaveBarsHTML(trackId, duration, values, 60, 'main', s);
+  const mel = document.getElementById('waveformMarkers');
+  if (mel) mel.innerHTML = renderWaveMarkers(s, duration);
+  // Also lib modal
+  const lel = document.getElementById('lmWaveBars');
+  if (lel) lel.innerHTML = buildWaveBarsHTML(trackId, duration, values, 80, 'small', s);
+  const lmel = document.getElementById('lmWaveMarkers');
+  if (lmel) lmel.innerHTML = lmWaveMarkers(s, duration);
 }
 
 async function generateWaveBarsAsync(trackId, duration, elId, markersElId, count, style) {
@@ -2866,8 +2950,7 @@ function waveformClick(e, trackId, duration) {
     s.endTime = Math.max(time, s.startTime + 5);
     document.getElementById('endInput').value = fmtTime(s.endTime);
   }
-  document.getElementById('waveformBars').innerHTML = generateWaveBars(trackId, duration);
-  document.getElementById('waveformMarkers').innerHTML = renderWaveMarkers(s, duration);
+  redrawWaveform(trackId, duration);
 }
 
 function updateTimeFromInput(trackId, type, val, duration) {
@@ -2876,8 +2959,7 @@ function updateTimeFromInput(trackId, type, val, duration) {
   const s = state.trackSettings[trackId];
   if (type === 'start') s.startTime = Math.max(0, Math.min(secs, duration - 5));
   else s.endTime = Math.max(5, Math.min(secs, duration));
-  document.getElementById('waveformBars').innerHTML = generateWaveBars(trackId, duration);
-  document.getElementById('waveformMarkers').innerHTML = renderWaveMarkers(s, duration);
+  redrawWaveform(trackId, duration);
 }
 
 function setCategory(trackId, cat, el) {
@@ -3711,44 +3793,102 @@ function qbDrop(e, idx) {
 
 // Open picker to add a quick button from library or categorised queue tracks
 function openQuickAddPicker() {
-  // Collect candidates: library tracks and categorised queue tracks
+  // Remove any existing picker
+  document.getElementById('quickPickerModal')?.remove();
+
+  // Collect all candidates
   const candidates = new Map();
-  // Library tracks first
-  state.library.forEach(l => candidates.set(l.id, { id: l.id, name: l.name, artist: l.artist, img: l.img, category: l.settings?.category || '' }));
-  // Queue tracks with category
+  state.library.forEach(l => {
+    const s = state.trackSettings[l.id] || l.settings || {};
+    candidates.set(l.id, { id: l.id, name: l.name, artist: l.artist, img: l.img, category: s.category || '' });
+  });
   state.periods.forEach(p => p.queue.forEach(t => {
     if (!candidates.has(t.id)) {
       const s = state.trackSettings[t.id] || {};
-      if (s.category) candidates.set(t.id, { id: t.id, name: t.name, artist: t.artist, img: t.img, category: s.category });
+      candidates.set(t.id, { id: t.id, name: t.name, artist: t.artist, img: t.img, category: s.category || '' });
     }
   }));
-  const list = [...candidates.values()];
-  if (!list.length) { showToast('Ingen sanger i biblioteket eller kø med kategori', 'error'); return; }
+  const allTracks = [...candidates.values()];
 
-  // Simple picker modal
-  document.querySelectorAll('.ctx-menu').forEach(m => m.remove());
-  const menu = document.createElement('div');
-  menu.className = 'ctx-menu';
-  menu.style.cssText += ';max-height:320px;overflow-y:auto;width:260px;';
-  menu.innerHTML = `<div class="ctx-menu-label">Velg sang til hurtigknapp</div>` +
-    list.map(c => `
-      <button class="ctx-menu-item" onclick="addQuickButton('${c.id}')">
-        <span style="display:flex;align-items:center;gap:8px;">
-          ${c.img ? `<img src="${c.img}" style="width:24px;height:24px;border-radius:3px;object-fit:cover;">` : ''}
-          <span>
-            <span style="display:block;font-weight:600;">${esc(c.name)}</span>
-            <span style="font-size:10px;opacity:0.6;">${c.category || c.artist}</span>
-          </span>
-        </span>
-      </button>`).join('');
-  document.body.appendChild(menu);
-  const addBtn = document.getElementById('quickAddBtn');
-  const r = addBtn?.getBoundingClientRect();
-  if (r) {
-    menu.style.top = (r.bottom + 6) + 'px';
-    menu.style.left = r.left + 'px';
+  const modal = document.createElement('div');
+  modal.id = 'quickPickerModal';
+  modal.style.cssText = `
+    position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9999;
+    display:flex;align-items:center;justify-content:center;`;
+  modal.innerHTML = `
+    <div style="background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;width:420px;max-height:560px;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:1px;text-transform:uppercase;">Legg til hurtigknapp</span>
+        <button onclick="document.getElementById('quickPickerModal').remove()" style="background:none;border:none;color:var(--text-dim);font-size:18px;cursor:pointer;padding:0 4px;line-height:1;">✕</button>
+      </div>
+      <div style="padding:10px 12px;border-bottom:1px solid var(--border);display:flex;gap:8px;flex-direction:column;">
+        <div class="search-input-wrap">
+          <input type="text" id="qpSearch" placeholder="Søk på sangnavn eller artist..."
+            oninput="renderQuickPicker()" autofocus
+            style="font-size:13px;">
+        </div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;">
+          <button class="lib-cat-filter active" data-qpcat="" onclick="setQpCat('',this)">Alle</button>
+          <button class="lib-cat-filter" data-qpcat="goal" onclick="setQpCat('goal',this)">Mål</button>
+          <button class="lib-cat-filter" data-qpcat="powerplay" onclick="setQpCat('powerplay',this)">PP</button>
+          <button class="lib-cat-filter" data-qpcat="intro" onclick="setQpCat('intro',this)">Intro</button>
+          <button class="lib-cat-filter" data-qpcat="pump" onclick="setQpCat('pump',this)">Pump</button>
+          <button class="lib-cat-filter" data-qpcat="timeout" onclick="setQpCat('timeout',this)">Timeout</button>
+        </div>
+      </div>
+      <div id="qpList" style="overflow-y:auto;flex:1;padding:4px 0;"></div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+  window._qpTracks = allTracks;
+  window._qpCat = '';
+  renderQuickPicker();
+  document.getElementById('qpSearch')?.focus();
+}
+
+function setQpCat(cat, btn) {
+  window._qpCat = cat;
+  document.querySelectorAll('[data-qpcat]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderQuickPicker();
+}
+
+function renderQuickPicker() {
+  const el = document.getElementById('qpList');
+  if (!el) return;
+  const q = document.getElementById('qpSearch')?.value.toLowerCase() || '';
+  const cat = window._qpCat || '';
+  const alreadyAdded = new Set(state.quickButtons.map(b => b.trackId));
+
+  let list = (window._qpTracks || []).filter(t => {
+    if (cat && t.category !== cat) return false;
+    if (q && !t.name.toLowerCase().includes(q) && !t.artist.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  if (!list.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:32px 0;"><div class="big-icon">—</div><p>Ingen sanger funnet</p></div>';
+    return;
   }
-  setTimeout(() => document.addEventListener('click', () => menu.remove(), { once: true }), 0);
+
+  el.innerHTML = list.map(c => {
+    const added = alreadyAdded.has(c.id);
+    return `
+      <div style="display:flex;align-items:center;gap:10px;padding:7px 14px;cursor:pointer;transition:background .12s;border-radius:0;"
+           onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''"
+           onclick="${added ? '' : `addQuickButton('${c.id}');document.getElementById('quickPickerModal')?.remove()`}">
+        ${c.img ? `<img src="${c.img}" style="width:36px;height:36px;border-radius:4px;object-fit:cover;flex-shrink:0;">` : '<div style="width:36px;height:36px;border-radius:4px;background:var(--bg-raised);flex-shrink:0;"></div>'}
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(c.name)}</div>
+          <div style="font-size:11px;color:var(--text-dim);">${esc(c.artist)}${c.category ? ` · <span style="color:var(--accent)">${c.category}</span>` : ''}</div>
+        </div>
+        ${added
+          ? `<span style="font-size:11px;color:var(--text-faint);font-family:'Barlow Condensed',sans-serif;">I hurtigrad</span>`
+          : `<button onclick="event.stopPropagation();addQuickButton('${c.id}');document.getElementById('quickPickerModal')?.remove()"
+              style="background:var(--accent);border:none;color:white;padding:4px 12px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0;">+ Legg til</button>`}
+      </div>`;
+  }).join('');
 }
 
 function addQuickButton(trackId) {
@@ -4128,8 +4268,7 @@ function nudgeTime(trackId, type, delta, duration) {
     const el = document.getElementById('endInput');
     if (el) el.value = fmtTimeFine(s.endTime);
   }
-  document.getElementById('waveformBars').innerHTML = generateWaveBars(trackId, duration);
-  document.getElementById('waveformMarkers').innerHTML = renderWaveMarkers(s, duration);
+  redrawWaveform(trackId, duration);
 }
 
 function parseTimeInput(val) {
@@ -4542,21 +4681,20 @@ function lmEscHandler(e) {
 
 function switchLibModalTab(tab) {
   lmActiveTab = tab;
-  // Col 1 views
   ['lmSearchView','lmLibraryView','lmArrangementsView','lmExploreView'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
-  // Col 2 panels
   const isArr = tab === 'arrangements' || tab === 'explore';
   document.getElementById('lmSongEditorPanel').style.display = isArr ? 'none' : 'flex';
-  document.getElementById('lmArrDetailPanel').style.display = isArr ? 'flex' : 'none';
-  // Tab active state
+  document.getElementById('lmArrDetailPanel').style.display  = isArr ? 'flex' : 'none';
+  // Col 3 toggle
+  document.getElementById('lmCol3Songs').style.display = isArr ? 'none' : 'flex';
+  document.getElementById('lmCol3Arr').style.display   = isArr ? 'flex' : 'none';
   ['Search','Library','Arrangements'].forEach(t => {
     document.getElementById('lmTab' + t)?.classList.toggle('active', tab === t.toLowerCase());
   });
-  // Show correct view
-  if (tab === 'search') { document.getElementById('lmSearchView').style.display = 'flex'; }
+  if (tab === 'search')       { document.getElementById('lmSearchView').style.display = 'flex'; }
   else if (tab === 'library') { document.getElementById('lmLibraryView').style.display = 'flex'; renderLibModalList(); }
   else if (tab === 'arrangements') { document.getElementById('lmArrangementsView').style.display = 'flex'; loadLmArrangements(); }
   else if (tab === 'explore') { document.getElementById('lmExploreView').style.display = 'flex'; loadLmExplore(); }
@@ -4567,21 +4705,17 @@ let lmExploreCache = [];
 
 async function loadLmArrangements() {
   const el = document.getElementById('lmArrList');
-  el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Laster...</p></div>';
-  // Combine local + cloud
   const local = state.savedSetlists;
   document.getElementById('lmArrCount').textContent = local.length;
   document.getElementById('lmArrHeaderCount').textContent = `${local.length} arrangementer`;
-  if (!local.length) {
-    el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Ingen arrangementer ennå — lagre ett fra spillekøen</p></div>';
-    return;
-  }
+
   el.innerHTML = [...local].reverse().map(sl => {
     const periods = sl.periods?.map(p => p.name).slice(0,3).join(' · ') || '';
     const isPublic = sl.is_public;
+    const isSelected = lmSelectedArrangement?.id === sl.id;
     return `
-      <div class="lm-item${lmSelectedArrangement?.id === sl.id ? ' selected' : ''}"
-           id="lmarr-${sl.id}" onclick="lmSelectArrangement('${sl.id}')">
+      <div class="lm-item${isSelected ? ' selected' : ''}" id="lmarr-${sl.id}"
+           onclick="lmSelectArrangement('${sl.id}')">
         <div class="lm-info">
           <div class="lm-name">${esc(sl.name)}</div>
           <div class="lm-sub">
@@ -4590,89 +4724,328 @@ async function loadLmArrangements() {
           </div>
           ${periods ? `<div style="font-size:10px;color:var(--text-faint);margin-top:2px;">${esc(periods)}</div>` : ''}
         </div>
+        <button onclick="event.stopPropagation();lmDeleteArrangement('${sl.id}')"
+          style="background:none;border:none;color:var(--text-faint);font-size:14px;cursor:pointer;padding:4px;flex-shrink:0;transition:color .12s;"
+          onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-faint)'"
+          title="Slett">✕</button>
       </div>`;
-  }).join('');
+  }).join('') || '<div class="empty-state"><div class="big-icon">—</div><p>Ingen arrangementer ennå</p></div>';
 }
 
+// ── ARRANGEMENT EDITOR ──────────────────────────────────────
 let lmSelectedArrangement = null;
+let lmEditingPeriodIdx = null; // which period is selected in editor
+let lmArrDirty = false;        // unsaved changes to arrangement being edited
 
 function lmSelectArrangement(id) {
   const sl = state.savedSetlists.find(s => s.id === id);
   if (!sl) return;
-  lmSelectedArrangement = sl;
-  // Highlight
+  // Deep copy so edits don't affect live state until saved
+  lmSelectedArrangement = JSON.parse(JSON.stringify(sl));
+  lmArrDirty = false;
+  lmEditingPeriodIdx = null;
   document.querySelectorAll('#lmArrList .lm-item').forEach(el => el.classList.remove('selected'));
   document.getElementById('lmarr-' + id)?.classList.add('selected');
-  renderLmArrDetail(sl);
+  renderLmArrEditor();
 }
 
-function renderLmArrDetail(sl) {
-  document.getElementById('lmArrDetailTitle').textContent = sl.name;
-  const isPublic = sl.is_public;
+function renderLmArrEditor() {
+  const sl = lmSelectedArrangement;
+  if (!sl) return;
+  // Name
+  const nameEl = document.getElementById('lmArrNameInput');
+  if (nameEl) nameEl.value = sl.name || '';
+  // Title
+  document.getElementById('lmArrDetailTitle').textContent = sl.name || 'Arrangement';
+  // Actions bar
+  document.getElementById('lmArrDetailActions').innerHTML = lmArrDirty
+    ? `<span style="font-size:11px;color:var(--gold);font-family:'Barlow Condensed',sans-serif;">● endret</span>`
+    : '';
+  // Load/public buttons
+  const loadBtn = document.getElementById('lmLoadBtn');
+  const pubBtn = document.getElementById('lmPublicBtn');
+  if (loadBtn) loadBtn.style.display = sl.id ? 'block' : 'none';
+  if (pubBtn) {
+    pubBtn.textContent = sl.is_public ? 'Gjør privat' : 'Del offentlig';
+    pubBtn.style.display = sl.id ? 'block' : 'none';
+  }
+  // Periods
+  renderLmPeriodRows();
+  // Quick buttons preview
+  renderLmQuickBtnsPreview();
+  // Col 3
+  if (lmEditingPeriodIdx !== null) {
+    renderLmArrSongList();
+  }
+}
 
-  document.getElementById('lmArrDetailActions').innerHTML = `
-    <button onclick="lmLoadArrangement('${sl.id}')"
-      style="background:var(--accent);border:none;color:white;padding:4px 12px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:opacity .15s;"
-      onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">Last inn</button>`;
+function renderLmPeriodRows() {
+  const sl = lmSelectedArrangement;
+  const el = document.getElementById('lmPeriodRows');
+  if (!el || !sl) return;
+  el.innerHTML = (sl.periods || []).map((p, i) => `
+    <div class="arr-period-row" id="arrprow-${i}"
+         draggable="true"
+         ondragstart="arrPeriodDragStart(${i})"
+         ondragover="arrPeriodDragOver(event,${i})"
+         ondrop="arrPeriodDrop(event,${i})"
+         onclick="lmSelectPeriod(${i})"
+         style="${lmEditingPeriodIdx === i ? 'border-color:var(--accent);background:var(--accent-dim);' : ''}">
+      <span style="color:var(--text-faint);cursor:grab;font-size:12px;flex-shrink:0;">⠿</span>
+      <input class="arr-period-name" value="${esc(p.name)}"
+        onclick="event.stopPropagation()"
+        onchange="lmRenamePeriod(${i}, this.value)"
+        title="Klikk for å gi nytt navn">
+      <span style="font-size:11px;color:var(--text-dim);flex-shrink:0;">${p.queue?.length || 0} låter</span>
+      <button onclick="event.stopPropagation();lmSelectPeriod(${i})"
+        style="background:var(--accent);border:none;color:#fff;padding:3px 8px;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">+ Sanger</button>
+      <button onclick="event.stopPropagation();lmRemovePeriod(${i})"
+        style="background:none;border:none;color:var(--text-faint);font-size:15px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;transition:color .12s;"
+        onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-faint)'">✕</button>
+    </div>`).join('');
+}
 
-  const periods = sl.periods || [];
-  document.getElementById('lmArrDetail').innerHTML = `
-    <div style="margin-bottom:16px;">
-      <div class="lm-label">Perioder</div>
-      ${periods.length ? periods.map(p => `
-        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
-          <span style="font-size:13px;">${esc(p.name)}</span>
-          <span style="font-size:12px;color:var(--text-dim);">${p.queue?.length || 0} låter</span>
-        </div>`).join('') : '<p style="color:var(--text-dim);font-size:12px;">Ingen perioder</p>'}
-    </div>
-    <div style="margin-bottom:16px;">
-      <div class="lm-label">Info</div>
-      <div style="font-size:12px;color:var(--text-dim);line-height:1.8;">
-        <div>Totalt: <strong style="color:var(--text);">${sl.count || 0} låter</strong></div>
-        <div>Lagret: <strong style="color:var(--text);">${sl.date || '—'}</strong></div>
-        <div>Synlighet: <strong style="color:${isPublic ? 'var(--green)' : 'var(--text)'};">${isPublic ? 'Offentlig' : 'Privat'}</strong></div>
-      </div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <button onclick="lmLoadArrangement('${sl.id}')"
-        style="width:100%;background:var(--accent);border:none;color:white;padding:9px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;cursor:pointer;transition:opacity .2s;"
-        onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Last inn i spillekø</button>
-      <button onclick="lmTogglePublic('${sl.id}',${!isPublic})"
-        style="width:100%;background:none;border:1px solid var(--border);color:var(--text-dim);padding:8px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:all .15s;"
-        onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
-        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">${isPublic ? 'Gjør privat' : 'Del offentlig'}</button>
-      <button onclick="lmShareArrangement('${sl.id}')"
-        style="width:100%;background:none;border:1px solid var(--border);color:var(--text-dim);padding:8px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:all .15s;"
-        onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'"
-        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">Kopier delingslenke</button>
-      <button onclick="lmDeleteArrangement('${sl.id}')"
-        style="width:100%;background:none;border:1px solid var(--border);color:var(--text-dim);padding:8px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:all .15s;"
-        onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
-        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">Slett arrangement</button>
-    </div>`;
+function renderLmQuickBtnsPreview() {
+  const el = document.getElementById('lmQuickBtnsPreview');
+  if (!el) return;
+  if (!state.quickButtons.length) {
+    el.innerHTML = '<span style="font-size:11px;color:var(--text-faint);">Ingen hurtigknapper</span>';
+    return;
+  }
+  el.innerHTML = state.quickButtons.map(b => {
+    const track = findTrackAnywhere(b.trackId);
+    return `<span style="background:var(--bg-raised);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--text-dim);" title="${esc(track?.name || '')}">
+      ${esc(b.label)}${b.key ? ` <span style="color:var(--text-faint)">(${b.key.toUpperCase()})</span>` : ''}
+    </span>`;
+  }).join('');
+}
+
+// Period drag-reorder
+let arrPeriodDragSrc = null;
+function arrPeriodDragStart(i) { arrPeriodDragSrc = i; }
+function arrPeriodDragOver(e, i) {
+  e.preventDefault();
+  document.querySelectorAll('.arr-period-row').forEach(r => r.classList.remove('drag-over'));
+  document.getElementById('arrprow-' + i)?.classList.add('drag-over');
+}
+function arrPeriodDrop(e, i) {
+  e.preventDefault();
+  document.querySelectorAll('.arr-period-row').forEach(r => r.classList.remove('drag-over'));
+  if (arrPeriodDragSrc === null || arrPeriodDragSrc === i) return;
+  const periods = lmSelectedArrangement.periods;
+  const [moved] = periods.splice(arrPeriodDragSrc, 1);
+  periods.splice(i, 0, moved);
+  if (lmEditingPeriodIdx === arrPeriodDragSrc) lmEditingPeriodIdx = i;
+  arrPeriodDragSrc = null;
+  lmArrDirty = true;
+  renderLmPeriodRows();
+  renderLmArrEditor();
+}
+
+function lmAddPeriod() {
+  if (!lmSelectedArrangement) return;
+  const name = `Periode ${(lmSelectedArrangement.periods?.length || 0) + 1}`;
+  lmSelectedArrangement.periods = lmSelectedArrangement.periods || [];
+  lmSelectedArrangement.periods.push({ id: 'np' + Date.now(), name, queue: [] });
+  lmArrDirty = true;
+  renderLmPeriodRows();
+  renderLmArrEditor();
+}
+
+function lmRemovePeriod(i) {
+  const p = lmSelectedArrangement.periods[i];
+  if (p.queue?.length && !confirm(`Slette "${p.name}" med ${p.queue.length} låter?`)) return;
+  lmSelectedArrangement.periods.splice(i, 1);
+  if (lmEditingPeriodIdx === i) lmEditingPeriodIdx = null;
+  else if (lmEditingPeriodIdx > i) lmEditingPeriodIdx--;
+  lmArrDirty = true;
+  renderLmPeriodRows();
+  renderLmArrSongList();
+}
+
+function lmRenamePeriod(i, name) {
+  if (!name.trim()) return;
+  lmSelectedArrangement.periods[i].name = name.trim();
+  lmArrDirty = true;
+  renderLmArrEditor();
+}
+
+function lmArrNameChanged() {
+  if (!lmSelectedArrangement) return;
+  lmSelectedArrangement.name = document.getElementById('lmArrNameInput').value;
+  document.getElementById('lmArrDetailTitle').textContent = lmSelectedArrangement.name || 'Arrangement';
+  lmArrDirty = true;
+}
+
+function lmSelectPeriod(i) {
+  lmEditingPeriodIdx = i;
+  renderLmPeriodRows();
+  renderLmArrSongList();
+}
+
+// Song list for arrangement period
+function renderLmArrSongList() {
+  const col3 = document.getElementById('lmCol3Arr');
+  const activeEl = document.getElementById('lmArrActivePeriod');
+  const listEl = document.getElementById('lmArrSongList');
+  if (!col3) return;
+
+  if (lmEditingPeriodIdx === null || !lmSelectedArrangement) {
+    if (activeEl) activeEl.style.display = 'none';
+    if (listEl) listEl.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Velg en periode for å legge til sanger</p></div>';
+    return;
+  }
+
+  const period = lmSelectedArrangement.periods[lmEditingPeriodIdx];
+  if (!period) return;
+
+  document.getElementById('lmCol3ArrTitle').textContent = `${period.name}`;
+  if (activeEl) {
+    activeEl.style.display = 'block';
+    activeEl.textContent = `Redigerer: ${period.name} · ${period.queue?.length || 0} låter`;
+  }
+
+  const q = document.getElementById('lmArrSongSearch')?.value.toLowerCase() || '';
+  const existing = new Set(period.queue?.map(t => t.id) || []);
+
+  // Gather all available songs
+  const candidates = new Map();
+  state.library.forEach(l => candidates.set(l.id, l));
+  state.periods.forEach(p => p.queue.forEach(t => {
+    if (!candidates.has(t.id)) candidates.set(t.id, t);
+  }));
+  let songs = [...candidates.values()];
+  if (q) songs = songs.filter(t => t.name.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q));
+
+  // Show current queue first, then available
+  const inQueue = period.queue || [];
+
+  listEl.innerHTML = `
+    ${inQueue.length ? `
+      <div style="padding:6px 12px 2px;font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);">I perioden</div>
+      ${inQueue.map((t, qi) => `
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;transition:background .12s;" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+          ${t.img ? `<img src="${t.img}" style="width:30px;height:30px;border-radius:3px;object-fit:cover;flex-shrink:0;">` : '<div style="width:30px;height:30px;background:var(--bg-raised);border-radius:3px;flex-shrink:0;"></div>'}
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(t.name)}</div>
+            <div style="font-size:10px;color:var(--text-dim);">${esc(t.artist||'')}</div>
+          </div>
+          <button onclick="lmArrRemoveSong(${lmEditingPeriodIdx},${qi})"
+            style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:14px;padding:2px;flex-shrink:0;transition:color .12s;"
+            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-faint)'">✕</button>
+        </div>`).join('')}
+      <div style="height:1px;background:var(--border);margin:6px 0;"></div>
+    ` : ''}
+    ${songs.length ? `
+      <div style="padding:6px 12px 2px;font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);">Legg til</div>
+      ${songs.map(t => {
+        const inP = existing.has(t.id);
+        return `
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;transition:background .12s;${inP?'opacity:0.5;':''}" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+          ${t.img ? `<img src="${t.img}" style="width:30px;height:30px;border-radius:3px;object-fit:cover;flex-shrink:0;">` : '<div style="width:30px;height:30px;background:var(--bg-raised);border-radius:3px;flex-shrink:0;"></div>'}
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(t.name)}</div>
+            <div style="font-size:10px;color:var(--text-dim);">${esc(t.artist||'')}</div>
+          </div>
+          ${inP
+            ? `<span style="font-size:10px;color:var(--text-faint);font-family:'Barlow Condensed',sans-serif;">Lagt til</span>`
+            : `<button onclick="lmArrAddSong('${t.id}')"
+                style="background:var(--accent);border:none;color:#fff;padding:3px 10px;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;transition:opacity .12s;"
+                onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">+</button>`}
+        </div>`;
+      }).join('')}
+    ` : '<div class="empty-state"><div class="big-icon">—</div><p>Ingen sanger i bibliotek</p></div>'}`;
+}
+
+function lmFilterArrSongs() { renderLmArrSongList(); }
+
+function lmArrAddSong(trackId) {
+  if (lmEditingPeriodIdx === null || !lmSelectedArrangement) return;
+  const period = lmSelectedArrangement.periods[lmEditingPeriodIdx];
+  if (!period) return;
+  // Find track from library or queue
+  const track = state.library.find(l => l.id === trackId) ||
+    (() => { for (const p of state.periods) { const t = p.queue.find(q => q.id === trackId); if (t) return t; } })();
+  if (!track) return;
+  if (period.queue.find(t => t.id === trackId)) { showToast('Allerede i perioden', 'error'); return; }
+  period.queue.push({ id: track.id, name: track.name, artist: track.artist, duration: track.duration, img: track.img, uri: track.uri });
+  lmArrDirty = true;
+  renderLmPeriodRows();
+  renderLmArrSongList();
+}
+
+function lmArrRemoveSong(periodIdx, songIdx) {
+  lmSelectedArrangement.periods[periodIdx].queue.splice(songIdx, 1);
+  lmArrDirty = true;
+  renderLmPeriodRows();
+  renderLmArrSongList();
+}
+
+async function lmSaveArrangement() {
+  if (!lmSelectedArrangement) return;
+  const name = document.getElementById('lmArrNameInput')?.value.trim();
+  if (!name) { showToast('Gi arrangementet et navn', 'error'); return; }
+  lmSelectedArrangement.name = name;
+  lmSelectedArrangement.count = lmSelectedArrangement.periods?.reduce((s, p) => s + (p.queue?.length || 0), 0) || 0;
+  lmSelectedArrangement.date = new Date().toISOString().slice(0,10);
+
+  const isNew = !state.savedSetlists.find(s => s.id === lmSelectedArrangement.id);
+  if (isNew) lmSelectedArrangement.id = lmSelectedArrangement.id || ('sl' + Date.now());
+
+  // Check if active in queue
+  const currentName = localStorage.getItem('hd_current_setlist_name');
+  const isActive = currentName === (state.savedSetlists.find(s => s.id === lmSelectedArrangement.id)?.name);
+  let loadIntoQueue = false;
+
+  if (isActive) {
+    loadIntoQueue = confirm(`"${name}" er aktivt lastet i spillekøen.\nOppdatere spillekøen med disse endringene også?`);
+  }
+
+  const idx = state.savedSetlists.findIndex(s => s.id === lmSelectedArrangement.id);
+  if (idx >= 0) state.savedSetlists[idx] = { ...lmSelectedArrangement };
+  else state.savedSetlists.push({ ...lmSelectedArrangement });
+
+  if (loadIntoQueue) {
+    state.periods = lmSelectedArrangement.periods.map(p => ({ ...p, queue: [...p.queue] }));
+    state.activePeriodId = state.periods[0]?.id || '';
+    updateHeaderSetlistName(name);
+    renderPeriodTabs();
+    renderQueue();
+    clearDirty();
+  }
+
+  state._dirtyArrangements.add(lmSelectedArrangement.id);
+  saveState();
+  await sbSaveArrangement(lmSelectedArrangement);
+  lmArrDirty = false;
+  renderLmArrEditor();
+  loadLmArrangements();
+  showToast(`"${name}" lagret ✓`, 'success');
 }
 
 function lmLoadArrangement(id) {
+  if (!id) return;
   loadSetlist(id);
   closeLibModal();
 }
 
 async function lmTogglePublic(id, makePublic) {
+  if (!id) return;
   await sbTogglePublic(id, makePublic);
   const idx = state.savedSetlists.findIndex(s => s.id === id);
   if (idx >= 0) state.savedSetlists[idx].is_public = makePublic;
+  if (lmSelectedArrangement?.id === id) lmSelectedArrangement.is_public = makePublic;
   saveLocalState();
   showToast(makePublic ? 'Delt offentlig ✓' : 'Gjort privat ✓', 'success');
-  lmSelectedArrangement = state.savedSetlists.find(s => s.id === id);
+  renderLmArrEditor();
   loadLmArrangements();
-  if (lmSelectedArrangement) renderLmArrDetail(lmSelectedArrangement);
 }
 
 async function lmShareArrangement(id) {
   const sl = state.savedSetlists.find(s => s.id === id);
   if (!sl) return;
   if (!sl.is_public) {
-    if (confirm(`"${sl.name}" er privat. Gjøre den offentlig og kopiere delingslenke?`)) {
+    if (confirm(`"${sl.name}" er privat. Gjøre offentlig og kopiere lenke?`)) {
       await lmTogglePublic(id, true);
     } else return;
   }
@@ -4687,7 +5060,10 @@ async function lmDeleteArrangement(id) {
   sbDeleteArrangement(id);
   saveLocalState();
   lmSelectedArrangement = null;
-  document.getElementById('lmArrDetail').innerHTML = '<div class="empty-state" style="justify-content:center;padding-top:60px;"><div class="big-icon">—</div><p>Velg et arrangement</p></div>';
+  lmEditingPeriodIdx = null;
+  // Clear editor
+  document.getElementById('lmArrNameInput') && (document.getElementById('lmArrNameInput').value = '');
+  document.getElementById('lmPeriodRows') && (document.getElementById('lmPeriodRows').innerHTML = '');
   document.getElementById('lmArrDetailTitle').textContent = 'Arrangement';
   document.getElementById('lmArrDetailActions').innerHTML = '';
   loadLmArrangements();
@@ -4695,24 +5071,42 @@ async function lmDeleteArrangement(id) {
 }
 
 function lmSaveCurrentArrangement() {
-  closeLibModal();
-  openSaveSetlistModal();
+  // Open with current queue pre-filled as new arrangement
+  lmSelectedArrangement = {
+    id: 'sl' + Date.now(),
+    name: localStorage.getItem('hd_current_setlist_name') || '',
+    periods: JSON.parse(JSON.stringify(state.periods)),
+    count: state.periods.reduce((s,p) => s + p.queue.length, 0),
+    date: new Date().toISOString().slice(0,10),
+    is_public: false,
+  };
+  lmArrDirty = true;
+  switchLibModalTab('arrangements');
+  renderLmArrEditor();
 }
 
 function lmNewArrangement() {
-  closeLibModal();
-  newSetlist();
+  lmSelectedArrangement = {
+    id: 'sl' + Date.now(),
+    name: '',
+    periods: DEFAULT_PERIODS.map((name, i) => ({ id: 'np' + i, name, queue: [] })),
+    count: 0, date: new Date().toISOString().slice(0,10), is_public: false,
+  };
+  lmEditingPeriodIdx = null;
+  lmArrDirty = true;
+  switchLibModalTab('arrangements');
+  // Deselect list
+  document.querySelectorAll('#lmArrList .lm-item').forEach(el => el.classList.remove('selected'));
+  renderLmArrEditor();
 }
 
-function lmExportData() {
-  closeLibModal();
-  exportData();
-}
+function lmExportData() { closeLibModal(); exportData(); }
 
 function lmOpenExplore() {
   lmActiveTab = 'explore';
   document.getElementById('lmArrangementsView').style.display = 'none';
   document.getElementById('lmExploreView').style.display = 'flex';
+  document.getElementById('lmCol3Arr').style.display = 'flex';
   loadLmExplore();
 }
 
