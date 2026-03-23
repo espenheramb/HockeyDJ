@@ -994,7 +994,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v48</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v49</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -1189,7 +1189,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v48</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v49</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
@@ -1242,10 +1242,7 @@
         </div>
       </div>
       <div class="lib-modal-tabs">
-        <button class="lib-modal-tab active" id="lmTabSearch" onclick="switchLibModalTab('search')">
-          Spotify
-        </button>
-        <button class="lib-modal-tab" id="lmTabLibrary" onclick="switchLibModalTab('library')">
+        <button class="lib-modal-tab active" id="lmTabLibrary" onclick="switchLibModalTab('library')">
           Sanger <span class="tab-count" id="lmLibCount">0</span>
         </button>
         <button class="lib-modal-tab" id="lmTabArrangements" onclick="switchLibModalTab('arrangements')">
@@ -1405,7 +1402,7 @@
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v48';
+const APP_VERSION = 'v49';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
@@ -1494,6 +1491,8 @@ window.onload = async () => {
   updateDirtyIndicator();
   // Init search panel state
   setSearchPanelState('normal');
+  // Wake lock — prevent screen sleep
+  initWakeLock();
 };
 
 
@@ -3417,7 +3416,7 @@ function loadSetlist(id) {
     // Bakoverkompatibilitet: gammel format uten perioder
     getActivePeriod().queue = JSON.parse(JSON.stringify(sl.tracks));
   }
-  Object.keys(sl.settings).forEach(key => {
+  Object.keys(sl.settings || {}).forEach(key => {
     if (!state.trackSettings[key]) state.trackSettings[key] = sl.settings[key];
   });
   state.playedTracks = [];
@@ -4179,8 +4178,8 @@ function doImport(data, source) {
   }
   saveState();
   renderQueue();
+  loadLmArrangements();
   showToast(`Importert: +${newArr.length} arrangementer, +${newLib.length} sanger ✓`, 'success');
-  closeGalleryModal();
 }
 
 // ============================================================
@@ -4637,6 +4636,30 @@ document.addEventListener('keydown', e => {
   }
 });
 
+// ============================================================
+// WAKE LOCK — prevent screen sleep during playback
+// ============================================================
+let _wakeLock = null;
+
+async function initWakeLock() {
+  if (!('wakeLock' in navigator)) return; // not supported
+  // Request on load
+  await requestWakeLock();
+  // Re-acquire on visibility change (lost when tab hidden)
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'visible') await requestWakeLock();
+  });
+}
+
+async function requestWakeLock() {
+  try {
+    _wakeLock = await navigator.wakeLock.request('screen');
+    _wakeLock.addEventListener('release', () => { _wakeLock = null; });
+  } catch(e) {
+    // Silently fail — not critical
+  }
+}
+
 function toggleFullscreen() {
   if (!document.fullscreenElement) {
     document.documentElement.requestFullscreen().catch(() => {});
@@ -4657,10 +4680,10 @@ let lmSearchCache = [];
 
 function openLibModal() {
   document.getElementById('libModal').classList.add('open');
-  renderLibModalList();
   document.getElementById('lmLibCount').textContent = state.library.length;
   document.getElementById('lmArrCount').textContent = state.savedSetlists.length;
-  document.getElementById('lmSearchInput').focus();
+  switchLibModalTab('library');
+  document.getElementById('lmSearchInput')?.focus();
   document.addEventListener('keydown', lmEscHandler);
 }
 
@@ -4682,16 +4705,22 @@ function switchLibModalTab(tab) {
   const isArr = tab === 'arrangements' || tab === 'explore';
   document.getElementById('lmSongEditorPanel').style.display = isArr ? 'none' : 'flex';
   document.getElementById('lmArrDetailPanel').style.display  = isArr ? 'flex' : 'none';
-  // Col 3 toggle
   document.getElementById('lmCol3Songs').style.display = isArr ? 'none' : 'flex';
   document.getElementById('lmCol3Arr').style.display   = isArr ? 'flex' : 'none';
-  ['Search','Library','Arrangements'].forEach(t => {
+  // Only Library and Arrangements tabs remain
+  ['Library','Arrangements'].forEach(t => {
     document.getElementById('lmTab' + t)?.classList.toggle('active', tab === t.toLowerCase());
   });
-  if (tab === 'search')       { document.getElementById('lmSearchView').style.display = 'flex'; }
-  else if (tab === 'library') { document.getElementById('lmLibraryView').style.display = 'flex'; renderLibModalList(); }
-  else if (tab === 'arrangements') { document.getElementById('lmArrangementsView').style.display = 'flex'; loadLmArrangements(); }
-  else if (tab === 'explore') { document.getElementById('lmExploreView').style.display = 'flex'; loadLmExplore(); }
+  if (tab === 'library') {
+    document.getElementById('lmLibraryView').style.display = 'flex';
+    renderLibModalList();
+  } else if (tab === 'arrangements') {
+    document.getElementById('lmArrangementsView').style.display = 'flex';
+    loadLmArrangements();
+  } else if (tab === 'explore') {
+    document.getElementById('lmExploreView').style.display = 'flex';
+    loadLmExplore();
+  }
 }
 
 // ── ARRANGEMENT TAB ──────────────────────────────────────────
@@ -5178,21 +5207,57 @@ function setLmCatFilter(cat, btn) {
 // SEARCH
 async function doLibModalSearch() {
   const q = document.getElementById('lmSearchInput').value.trim();
-  if (!q) return;
-  if (!state.token) { showToast('Logg inn med Spotify først', 'error'); return; }
-  const el = document.getElementById('lmSearchResults');
+  if (!q) {
+    // Clear search — show library
+    renderLibModalList();
+    return;
+  }
+  // Always show in library tab
+  if (lmActiveTab !== 'library') switchLibModalTab('library');
+
+  const el = document.getElementById('lmLibraryList');
   el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Søker...</p></div>';
-  try {
-    const data = await spotifyFetch(
-      `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=20&market=NO`
-    );
-    const tracks = data.tracks?.items || [];
-    lmSearchCache = tracks;
-    if (!tracks.length) {
-      el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Ingen resultater</p></div>';
-      return;
-    }
-    el.innerHTML = tracks.map(t => {
+
+  // Filter local library first
+  const libMatches = state.library.filter(l =>
+    l.name.toLowerCase().includes(q.toLowerCase()) ||
+    l.artist.toLowerCase().includes(q.toLowerCase())
+  );
+
+  // Fetch Spotify results
+  let spotifyTracks = [];
+  if (state.token) {
+    try {
+      const data = await spotifyFetch(
+        `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=15&market=NO`
+      );
+      spotifyTracks = data.tracks?.items || [];
+      lmSearchCache = spotifyTracks;
+    } catch(e) { /* silently continue with library only */ }
+  }
+
+  // Build merged results
+  let html = '';
+  if (libMatches.length) {
+    html += `<div style="padding:4px 14px 2px;font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);">Bibliotek</div>`;
+    html += libMatches.map(l => {
+      const s = state.trackSettings[l.id] || l.settings || {};
+      return `
+        <div class="lm-item${lmSelectedTrack?.id === l.id ? ' selected' : ''}" id="lmli-${l.id}"
+             onclick="lmSelectLibTrack('${l.id}')">
+          <div class="lm-thumb">${l.img ? `<img src="${l.img}">` : ''}</div>
+          <div class="lm-info">
+            <div class="lm-name">${esc(l.name)}</div>
+            <div class="lm-sub">${esc(l.artist)} · ${fmtTime(l.duration)}${s.category ? ` · <span style="color:var(--accent)">${catLabel(s.category)}</span>` : ''}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  if (spotifyTracks.length) {
+    if (libMatches.length) html += `<div style="height:1px;background:var(--border);margin:4px 0;"></div>`;
+    html += `<div style="padding:4px 14px 2px;font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);">Spotify</div>`;
+    html += spotifyTracks.map(t => {
       const inLib = !!state.library.find(l => l.id === t.id);
       return `
         <div class="lm-item${lmSelectedTrack?.id === t.id ? ' selected' : ''}" id="lmsi-${t.id}"
@@ -5200,13 +5265,14 @@ async function doLibModalSearch() {
           <div class="lm-thumb">${t.album.images[1] ? `<img src="${t.album.images[1].url}">` : ''}</div>
           <div class="lm-info">
             <div class="lm-name">${esc(t.name)}</div>
-            <div class="lm-sub">${esc(t.artists[0].name)} · ${fmtTime(Math.round(t.duration_ms/1000))}${inLib ? ' ·  <span style="color:var(--gold)">★</span>' : ''}</div>
+            <div class="lm-sub">${esc(t.artists[0].name)} · ${fmtTime(Math.round(t.duration_ms/1000))}${inLib ? ' · <span style="color:var(--gold)">★</span>' : ''}</div>
           </div>
         </div>`;
     }).join('');
-  } catch(e) {
-    el.innerHTML = `<div class="empty-state"><div class="big-icon">—</div><p>${e.message}</p></div>`;
   }
+
+  if (!html) html = '<div class="empty-state"><div class="big-icon">—</div><p>Ingen resultater</p></div>';
+  el.innerHTML = html;
 }
 
 function lmSelectSearchTrack(id) {
@@ -5445,7 +5511,13 @@ function lmWaveformClick(e, trackId, duration) {
 
 // Library filter (live filter while typing in unified search when on library tab)
 function lmFilterLibrary() {
-  if (lmActiveTab === 'library') renderLibModalList();
+  const q = document.getElementById('lmSearchInput')?.value.trim();
+  if (q) {
+    // Debounce library filter live, Spotify search on Enter
+    renderLibModalList(); // shows filtered library instantly
+  } else {
+    if (lmActiveTab === 'library') renderLibModalList();
+  }
 }
 
 function lmNudge(trackId, type, delta, duration) {
