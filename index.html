@@ -994,7 +994,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v49</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v50</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -1189,7 +1189,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v49</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v50</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
@@ -1276,6 +1276,9 @@
               <button class="lib-cat-filter" data-lmcat="pump" onclick="setLmCatFilter('pump',this)">Pump</button>
               <button class="lib-cat-filter" data-lmcat="timeout" onclick="setLmCatFilter('timeout',this)">Timeout</button>
             </div>
+          </div>
+          <div id="lmSpotifyHint" style="display:none;padding:4px 14px;font-size:11px;color:var(--text-dim);background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0;">
+            Trykk <strong style="color:var(--accent)">Enter</strong> eller <strong style="color:var(--accent)">Søk</strong> for å søke på Spotify
           </div>
           <div class="lib-modal-scroll" id="lmLibraryList">
             <div class="empty-state"><div class="big-icon">—</div><p>Biblioteket er tomt</p></div>
@@ -1402,7 +1405,7 @@
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v49';
+const APP_VERSION = 'v50';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
@@ -1949,9 +1952,12 @@ async function doSearch() {
   el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Søker...</p></div>';
 
   try {
-    const data = await spotifyFetch(
-      `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=20&market=NO`
-    );
+    const searchUrl = new URL('https://api.spotify.com/v1/search');
+    searchUrl.searchParams.set('q', q);
+    searchUrl.searchParams.set('type', 'track');
+    searchUrl.searchParams.set('limit', '20');
+    searchUrl.searchParams.set('market', 'NO');
+    const data = await spotifyFetch(searchUrl.toString());
     const spotify = data.tracks?.items || [];
     spotify.forEach(t => { searchResultCache[t.id] = t; });
     window._lastSpotifyResults = spotify;
@@ -2528,27 +2534,52 @@ function renderQueue() {
     el.innerHTML = flat.map((t, i) => {
       const s = state.trackSettings[t.id] || {};
       const isPlayed = state.playedTracks.includes(t.id);
+      const isPlaying = state.isPlaying && t.id === getActiveQueue()[state.currentIndex]?.id &&
+        state.periods.find(p => p.id === state.currentPeriodId)?.queue[state.currentIndex]?.id === t.id;
       const periods = trackPeriods[t.id]?.periods || [];
       const isDuplicate = periods.length > 1;
       const periodLabel = periods.join(' · ');
       const startSecs = s.startTime || 0;
       const endSecs = s.endTime || t.duration;
+      const hasCustomStart = startSecs > 0;
+      const hasCustomEnd = s.endTime && s.endTime < t.duration;
+      const catColor = getCatColor(s.category);
+
+      // Find which period+index this track is in for playback
+      let trackPeriodId = '', trackIdx = 0;
+      for (const p of state.periods) {
+        const idx = p.queue.findIndex(q => q.id === t.id);
+        if (idx >= 0) { trackPeriodId = p.id; trackIdx = idx; break; }
+      }
+
       return `
-        <div class="queue-item${isPlayed ? ' played' : ''}">
-          <span style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--text-faint);width:20px;text-align:right;flex-shrink:0;">${i+1}</span>
+        <div class="queue-item${isPlaying ? ' playing' : ''}${isPlayed && !isPlaying ? ' played' : ''}"
+             onclick="selectTrackFromAll('${t.id}','${trackPeriodId}',${trackIdx})">
+          <span class="queue-num" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:${isPlaying ? 'var(--gold)' : 'var(--text-dim)'};width:22px;text-align:right;flex-shrink:0;">${i+1}</span>
+          <button class="queue-play-btn" onclick="event.stopPropagation();playFromAll('${trackPeriodId}',${trackIdx})" title="Spill">
+            ${isPlaying
+              ? `<span style="display:flex;align-items:flex-end;gap:2px;height:14px">
+                  <span style="width:3px;background:var(--gold);border-radius:1px;animation:paAnim .8s ease-in-out infinite alternate;display:block"></span>
+                  <span style="width:3px;background:var(--gold);border-radius:1px;animation:paAnim .8s ease-in-out infinite alternate .2s;display:block"></span>
+                  <span style="width:3px;background:var(--gold);border-radius:1px;animation:paAnim .8s ease-in-out infinite alternate .4s;display:block"></span>
+                 </span>`
+              : `<span style="color:var(--text-dim)">▶</span>`}
+          </button>
           <div class="track-thumb">${t.img ? `<img src="${t.img}">` : ''}</div>
           <div class="track-info">
-            <div style="display:flex;align-items:center;gap:6px;">
-              <div class="track-name">${esc(t.name)}</div>
-              ${isDuplicate ? `<span title="Finnes i ${periods.length} perioder" style="color:var(--gold);font-size:12px;font-weight:700;flex-shrink:0;">!</span>` : ''}
-              ${s.category ? `<span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--accent);background:var(--accent-dim);padding:1px 6px;border-radius:3px;">${s.category}</span>` : ''}
+            <div class="track-name" style="${isPlayed && !isPlaying ? 'opacity:0.5' : ''};display:flex;align-items:center;gap:5px;">
+              ${esc(t.name)}
+              ${isDuplicate ? `<span title="Finnes i ${periods.length} perioder" style="color:var(--gold);font-size:11px;font-weight:700;">!</span>` : ''}
             </div>
-            <div class="track-artist">${esc(t.artist)}</div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--text-faint);margin-top:2px;letter-spacing:0.3px;">${periodLabel}</div>
-          </div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--text-faint);flex-shrink:0;text-align:right;">
-            ${startSecs > 0 ? `<span style="color:var(--green)">${fmtTime(startSecs)}</span>` : ''}
-            ${s.endTime && s.endTime < t.duration ? `<span style="color:var(--red);margin-left:4px;">${fmtTime(endSecs)}</span>` : ''}
+            <div class="track-artist" style="display:flex;align-items:center;gap:6px;${isPlayed && !isPlaying ? 'opacity:0.5' : ''}">
+              <span>${esc(t.artist)}</span>
+              ${s.category ? `<span style="color:${catColor};font-size:10px">${catLabel(s.category)}</span>` : ''}
+            </div>
+            <div class="track-times">
+              <span class="${hasCustomStart ? 'time-tag start-tag' : 'time-tag'}">▶ ${fmtTime(startSecs)}</span>
+              <span class="${hasCustomEnd ? 'time-tag end-tag' : 'time-tag'}">■ ${fmtTime(endSecs)}</span>
+              <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--text-faint);margin-left:4px;">${periodLabel}</span>
+            </div>
           </div>
         </div>`;
     }).join('');
@@ -4584,6 +4615,26 @@ function getActivePeriod() {
 function getActiveQueue() {
   return getActivePeriod().queue;
 }
+// Play a track from the All-tab by switching to its period
+async function playFromAll(periodId, trackIdx) {
+  const prevPeriodId = state.activePeriodId;
+  state.activePeriodId = periodId;
+  await playTrack(trackIdx);
+  state.currentPeriodId = periodId;
+  state.activePeriodId = prevPeriodId; // stay on All tab
+  renderPeriodTabs();
+  renderQueue();
+}
+
+// Select (edit) a track from All-tab
+function selectTrackFromAll(trackId, periodId, trackIdx) {
+  const period = state.periods.find(p => p.id === periodId);
+  const track = period?.queue[trackIdx];
+  if (!track) return;
+  state.selectedTrackId = trackId;
+  renderTrackEditor(track);
+}
+
 function setActivePeriod(id) {
   // Only update the VIEW — never stop playback when switching tabs
   state.activePeriodId = id;
@@ -5228,9 +5279,12 @@ async function doLibModalSearch() {
   let spotifyTracks = [];
   if (state.token) {
     try {
-      const data = await spotifyFetch(
-        `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=15&market=NO`
-      );
+      const searchUrl = new URL('https://api.spotify.com/v1/search');
+      searchUrl.searchParams.set('q', q);
+      searchUrl.searchParams.set('type', 'track');
+      searchUrl.searchParams.set('limit', '15');
+      searchUrl.searchParams.set('market', 'NO');
+      const data = await spotifyFetch(searchUrl.toString());
       spotifyTracks = data.tracks?.items || [];
       lmSearchCache = spotifyTracks;
     } catch(e) { /* silently continue with library only */ }
@@ -5512,11 +5566,16 @@ function lmWaveformClick(e, trackId, duration) {
 // Library filter (live filter while typing in unified search when on library tab)
 function lmFilterLibrary() {
   const q = document.getElementById('lmSearchInput')?.value.trim();
-  if (q) {
-    // Debounce library filter live, Spotify search on Enter
-    renderLibModalList(); // shows filtered library instantly
-  } else {
-    if (lmActiveTab === 'library') renderLibModalList();
+  if (lmActiveTab === 'library') {
+    renderLibModalList(); // always show filtered library live
+    // Show hint to press Enter for Spotify when there's a query
+    if (q) {
+      const hint = document.getElementById('lmSpotifyHint');
+      if (hint) hint.style.display = 'block';
+    } else {
+      const hint = document.getElementById('lmSpotifyHint');
+      if (hint) hint.style.display = 'none';
+    }
   }
 }
 
