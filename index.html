@@ -1043,7 +1043,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v45</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v47</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -1112,7 +1112,9 @@
         </div>
         <div class="search-box" style="flex-shrink:0;">
           <div class="search-input-wrap">
-            <input type="text" id="searchInput" placeholder="Søk i Spotify og bibliotek..." onkeydown="if(event.key==='Enter') doSearch()">
+            <input type="text" id="searchInput" placeholder="Søk i Spotify og bibliotek..."
+              onkeydown="if(event.key==='Enter') doSearch()"
+              oninput="onSearchInput()">
             <button onclick="doSearch()">Søk</button>
           </div>
         </div>
@@ -1236,7 +1238,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v45</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v47</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
@@ -1549,7 +1551,7 @@
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v45';
+const APP_VERSION = 'v47';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
@@ -2024,6 +2026,9 @@ function setSearchPanelState(s) {
     expandBtn.style.display = 'inline';
     collapseBtn.style.display = 'none';
     catFilter.style.display = 'none';
+    // Show library immediately in normal mode
+    const q = document.getElementById('searchInput')?.value.trim();
+    if (!q) renderLibraryOnly();
   } else if (s === 'expanded') {
     document.documentElement.style.setProperty('--left-panel-width', '600px');
     collapsed.style.display = 'none';
@@ -2050,21 +2055,47 @@ function setSearchCat(cat, btn) {
 // Render library-only results (no search query)
 function renderLibraryOnly() {
   const el = document.getElementById('resultsList');
+  if (!el) return;
   let lib = [...state.library];
-  if (searchCatFilter) lib = lib.filter(l => (state.trackSettings[l.id]?.category || l.settings?.category || '') === searchCatFilter);
+  if (searchCatFilter) lib = lib.filter(l => {
+    const c = state.trackSettings[l.id]?.category || l.settings?.category || '';
+    return c === searchCatFilter;
+  });
   if (!lib.length) {
     el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Ingen sanger i biblioteket</p></div>';
     return;
   }
-  el.innerHTML = lib.map(t => renderSearchItem(t, null, 'library')).join('');
+  el.innerHTML = lib.map(t => {
+    const s = state.trackSettings[t.id] || t.settings || {};
+    return renderSearchItem(t, s, 'library');
+  }).join('');
+}
+
+function onSearchInput() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) {
+    window._lastSpotifyResults = [];
+    renderLibraryOnly();
+  } else {
+    // Filter library live while typing; Spotify search fires on Enter/button
+    window._lastSpotifyResults = window._lastSpotifyResults || [];
+    renderMergedResults();
+  }
+}
+
+function refreshSearchPanel() {
+  // Re-render results to update gray/in-use state
+  const q = document.getElementById('searchInput')?.value.trim();
+  if (!q) renderLibraryOnly();
+  else if (window._lastSpotifyResults?.length) renderMergedResults();
 }
 
 async function doSearch() {
   const q = document.getElementById('searchInput').value.trim();
 
-  // If expanded with no query — show library
+  // No query — always show library (both normal and expanded)
   if (!q) {
-    if (searchPanelState === 'expanded') renderLibraryOnly();
+    renderLibraryOnly();
     return;
   }
 
@@ -2158,7 +2189,7 @@ function renderSearchItem(track, s, source) {
   const isExpanded = searchPanelState === 'expanded';
 
   const img = track.img || track.imgMd || '';
-  const inQueue = !!getActiveQueue().find(q => q.id === track.id);
+  const inQueue = state.periods.some(p => p.queue.some(q => q.id === track.id));
 
   return `
     <div class="result-item" id="sri-${track.id}"
@@ -2598,6 +2629,7 @@ function addToQueue(track) {
   saveState();
   markQueueDirty();
   renderQueue();
+  refreshSearchPanel();
 }
 
 function removeFromQueue(idx) {
@@ -2607,6 +2639,7 @@ function removeFromQueue(idx) {
   saveState();
   markQueueDirty();
   renderQueue();
+  refreshSearchPanel();
   if (state.selectedTrackId && !q.find(t => t.id === state.selectedTrackId)) {
     state.selectedTrackId = null;
     document.getElementById('editorContent').innerHTML = `<div class="empty-state" style="height:100%"><div class="big-icon">—</div><p>Klikk på en låt for å redigere</p></div>`;
@@ -2684,8 +2717,10 @@ function renderQueue() {
   }
   el.innerHTML = q.map((t, i) => {
     const s = state.trackSettings[t.id] || {};
-    const isPlaying = i === state.currentIndex && state.isPlaying;
-    const isLoaded = i === state.loadedIndex || i === state.currentIndex;
+    const isInPlayingPeriod = state.currentPeriodId === getActivePeriod().id ||
+      (state.activePeriodId === ALL_PERIOD_ID); // in ALL view use global index
+    const isPlaying = isInPlayingPeriod && i === state.currentIndex && state.isPlaying;
+    const isLoaded  = isInPlayingPeriod && (i === state.loadedIndex || i === state.currentIndex);
     const isPlayed = state.playedTracks.includes(t.id);
     const catColor = getCatColor(s.category);
     const startSecs = s.startTime || 0;
@@ -2960,7 +2995,78 @@ function selectTrack(idx) {
   // Upgrade to real waveform async
   upgradeWaveform(track.id, track.duration);
 }
-const waveCache = {}; // trackId → Float32Array (200 points, 0–1)
+
+// Render editor sidebar for any track (used by quickPlay, library play etc.)
+function selectTrackInEditor(track) {
+  if (!track) return;
+  state.selectedTrackId = track.id;
+  const s = state.trackSettings[track.id] || { startTime: 0, endTime: track.duration, category: '', note: '', fadeOut: 0 };
+  document.getElementById('editorContent').innerHTML = `
+    <div class="editor-thumb">${(track.imgLg || track.img) ? `<img src="${track.imgLg || track.img}">` : ''}</div>
+    <div class="editor-title">${esc(track.name)}</div>
+    <div class="editor-artist">${esc(track.artist)} · ${fmtTime(track.duration)}</div>
+    <div class="editor-section">
+      <div class="editor-label">Tidslinje <span style="color:var(--text-dim);font-size:10px">klikk for å sette markør</span></div>
+      <div class="waveform-wrap" id="waveformWrap" onclick="waveformClick(event,'${track.id}',${track.duration})">
+        <div class="waveform" id="waveformBars">${generateWaveBars(track.id, track.duration)}</div>
+        <div class="waveform-markers" id="waveformMarkers">${renderWaveMarkers(s, track.duration)}</div>
+        <div id="wavePlayCursor" style="display:none;position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,0.7);border-radius:1px;pointer-events:none;transform:translateX(-50%);transition:left 0.25s linear;z-index:10;"></div>
+      </div>
+    </div>
+    <div class="editor-section">
+      <div class="editor-label">Tidspunkter</div>
+      <div class="time-inputs">
+        <div class="time-input-group">
+          <label class="start-lbl">▶ Start</label>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <button class="nudge-btn" onclick="nudgeTime('${track.id}','start',-1,${track.duration})">−1</button>
+            <button class="nudge-btn" onclick="nudgeTime('${track.id}','start',-0.1,${track.duration})">−.1</button>
+            <input type="text" id="startInput" class="time-input" value="${fmtTimeFine(s.startTime||0)}"
+              onchange="updateTimeFromInput('${track.id}','start',this.value,${track.duration})">
+            <button class="nudge-btn" onclick="nudgeTime('${track.id}','start',0.1,${track.duration})">+.1</button>
+            <button class="nudge-btn" onclick="nudgeTime('${track.id}','start',1,${track.duration})">+1</button>
+          </div>
+        </div>
+        <div class="time-input-group">
+          <label class="end-lbl">■ Stopp</label>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <button class="nudge-btn" onclick="nudgeTime('${track.id}','end',-1,${track.duration})">−1</button>
+            <button class="nudge-btn" onclick="nudgeTime('${track.id}','end',-0.1,${track.duration})">−.1</button>
+            <input type="text" id="endInput" class="time-input" value="${fmtTimeFine(s.endTime||track.duration)}"
+              onchange="updateTimeFromInput('${track.id}','end',this.value,${track.duration})">
+            <button class="nudge-btn" onclick="nudgeTime('${track.id}','end',0.1,${track.duration})">+.1</button>
+            <button class="nudge-btn" onclick="nudgeTime('${track.id}','end',1,${track.duration})">+1</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="editor-section">
+      <div class="editor-label">Kategori</div>
+      <div class="category-pills">
+        ${[['goal','Mål'],['powerplay','Powerplay'],['intro','Intro'],['pump','Pump'],['timeout','Timeout']].map(([cat,label]) => `
+          <div class="cat-pill${s.category===cat?' active':''}" data-cat="${cat}"
+               onclick="setCategory('${track.id}','${cat}',this)">${label}</div>`).join('')}
+      </div>
+    </div>
+    <div class="editor-section">
+      <div class="editor-label">Fade ut (sekunder fra stopp)</div>
+      <div style="display:flex;align-items:center;gap:10px;padding:4px 0;">
+        <input type="range" min="0" max="10" step="1" value="${s.fadeOut||0}" id="fadeSlider"
+          oninput="document.getElementById('fadeVal').textContent=this.value+'s'"
+          onchange="updateFade('${track.id}',this.value)" style="flex:1;">
+        <span id="fadeVal">${s.fadeOut||0}s</span>
+      </div>
+    </div>
+    <div class="editor-section">
+      <div class="editor-label">Notat</div>
+      <textarea id="trackNote" placeholder="F.eks. spill etter mål, ved utvisning..."
+        style="width:100%;background:var(--rink-surface);border:1px solid var(--panel-border);border-radius:5px;color:var(--text);padding:8px 10px;font-family:'Barlow',sans-serif;font-size:12px;resize:vertical;min-height:56px;outline:none;"
+        onchange="updateNote('${track.id}', this.value)">${esc(s.note || '')}</textarea>
+    </div>
+    <button class="save-btn" onclick="saveTrackSettings('${track.id}')">Lagre innstillinger</button>
+  `;
+  upgradeWaveform(track.id, track.duration);
+} // trackId → Float32Array (200 points, 0–1)
 
 async function fetchWaveData(trackId) {
   if (waveCache[trackId]) return waveCache[trackId];
@@ -3533,6 +3639,7 @@ function loadSetlist(id) {
   state.playedTracks = [];
   state.currentIndex = -1;
   state.loadedIndex = -1;
+  state.activePeriodId = '__all__';  // Always show All tab after loading
   state.isPlaying = false;
   stopTicker();
   saveState();
@@ -3543,6 +3650,7 @@ function loadSetlist(id) {
   showToast(`"${sl.name}" lastet inn ✓`, 'success');
   updateHeaderSetlistName(sl.name);
   clearDirty();
+  refreshSearchPanel();
 }
 
 function deleteSetlist(id) {
@@ -3922,6 +4030,9 @@ async function quickPlay(trackId) {
       state.activePeriodId = prevPeriodId;
       renderPeriodTabs();
       renderQueue();
+      // Load into editor sidebar
+      state.selectedTrackId = trackId;
+      selectTrackInEditor(p.queue[idx]);
       return;
     }
   }
@@ -3947,6 +4058,9 @@ async function quickPlay(trackId) {
       updatePlayerUI();
       startTicker();
       showToast(`▶ ${track.name}`, 'success');
+      // Load into editor sidebar
+      state.selectedTrackId = trackId;
+      selectTrackInEditor(track);
       return;
     } catch(e) {}
   }
@@ -5243,7 +5357,7 @@ async function lmSaveArrangement() {
 
   if (loadIntoQueue) {
     state.periods = lmSelectedArrangement.periods.map(p => ({ ...p, queue: [...p.queue] }));
-    state.activePeriodId = state.periods[0]?.id || '';
+    state.activePeriodId = '__all__';
     updateHeaderSetlistName(name);
     renderPeriodTabs();
     renderQueue();
