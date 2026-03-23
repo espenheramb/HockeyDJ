@@ -436,6 +436,8 @@
     border-radius: 4px; padding: 8px 8px 5px;
     border: 1px solid var(--border);
     cursor: crosshair;
+    position: relative;
+    overflow: hidden;
   }
   .waveform { display: flex; align-items: center; gap: 1px; height: 36px; margin-bottom: 4px; }
   .wave-bar { flex: 1; background: var(--accent); border-radius: 1px; opacity: 0.5; }
@@ -1041,7 +1043,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v44</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v45</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -1234,7 +1236,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v44</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v45</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
@@ -1547,7 +1549,7 @@
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v44';
+const APP_VERSION = 'v45';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
@@ -1564,7 +1566,7 @@ const state = {
   clientId: localStorage.getItem('spotify_client_id') || '',
   // Perioder: array av { id, name, queue: [] }
   periods: JSON.parse(localStorage.getItem('hd_periods') || 'null') || DEFAULT_PERIODS.map((name, i) => ({ id: 'p' + i, name, queue: [] })),
-  activePeriodId: localStorage.getItem('hd_active_period') || 'p0',
+  activePeriodId: localStorage.getItem('hd_active_period') || '__all__',
   trackSettings: JSON.parse(localStorage.getItem('hd_settings') || '{}'),
   playedTracks: JSON.parse(localStorage.getItem('hd_played') || '[]'),
   savedSetlists: JSON.parse(localStorage.getItem('hd_setlists') || '[]'),
@@ -3909,7 +3911,7 @@ function isTrackCurrentlyPlaying(trackId) {
 }
 
 async function quickPlay(trackId) {
-  // Find the period with this track
+  // First try to find in a period queue
   for (const p of state.periods) {
     const idx = p.queue.findIndex(t => t.id === trackId);
     if (idx >= 0) {
@@ -3917,15 +3919,38 @@ async function quickPlay(trackId) {
       state.activePeriodId = p.id;
       await playTrack(idx);
       state.currentPeriodId = p.id;
-      // Don't autoplay after stop
-      // Restore view tab
       state.activePeriodId = prevPeriodId;
       renderPeriodTabs();
       renderQueue();
       return;
     }
   }
-  showToast('Sang ikke funnet — legg den til i en periode', 'error');
+  // Fallback: play directly from library or search cache via Spotify API
+  const track = state.library.find(l => l.id === trackId)
+    || (() => { const t = searchResultCache[trackId]; if (!t) return null;
+        return { uri: t.uri, name: t.name,
+          img: t.album?.images?.[0]?.url || '',
+          imgLg: t.album?.images?.[0]?.url || '',
+          artist: t.artists?.[0]?.name || '',
+          duration: Math.round(t.duration_ms/1000) }; })();
+  if (track?.uri && state.player && state.deviceId) {
+    const s = state.trackSettings[trackId] || {};
+    const startMs = (s.startTime || 0) * 1000;
+    try {
+      await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${state.deviceId}`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${state.token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uris: [track.uri], position_ms: startMs })
+      });
+      state.isPlaying = true;
+      updatePlayerBar(track, s);
+      updatePlayerUI();
+      startTicker();
+      showToast(`▶ ${track.name}`, 'success');
+      return;
+    } catch(e) {}
+  }
+  showToast('Sang ikke funnet — legg den til i en periode eller biblioteket', 'error');
 }
 
 function toggleQuickEditMode() {
