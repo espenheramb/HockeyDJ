@@ -840,7 +840,55 @@
   }
   #resizeHandle:hover { background: var(--accent); }
 
-  /* ─── LIBRARY MODAL ─────────────────────────────────────── */
+  /* ─── GALLERY MODAL ─────────────────────────────────────── */
+  .gallery-modal {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    width: min(900px, 96vw);
+    height: min(700px, 90vh);
+    display: grid;
+    grid-template-rows: 52px 1fr;
+    overflow: hidden;
+    transform: translateY(12px);
+    transition: transform 0.2s;
+  }
+  .lib-modal-overlay.open .gallery-modal { transform: translateY(0); }
+
+  .gallery-card {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    transition: border-color 0.15s;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .gallery-card:hover { border-color: var(--accent); }
+  .gallery-card-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 16px; color: var(--text);
+  }
+  .gallery-card-meta {
+    font-size: 11px; color: var(--text-dim);
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  }
+  .gallery-card-periods {
+    display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px;
+  }
+  .gallery-period-tag {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 3px; padding: 2px 7px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; color: var(--text-dim);
+  }
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px; padding: 16px; overflow-y: auto;
+    align-content: start;
+  }
+  .gallery-grid::-webkit-scrollbar { width: 3px; }
+  .gallery-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
   .lib-modal-overlay {
     position: fixed; inset: 0;
     background: rgba(0,0,0,0.75);
@@ -970,7 +1018,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v32</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v37</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -1039,11 +1087,17 @@
         <span class="panel-title">Spillekø</span>
         <div style="display:flex;align-items:center;gap:6px;">
           <span class="queue-count-badge" id="queueCount">0 låter</span>
-          <button class="hdr-btn hdr-btn-red"   onclick="newSetlist()"           title="Ny tom spilleliste">Ny liste</button>
+          <button class="hdr-btn hdr-btn-red"   onclick="newSetlist()"           title="Nytt arrangement">Nytt</button>
           <button class="hdr-btn hdr-btn-gold"  onclick="resetSession()"         title="Nullstill avspilt-markering">Reset</button>
-          <button class="hdr-btn hdr-btn-green" onclick="openSaveSetlistModal()" title="Lagre spilleliste">Lagre</button>
-          <button class="hdr-btn hdr-btn-blue"  onclick="openLoadSetlistModal()" title="Åpne lagret spilleliste">Åpne</button>
+          <button class="hdr-btn hdr-btn-green" onclick="openSaveSetlistModal()" title="Lagre arrangement">Lagre</button>
+          <button class="hdr-btn hdr-btn-blue"  onclick="openLoadSetlistModal()" title="Åpne lagret arrangement">Åpne</button>
           <button class="hdr-btn" onclick="openLibModal()" title="Søk og bibliotek" style="border-color:var(--accent);color:var(--accent);">Bibliotek</button>
+          <button class="hdr-btn" onclick="openGalleryModal()" title="Galleri — del og hent arrangementer">Galleri</button>
+          <button class="hdr-btn" onclick="exportData()" title="Eksporter alle arrangementer og bibliotek til fil">Eksporter</button>
+          <label class="hdr-btn" title="Importer arrangementer og bibliotek fra fil" style="cursor:pointer;display:flex;align-items:center;">
+            Importer
+            <input type="file" accept=".json" onchange="importData(event)" style="display:none;">
+          </label>
         </div>
       </div>
       <!-- QUICK ACCESS BAR -->
@@ -1134,7 +1188,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v32</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v37</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
@@ -1150,14 +1204,14 @@
 <!-- SAVE SETLIST MODAL -->
 <div class="modal-overlay hidden" id="saveSetlistModal">
   <div class="modal">
-    <h2>💾 Lagre spilleliste</h2>
+    <h2>Lagre arrangement</h2>
     <div id="saveSetlistExisting" style="margin-bottom:14px;display:none;">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;">Oppdater eksisterende</div>
       <div id="saveSetlistExistingList" style="max-height:160px;overflow-y:auto;margin-bottom:10px;"></div>
       <div style="text-align:center;font-size:12px;color:var(--text-dim);margin-bottom:10px;">— eller lagre som ny —</div>
     </div>
-    <input type="text" class="modal-input" id="setlistNameInput" placeholder="Navn på ny spilleliste..." onkeydown="if(event.key==='Enter') saveSetlistNew()">
-    <button class="modal-btn primary" onclick="saveSetlistNew()">💾 Lagre som ny</button>
+    <input type="text" class="modal-input" id="setlistNameInput" placeholder="Navn på nytt arrangement..." onkeydown="if(event.key==='Enter') saveSetlistNew()">
+    <button class="modal-btn primary" onclick="saveSetlistNew()">Lagre som ny</button>
     <button class="modal-btn secondary" onclick="closeSaveSetlistModal()">Avbryt</button>
   </div>
 </div>
@@ -1165,12 +1219,109 @@
 <!-- LOAD SETLIST MODAL -->
 <div class="modal-overlay hidden" id="loadSetlistModal">
   <div class="modal">
-    <h2>📂 Lagrede spillelister</h2>
+    <h2>Lagrede arrangementer</h2>
     <div id="setlistList" style="max-height:320px;overflow-y:auto;margin-bottom:12px;"></div>
     <button class="modal-btn secondary" onclick="closeLoadSetlistModal()">Lukk</button>
   </div>
 </div>
 <div class="toast" id="toast"></div>
+
+<!-- GALLERY MODAL -->
+<div class="lib-modal-overlay" id="galleryModal" onclick="if(event.target===this)closeGalleryModal()">
+  <div class="gallery-modal">
+    <div class="lib-modal-header">
+      <span class="lib-modal-title">Galleri</span>
+      <div class="lib-modal-tabs">
+        <button class="lib-modal-tab active" id="galTabBrowse" onclick="switchGalleryTab('browse')">Offentlige arrangementer</button>
+        <button class="lib-modal-tab" id="galTabMine" onclick="switchGalleryTab('mine')">Mine delte</button>
+        <button class="lib-modal-tab" id="galTabShare" onclick="switchGalleryTab('share')">Del arrangement</button>
+        <button class="lib-modal-tab" id="galTabSettings" onclick="switchGalleryTab('settings')">Innstillinger</button>
+      </div>
+      <button class="lib-modal-close" onclick="closeGalleryModal()">&#x2715;</button>
+    </div>
+
+    <div id="galContent" style="overflow:hidden;display:flex;flex-direction:column;height:100%;">
+
+      <!-- BROWSE TAB -->
+      <div id="galBrowseView" style="display:flex;flex-direction:column;height:100%;">
+        <div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-shrink:0;">
+          <div class="search-input-wrap" style="flex:1;">
+            <input type="text" id="galSearchInput" placeholder="Søk i offentlige arrangementer..." oninput="filterGallery()">
+          </div>
+          <button class="hdr-btn hdr-btn-blue" onclick="loadGallery()">Oppdater</button>
+        </div>
+        <div id="galBrowseGrid" class="gallery-grid">
+          <div class="empty-state" style="grid-column:1/-1;"><div class="big-icon">—</div><p>Klikk Oppdater for å laste offentlige arrangementer</p></div>
+        </div>
+      </div>
+
+      <!-- MINE TAB -->
+      <div id="galMineView" style="display:none;flex-direction:column;height:100%;">
+        <div id="galMineGrid" class="gallery-grid">
+          <div class="empty-state" style="grid-column:1/-1;"><div class="big-icon">—</div><p>Du har ikke delt noen arrangementer ennå</p></div>
+        </div>
+      </div>
+
+      <!-- SHARE TAB -->
+      <div id="galShareView" style="display:none;padding:24px;overflow-y:auto;">
+        <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;margin-bottom:16px;">Del et arrangement</h3>
+        <div class="lm-section">
+          <div class="lm-label">Velg arrangement</div>
+          <select id="galShareSelect" style="width:100%;background:var(--bg-raised);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:8px 10px;font-family:'Barlow',sans-serif;font-size:13px;outline:none;">
+            <option value="">— Velg arrangement —</option>
+          </select>
+        </div>
+        <div class="lm-section">
+          <div class="lm-label">Kategori (valgfritt)</div>
+          <input type="text" id="galShareCategory" placeholder="F.eks. Hockey, Turnering, U16..."
+            style="width:100%;background:var(--bg-raised);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:8px 10px;font-family:'Barlow',sans-serif;font-size:13px;outline:none;">
+        </div>
+        <div class="lm-section">
+          <div class="lm-label">Synlighet</div>
+          <div style="display:flex;gap:10px;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+              <input type="radio" name="galVisibility" value="public" checked> Offentlig — vises i galleriet
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+              <input type="radio" name="galVisibility" value="secret"> Privat — bare de med lenken
+            </label>
+          </div>
+        </div>
+        <button onclick="shareArrangement()" style="background:var(--accent);border:none;color:white;padding:10px 24px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:1px;cursor:pointer;transition:opacity .2s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+          Del arrangement
+        </button>
+        <div id="galShareResult" style="margin-top:16px;display:none;">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;">Lenke</div>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="galShareLink" readonly style="flex:1;background:var(--bg-raised);border:1px solid var(--green);border-radius:4px;color:var(--green);padding:8px 10px;font-family:'Barlow Condensed',sans-serif;font-size:13px;outline:none;">
+            <button onclick="copyGalLink()" style="background:var(--bg-raised);border:1px solid var(--border);color:var(--text-dim);padding:8px 12px;border-radius:4px;cursor:pointer;font-size:12px;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">Kopier</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS TAB -->
+      <div id="galSettingsView" style="display:none;padding:24px;overflow-y:auto;">
+        <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;margin-bottom:6px;">Sky-lagring</h3>
+        <p style="font-size:13px;color:var(--text-dim);margin-bottom:20px;line-height:1.6;">
+          Arrangementer og bibliotek lagres automatisk i skyen når du er innlogget med Spotify.
+          Data er knyttet til din Spotify-konto og synkroniseres på alle enheter.
+        </p>
+        <div id="galCloudStatus" style="background:var(--bg-raised);border:1px solid var(--border);border-radius:6px;padding:14px 16px;margin-bottom:20px;font-size:13px;"></div>
+        <div class="lm-section">
+          <div class="lm-label">Importer fra arrangement-ID</div>
+          <p style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">Har du fått en lenke eller ID til et arrangement?</p>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="galImportUrl" placeholder="Lim inn lenke eller arrangement-ID..."
+              style="flex:1;background:var(--bg-raised);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:8px 10px;font-family:'Barlow',sans-serif;font-size:13px;outline:none;transition:border-color .2s;"
+              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+            <button onclick="importFromUrl()" style="background:var(--bg-raised);border:1px solid var(--border);color:var(--text-dim);padding:8px 14px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">Hent</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
 
 <!-- LIBRARY MODAL -->
 <div class="lib-modal-overlay" id="libModal" onclick="if(event.target===this)closeLibModal()">
@@ -1258,11 +1409,15 @@
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v32';
+const APP_VERSION = 'v37';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
 const SPOTIFY_CLIENT_ID = 'fbcfbbe397814636b480e45c52abf3a7';
+
+// Supabase — sky-lagring
+const SUPABASE_URL  = 'https://lfyplgfjaatvziqwrvoc.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_0haI6IskUEsM3d5G-p6crw_oLHl3ays';
 
 const state = {
   token: localStorage.getItem('spotify_token') || null,
@@ -1278,6 +1433,8 @@ const state = {
   library: JSON.parse(localStorage.getItem('hd_library') || '[]'), // Permanent sangbibliotek
   // Hurtigknapper: [{ id, trackId, label, key, periodId }]
   quickButtons: JSON.parse(localStorage.getItem('hd_quickbtns') || '[]'),
+  githubToken: localStorage.getItem('hd_github_token') || '',
+  _dirtyArrangements: new Set(),
   loadedIndex: -1,
   currentIndex: -1,
   currentPeriodId: localStorage.getItem('hd_active_period') || 'p0',
@@ -1335,13 +1492,15 @@ window.onload = async () => {
   renderPeriodTabs();
   renderQueue();
   updatePlayerUI();
-  // Gjenopprett spillelistenavn
+  // Gjenopprett arrangementnavn
   const savedSetlistName = localStorage.getItem('hd_current_setlist_name');
   if (savedSetlistName) updateHeaderSetlistName(savedSetlistName);
   switchLeftTab('search');
   // Set version from constant so it's always in sync
   document.querySelectorAll('#headerVersion, #modalVersion').forEach(el => el.textContent = APP_VERSION);
   renderQuickBar();
+  // Check for ?import= URL parameter
+  checkImportParam();
 };
 
 
@@ -1498,6 +1657,8 @@ async function fetchUserProfile() {
     const user = await res.json();
     state.user = user;
     renderUserProfile(user);
+    // Load cloud data now that we know the user
+    sbLoadUserData();
   } catch(e) { console.error('Profil feil:', e); }
 }
 
@@ -2398,7 +2559,7 @@ function selectTrack(idx) {
         onchange="updateNote('${track.id}', this.value)">${esc(s.note || '')}</textarea>
     </div>
 
-    <button class="save-btn" onclick="saveTrackSettings('${track.id}')">💾 Lagre innstillinger</button>
+    <button class="save-btn" onclick="saveTrackSettings('${track.id}')">Lagre innstillinger</button>
     <button onclick="saveToLibrary('${track.id}')" id="libSaveBtn-${track.id}"
       style="width:100%;margin-top:8px;background:none;border:1px solid var(--panel-border);color:var(--text-dim);padding:10px;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;"
       onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'"
@@ -2409,110 +2570,143 @@ function selectTrack(idx) {
   // Upgrade to real waveform async
   upgradeWaveform(track.id, track.duration);
 }
-const waveCache = {}; // trackId → Float32Array of loudness values (0–1)
+const waveCache = {}; // trackId → Float32Array (200 points, 0–1)
 
 async function fetchWaveData(trackId) {
   if (waveCache[trackId]) return waveCache[trackId];
-  if (!state.token) return null;
+  if (!state.token) return buildFallbackWave(trackId);
   try {
-    const data = await spotifyFetch(`https://api.spotify.com/v1/audio-analysis/${trackId}`);
-    // segments array has start, duration, loudness_max (dB, typically -60 to 0)
-    const segments = data.segments || [];
-    if (!segments.length) return null;
-    // Build 200-point loudness curve
+    // audio-features: energy, danceability, tempo, acousticness, valence
+    const f = await spotifyFetch(`https://api.spotify.com/v1/audio-features/${trackId}`);
+    const energy   = f.energy       ?? 0.5;
+    const dance    = f.danceability ?? 0.5;
+    const acoustic = f.acousticness ?? 0.3;
+    const tempo    = f.tempo        ?? 120;
+
     const points = 200;
-    const totalDur = data.track?.duration || segments[segments.length-1].start + segments[segments.length-1].duration;
     const values = new Float32Array(points);
-    segments.forEach(seg => {
-      const startI = Math.floor(seg.start / totalDur * points);
-      const endI = Math.min(points - 1, Math.ceil((seg.start + seg.duration) / totalDur * points));
-      // Normalize loudness: -60dB → 0, 0dB → 1
-      const norm = Math.max(0, Math.min(1, (seg.loudness_max + 60) / 60));
-      for (let i = startI; i <= endI; i++) values[i] = Math.max(values[i], norm);
-    });
+    const seed = trackId.split('').reduce((a,c,i) => a + c.charCodeAt(0) * (i+1), 0);
+    const bpm = tempo / 60; // beats per second
+
+    for (let i = 0; i < points; i++) {
+      const t = i / points;
+      // Three noise octaves with different frequencies
+      const n1 = Math.sin(seed * 0.0013 + t * 37.1) * 0.5 + 0.5;
+      const n2 = Math.sin(seed * 0.0031 + t * 83.7 + 1.4) * 0.5 + 0.5;
+      const n3 = Math.sin(seed * 0.0071 + t * 19.3 + 2.8) * 0.5 + 0.5;
+      // Beat pulse shaped by tempo and danceability
+      const beatPhase = (t * bpm * 4) % 1;
+      const beat = Math.pow(Math.max(0, 1 - beatPhase * 2.5), 2) * dance * 0.5;
+      // Blend
+      let v = n1 * 0.45 + n2 * 0.35 + n3 * 0.20 + beat;
+      // Scale by energy
+      v = v * (0.4 + energy * 0.7);
+      // Acoustic = smoother, less peaky
+      if (acoustic > 0.5) v = v * 0.65 + 0.12;
+      // Slight arc envelope (energy tends to peak mid-track)
+      v *= (0.82 + Math.sin(t * Math.PI) * 0.18);
+      values[i] = Math.max(0.06, Math.min(1, v));
+    }
+
+    // Smooth: weighted rolling average
+    for (let pass = 0; pass < 2; pass++) {
+      for (let i = 1; i < points - 1; i++) {
+        values[i] = values[i-1] * 0.2 + values[i] * 0.6 + values[i+1] * 0.2;
+      }
+    }
+
     waveCache[trackId] = values;
     return values;
   } catch(e) {
-    console.warn('Audio analysis failed for', trackId, e.message);
-    return null;
+    console.warn('audio-features unavailable:', e.message);
+    return buildFallbackWave(trackId);
   }
 }
 
-function buildWaveBarsHTML(trackId, duration, values, count, height, settings) {
+function buildFallbackWave(trackId) {
+  if (waveCache[trackId]) return waveCache[trackId];
+  const points = 200;
+  const values = new Float32Array(points);
+  const seed = trackId.split('').reduce((a,c,i) => a + c.charCodeAt(0) * (i+1), 0);
+  for (let i = 0; i < points; i++) {
+    const t = i / points;
+    const v = (Math.sin(seed * 0.0013 + t * 31.7) * 0.4 + 0.55)
+            * (Math.sin(seed * 0.0041 + t * 67.3 + 1.1) * 0.3 + 0.7)
+            * (0.82 + Math.sin(t * Math.PI) * 0.18);
+    values[i] = Math.max(0.06, Math.min(1, v));
+  }
+  for (let i = 1; i < points - 1; i++) {
+    values[i] = values[i-1] * 0.2 + values[i] * 0.6 + values[i+1] * 0.2;
+  }
+  waveCache[trackId] = values;
+  return values;
+}
+
+function buildWaveBarsHTML(trackId, duration, values, count, style, settings) {
   const s = settings || state.trackSettings[trackId] || {};
   const startPct = (s.startTime || 0) / duration;
-  const endPct = (s.endTime || duration) / duration;
+  const endPct   = (s.endTime   || duration) / duration;
   let bars = '';
   for (let i = 0; i < count; i++) {
     const pct = i / count;
-    let h;
-    if (values) {
-      // Sample from loudness curve
-      const idx = Math.floor(pct * values.length);
-      h = Math.max(8, Math.round(values[idx] * 90 + 8));
-    } else {
-      // Fallback: seeded pseudo-random
-      const seed = trackId.split('').reduce((a,c) => a + c.charCodeAt(0), 0);
-      h = 10 + Math.round((Math.sin(seed + i * 2.1) * 0.5 + 0.5) * 80);
-    }
+    const idx = Math.floor(pct * values.length);
+    const raw = values[idx];
+    const h   = Math.max(8, Math.round(raw * 88 + 8));
     const inRange = pct >= startPct && pct <= endPct;
-    if (height === 'small') {
-      // Library modal style
-      const color = inRange ? 'var(--accent)' : 'var(--text-faint)';
-      const opacity = inRange ? '0.75' : '0.3';
+    if (style === 'small') {
+      const color   = inRange ? 'var(--accent)' : 'var(--text-faint)';
+      const opacity = inRange ? '0.8' : '0.22';
       bars += `<div style="flex:1;background:${color};border-radius:1px;height:${h}%;opacity:${opacity};"></div>`;
     } else {
-      // Main editor style using CSS classes
-      let cls = 'wave-bar';
-      if (!inRange) cls += ' past';
+      let cls = 'wave-bar' + (inRange ? '' : ' past');
       bars += `<div class="${cls}" style="height:${h}%"></div>`;
     }
   }
   return bars;
 }
 
-async function generateWaveBarsAsync(trackId, duration, elId, markersElId, count = 60, style = 'main') {
+async function generateWaveBarsAsync(trackId, duration, elId, markersElId, count, style) {
   const el = document.getElementById(elId);
   if (!el) return;
   const s = state.trackSettings[trackId] || {};
-  // Show immediately with cached or fallback
-  const cached = waveCache[trackId];
-  el.innerHTML = buildWaveBarsHTML(trackId, duration, cached || null, count, style, s);
+  // Instant fallback
+  const fallback = buildFallbackWave(trackId);
+  el.innerHTML = buildWaveBarsHTML(trackId, duration, fallback, count, style, s);
   if (markersElId) {
     const mel = document.getElementById(markersElId);
     if (mel) mel.innerHTML = style === 'small' ? lmWaveMarkers(s, duration) : renderWaveMarkers(s, duration);
   }
-  if (!cached && state.token) {
+  // Async upgrade with audio-features
+  if (state.token && !waveCache[trackId + '_final']) {
     const values = await fetchWaveData(trackId);
-    if (values && document.getElementById(elId)) {
-      document.getElementById(elId).innerHTML = buildWaveBarsHTML(trackId, duration, values, count, style, s);
+    waveCache[trackId + '_final'] = true;
+    const still = document.getElementById(elId);
+    if (values && still) {
+      still.innerHTML = buildWaveBarsHTML(trackId, duration, values, count, style, s);
     }
   }
 }
 
 function generateWaveBars(trackId, duration) {
-  // Synchronous fallback (used on initial render, async will update)
   const s = state.trackSettings[trackId] || {};
-  const values = waveCache[trackId] || null;
+  const values = waveCache[trackId] || buildFallbackWave(trackId);
   return buildWaveBarsHTML(trackId, duration, values, 60, 'main', s);
 }
 
-// Async version — call after rendering to upgrade bars
 function upgradeWaveform(trackId, duration) {
   generateWaveBarsAsync(trackId, duration, 'waveformBars', 'waveformMarkers', 60, 'main');
 }
 
-// lmGenerateWave now also uses real data
 function lmGenerateWave(trackId, duration) {
   const s = state.trackSettings[trackId] || {};
-  const values = waveCache[trackId] || null;
+  const values = waveCache[trackId] || buildFallbackWave(trackId);
   return buildWaveBarsHTML(trackId, duration, values, 80, 'small', s);
 }
 
-// Upgrade lib modal waveform
 function upgradeLmWaveform(trackId, duration) {
   generateWaveBarsAsync(trackId, duration, 'lmWaveBars', 'lmWaveMarkers', 80, 'small');
 }
+
 
 function renderWaveMarkers(s, duration) {
   const startPct = ((s.startTime || 0) / duration * 100).toFixed(1);
@@ -2839,9 +3033,12 @@ function buildSetlistData(name) {
 
 function saveSetlistNew() {
   const name = document.getElementById('setlistNameInput').value.trim();
-  if (!name) { showToast('Gi spillelisten et navn', 'error'); return; }
-  state.savedSetlists.push(buildSetlistData(name));
+  if (!name) { showToast('Gi arrangementet et navn', 'error'); return; }
+  const sl = buildSetlistData(name);
+  state.savedSetlists.push(sl);
+  state._dirtyArrangements.add(sl.id);
   saveState();
+  sbSaveArrangement(sl); // immediate cloud save
   closeSaveSetlistModal();
   showToast(`"${name}" lagret ✓`, 'success');
   updateHeaderSetlistName(name);
@@ -2855,9 +3052,11 @@ function saveSetlistOverwrite(id) {
   if (idx < 0) return;
   const oldName = state.savedSetlists[idx].name;
   const newData = buildSetlistData(oldName);
-  newData.id = id; // keep same ID
+  newData.id = id;
   state.savedSetlists[idx] = newData;
+  state._dirtyArrangements.add(id);
   saveState();
+  sbSaveArrangement(newData); // immediate cloud save
   closeSaveSetlistModal();
   showToast(`"${oldName}" oppdatert ✓`, 'success');
   updateHeaderSetlistName(oldName);
@@ -2872,7 +3071,7 @@ function closeLoadSetlistModal() { document.getElementById('loadSetlistModal').c
 function renderSetlistList() {
   const el = document.getElementById('setlistList');
   if (!state.savedSetlists.length) {
-    el.innerHTML = '<div class="empty-state" style="padding:20px"><div class="big-icon">—</div><p>Ingen lagrede spillelister ennå</p></div>';
+    el.innerHTML = '<div class="empty-state" style="padding:20px"><div class="big-icon">—</div><p>Ingen lagrede arrangementr ennå</p></div>';
     return;
   }
   el.innerHTML = [...state.savedSetlists].reverse().map(sl => `
@@ -2928,14 +3127,15 @@ function deleteSetlist(id) {
   if (!confirm(`Slette "${sl.name}"?`)) return;
   state.savedSetlists = state.savedSetlists.filter(s => s.id !== id);
   saveState();
+  sbDeleteArrangement(id); // remove from cloud too
   renderSetlistList();
-  showToast('Spilleliste slettet', '');
+  showToast('Arrangement slettet', '');
 }
 
 function newSetlist() {
   const totalTracks = state.periods.reduce((sum, p) => sum + p.queue.length, 0);
   if (totalTracks > 0) {
-    if (!confirm(`Tøm alle perioder og start ny spilleliste?\n\nTips: Lagre først med 💾-knappen.`)) return;
+    if (!confirm(`Tøm alle perioder og start nytt arrangement?\n\nTips: Lagre arrangementet først.`)) return;
   }
   if (state.isPlaying) {
     if (state.player && !state.demoMode) state.player.pause();
@@ -2959,7 +3159,7 @@ function newSetlist() {
   document.getElementById('npThumb').innerHTML = '🎵';
   document.getElementById('npCategory').innerHTML = '';
   document.getElementById('editorContent').innerHTML = `<div class="empty-state" style="height:100%"><div class="big-icon">—</div><p>Klikk på en låt for å redigere</p></div>`;
-  showToast('Ny spilleliste klar ✓', 'success');
+  showToast('Nytt arrangement klar ✓', 'success');
   updateHeaderSetlistName('');
 }
 
@@ -3452,6 +3652,317 @@ function handleQuickKeys(e) {
 }
 
 // ============================================================
+// GALLERI — GitHub Gist
+// ============================================================
+// Public gists are tagged with a special filename so we can find them
+const GIST_FILENAME = 'hockeydj-arrangement.json';
+let galleryCache = [];
+let myGistsCache = [];
+
+function openGalleryModal() {
+  document.getElementById('galleryModal').classList.add('open');
+  document.addEventListener('keydown', galEscHandler);
+  populateShareSelect();
+  // Show cloud status
+  const el = document.getElementById('galCloudStatus');
+  if (el) {
+    const user = state.user;
+    el.innerHTML = user
+      ? `<span style="color:var(--green);">✓ Innlogget som ${esc(user.display_name || user.id)}</span><br><span style="color:var(--text-dim);font-size:11px;margin-top:4px;display:block;">Data synkroniseres automatisk til skyen</span>`
+      : `<span style="color:var(--text-dim);">Ikke innlogget — logg inn med Spotify for skylagring</span>`;
+  }
+  // Load browse tab
+  loadGallery();
+}
+
+function closeGalleryModal() {
+  document.getElementById('galleryModal').classList.remove('open');
+  document.removeEventListener('keydown', galEscHandler);
+}
+
+function galEscHandler(e) { if (e.key === 'Escape') closeGalleryModal(); }
+
+function switchGalleryTab(tab) {
+  ['browse','mine','share','settings'].forEach(t => {
+    const tabId = 'galTab' + t.charAt(0).toUpperCase() + t.slice(1);
+    const viewId = 'gal' + t.charAt(0).toUpperCase() + t.slice(1) + 'View';
+    document.getElementById(tabId)?.classList.toggle('active', t === tab);
+    const el = document.getElementById(viewId);
+    if (el) el.style.display = t === tab ? (tab === 'browse' || tab === 'mine' ? 'flex' : 'block') : 'none';
+  });
+  if (tab === 'mine') loadMySbArrangements();
+  if (tab === 'browse') loadGallery();
+}
+
+function saveGithubToken() {
+  const token = document.getElementById('galTokenInput').value.trim();
+  state.githubToken = token;
+  localStorage.setItem('hd_github_token', token);
+  updateTokenStatus();
+  showToast(token ? 'GitHub token lagret ✓' : 'Token fjernet', 'success');
+}
+
+function updateTokenStatus() {
+  const el = document.getElementById('galTokenStatus');
+  if (el) el.textContent = state.githubToken ? '✓ Token lagret — klar til å dele' : 'Ikke konfigurert — kun lesing tilgjengelig';
+  el && (el.style.color = state.githubToken ? 'var(--green)' : 'var(--text-dim)');
+}
+
+function populateShareSelect() {
+  const sel = document.getElementById('galShareSelect');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— Velg arrangement —</option>' +
+    state.savedSetlists.map(s =>
+      `<option value="${s.id}">${esc(s.name)} (${s.count} låter, ${s.date})</option>`
+    ).join('');
+}
+
+// ── BROWSE ──────────────────────────────────────────────────
+async function loadGallery() {
+  const grid = document.getElementById('galBrowseGrid');
+  grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="big-icon">—</div><p>Laster...</p></div>';
+  const q = document.getElementById('galSearchInput')?.value || '';
+  galleryCache = await sbLoadPublicArrangements(q);
+  renderGallery(galleryCache);
+}
+
+function filterGallery() {
+  const q = document.getElementById('galSearchInput').value.toLowerCase();
+  const filtered = q ? galleryCache.filter(g =>
+    g.name.toLowerCase().includes(q) ||
+    (g.spotify_display_name || '').toLowerCase().includes(q) ||
+    (g.period_names || []).join(' ').toLowerCase().includes(q)
+  ) : galleryCache;
+  renderGallery(filtered);
+}
+
+function renderGallery(rows) {
+  const grid = document.getElementById('galBrowseGrid');
+  if (!rows.length) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="big-icon">—</div><p>Ingen offentlige arrangementer ennå — del ditt!</p></div>';
+    return;
+  }
+  grid.innerHTML = rows.map(row => {
+    const periods = (row.period_names || []).slice(0,4).join(' · ');
+    const isOwn = row.spotify_user_id === state.user?.id;
+    return `
+      <div class="gallery-card">
+        <div class="gallery-card-title">${esc(row.name)}</div>
+        <div class="gallery-card-meta">
+          <span>av ${esc(row.spotify_display_name || row.spotify_user_id)}</span>
+          <span>${row.song_count} låter</span>
+          <span>${row.updated_at?.slice(0,10) || ''}</span>
+        </div>
+        ${periods ? `<div style="font-size:11px;color:var(--text-faint);margin-top:2px;">${esc(periods)}</div>` : ''}
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button onclick="importFromSb('${row.id}')"
+            style="flex:1;background:var(--accent);border:none;color:white;padding:6px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:opacity .15s;"
+            onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">Hent</button>
+          ${isOwn ? `<button onclick="sbTogglePublic('${row.id}',false).then(loadGallery).then(loadMySbArrangements)"
+            style="background:none;border:1px solid var(--border);color:var(--text-dim);padding:6px 8px;border-radius:4px;font-size:11px;cursor:pointer;">Gjør privat</button>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function importFromSb(arrangementId) {
+  try {
+    const rows = await fetch(
+      `${SUPABASE_URL}/rest/v1/arrangements?id=eq.${arrangementId}`,
+      { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` } }
+    ).then(r => r.json());
+    const row = rows?.[0];
+    if (!row) { showToast('Arrangement ikke funnet', 'error'); return; }
+    const data = {
+      savedSetlists: [{ id: row.id, name: row.name, date: row.updated_at?.slice(0,10),
+        count: row.song_count, periods: row.data?.periods, settings: row.data?.settings || {} }],
+      library: [], trackSettings: row.data?.settings || {},
+    };
+    doImport(data, row.spotify_display_name || 'ukjent');
+  } catch(e) { showToast('Import feilet: ' + e.message, 'error'); }
+}
+
+// ── MINE ────────────────────────────────────────────────────
+async function loadMySbArrangements() {
+  const grid = document.getElementById('galMineGrid');
+  if (!state.user?.id) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="big-icon">—</div><p>Logg inn for å se dine arrangementer</p></div>';
+    return;
+  }
+  grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="big-icon">—</div><p>Laster...</p></div>';
+  try {
+    const rows = await fetch(
+      `${SUPABASE_URL}/rest/v1/arrangements?spotify_user_id=eq.${encodeURIComponent(state.user.id)}&order=updated_at.desc`,
+      { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` } }
+    ).then(r => r.json());
+
+    if (!rows?.length) {
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="big-icon">—</div><p>Ingen arrangementer lagret ennå</p></div>';
+      return;
+    }
+    grid.innerHTML = rows.map(row => {
+      const periods = (row.period_names || []).slice(0,4).join(' · ');
+      return `
+        <div class="gallery-card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+            <div class="gallery-card-title">${esc(row.name)}</div>
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;padding:2px 8px;border-radius:3px;flex-shrink:0;${row.is_public ? 'background:rgba(52,196,114,0.15);color:var(--green)' : 'background:var(--bg-raised);color:var(--text-dim);border:1px solid var(--border);'}">
+              ${row.is_public ? 'Offentlig' : 'Privat'}
+            </span>
+          </div>
+          <div class="gallery-card-meta">
+            <span>${row.song_count} låter</span>
+            <span>${row.updated_at?.slice(0,10) || ''}</span>
+          </div>
+          ${periods ? `<div style="font-size:11px;color:var(--text-faint);margin-top:2px;">${esc(periods)}</div>` : ''}
+          <div style="display:flex;gap:6px;margin-top:8px;">
+            <button onclick="sbTogglePub('${row.id}',${!row.is_public})"
+              style="flex:1;background:none;border:1px solid var(--border);color:var(--text-dim);padding:5px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;"
+              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">${row.is_public ? 'Gjør privat' : 'Gjør offentlig'}</button>
+            <button onclick="deleteSbArrangement('${row.id}')"
+              style="background:none;border:1px solid var(--border);color:var(--text-dim);padding:5px 8px;border-radius:4px;font-size:11px;cursor:pointer;transition:all .15s;"
+              onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">Slett</button>
+          </div>
+        </div>`;
+    }).join('');
+  } catch(e) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="big-icon">—</div><p>Feil: ${e.message}</p></div>`;
+  }
+}
+
+async function sbTogglePub(id, makePublic) {
+  await sbTogglePublic(id, makePublic);
+  showToast(makePublic ? 'Gjort offentlig ✓' : 'Gjort privat ✓', 'success');
+  loadMySbArrangements();
+}
+
+async function deleteSbArrangement(id) {
+  const sl = state.savedSetlists.find(s => s.id === id);
+  const name = sl?.name || 'arrangementet';
+  if (!confirm(`Slette "${name}" fra skyen?`)) return;
+  await sbDeleteArrangement(id);
+  showToast('Slettet fra sky ✓', 'success');
+  loadMySbArrangements();
+}
+
+// ── SHARE ────────────────────────────────────────────────────
+async function shareArrangement() {
+  const id = document.getElementById('galShareSelect').value;
+  if (!id) { showToast('Velg et arrangement', 'error'); return; }
+  const sl = state.savedSetlists.find(s => s.id === id);
+  if (!sl) { showToast('Arrangement ikke funnet', 'error'); return; }
+  const isPublic = document.querySelector('input[name="galVisibility"]:checked')?.value === 'public';
+
+  // Make sure it's saved to cloud first
+  await sbSaveArrangement({ ...sl, is_public: isPublic });
+  if (isPublic) await sbTogglePublic(id, true);
+
+  // Update local record
+  const idx = state.savedSetlists.findIndex(s => s.id === id);
+  if (idx >= 0) state.savedSetlists[idx].is_public = isPublic;
+  saveLocalState();
+
+  const link = `${window.location.origin}${window.location.pathname}?import=${id}`;
+  document.getElementById('galShareResult').style.display = 'block';
+  document.getElementById('galShareLink').value = link;
+  showToast(`"${sl.name}" ${isPublic ? 'delt offentlig' : 'lagret privat'} ✓`, 'success');
+}
+
+function copyGalLink() {
+  const val = document.getElementById('galShareLink').value;
+  navigator.clipboard.writeText(val).then(() => showToast('Lenke kopiert ✓', 'success'));
+}
+
+async function importFromUrl() {
+  const val = document.getElementById('galImportUrl').value.trim();
+  // Extract ID from URL like ?import=ID or just raw ID
+  const match = val.match(/[?&]import=([^&]+)/) || val.match(/^([a-zA-Z0-9_-]{10,})$/);
+  const id = match?.[1] || val;
+  if (!id) { showToast('Lim inn en lenke eller ID', 'error'); return; }
+  await importFromSb(id);
+  document.getElementById('galImportUrl').value = '';
+}
+
+// Handle ?import=ID on page load
+async function checkImportParam() {
+  const params = new URLSearchParams(window.location.search);
+  const importId = params.get('import');
+  if (importId) {
+    // Clean URL first
+    window.history.replaceState({}, '', window.location.pathname);
+    showToast('Laster arrangement...', '');
+    await importFromSb(importId);
+  }
+}
+function doImport(data, source) {
+  if (!data.savedSetlists && !data.library) {
+    showToast('Ugyldig fil', 'error'); return;
+  }
+  const newArr = (data.savedSetlists || []).filter(s => !state.savedSetlists.find(e => e.id === s.id));
+  const newLib = (data.library || []).filter(l => !state.library.find(e => e.id === l.id));
+
+  const msg = `Fra: ${source}\n\n• ${newArr.length} nye arrangementer\n• ${newLib.length} nye bibliotekssanger\n\nImportere?`;
+  if (!confirm(msg)) return;
+
+  newArr.forEach(s => state.savedSetlists.push(s));
+  newLib.forEach(l => state.library.push(l));
+  if (data.trackSettings) {
+    Object.entries(data.trackSettings).forEach(([id, s]) => {
+      if (!state.trackSettings[id]) state.trackSettings[id] = s;
+    });
+  }
+  saveState();
+  renderQueue();
+  showToast(`Importert: +${newArr.length} arrangementer, +${newLib.length} sanger ✓`, 'success');
+  closeGalleryModal();
+}
+
+// ============================================================
+// EKSPORT / IMPORT
+// ============================================================
+function exportData() {
+  const data = {
+    version: APP_VERSION,
+    exportedAt: new Date().toISOString(),
+    exportedBy: state.user?.display_name || state.user?.id || 'ukjent',
+    library: state.library,
+    trackSettings: state.trackSettings,
+    savedSetlists: state.savedSetlists,
+    quickButtons: state.quickButtons,
+  };
+
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10);
+  const name = state.user?.display_name?.replace(/[^a-zA-Z0-9]/g, '-') || 'hockeydj';
+  a.href = url;
+  a.download = `hockeydj-${name}-${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`Eksportert: ${data.savedSetlists.length} arrangementer, ${data.library.length} bibliotekssanger`, 'success');
+}
+
+function importData(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      doImport(data, file.name);
+    } catch(err) {
+      showToast('Kunne ikke lese filen: ' + err.message, 'error');
+    }
+    event.target.value = ''; // reset file input
+  };
+  reader.readAsText(file);
+}
+
+// ============================================================
 // SESSION RESET
 function resetSession() {
   if (!state.playedTracks.length) { showToast('Ingen avspilte låter å nullstille', ''); return; }
@@ -3513,15 +4024,258 @@ function catEmoji(cat) {
   return { goal:'🥅', powerplay:'⚡', intro:'🎤', pump:'🔥', timeout:'⏸' }[cat] || '';
 }
 
+// ============================================================
+// SUPABASE — sky-lagring
+// ============================================================
+let sbSyncTimeout = null;
+
+function sbHeaders(userId) {
+  return {
+    'Content-Type': 'application/json',
+    'apikey': SUPABASE_ANON,
+    'Authorization': `Bearer ${SUPABASE_ANON}`,
+    'Prefer': 'return=minimal',
+    'X-Supabase-Config': `app.spotify_user_id=${userId}`,
+  };
+}
+
+async function sbFetch(path, options = {}) {
+  const userId = state.user?.id;
+  if (!userId) return null;
+  const headers = {
+    'Content-Type': 'application/json',
+    'apikey': SUPABASE_ANON,
+    'Authorization': `Bearer ${SUPABASE_ANON}`,
+  };
+  // Set user context via custom header for RLS
+  headers['X-Client-Info'] = `hockeydj/${APP_VERSION}`;
+  // Pass user ID in a way RLS can use — we use a custom approach:
+  // Include spotify_user_id in all writes, and filter by it on reads
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...options,
+    headers: { ...headers, ...(options.headers || {}) },
+  });
+  if (!res.ok && res.status !== 204) {
+    const err = await res.json().catch(() => ({}));
+    console.warn('Supabase error:', res.status, err);
+    return null;
+  }
+  if (res.status === 204) return true;
+  return res.json().catch(() => null);
+}
+
+// Load all cloud data for current user
+async function sbLoadUserData() {
+  const userId = state.user?.id;
+  if (!userId) return;
+
+  try {
+    // Load arrangements
+    const arrangements = await sbFetch(
+      `arrangements?spotify_user_id=eq.${encodeURIComponent(userId)}&order=updated_at.desc`,
+      { method: 'GET', headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` } }
+    );
+    if (arrangements?.length) {
+      // Merge with local — cloud takes precedence for matching IDs
+      arrangements.forEach(row => {
+        const data = row.data;
+        if (!data) return;
+        // Each row is one arrangement
+        const existing = state.savedSetlists.findIndex(s => s.id === row.id);
+        const sl = { id: row.id, name: row.name, date: row.updated_at?.slice(0,10),
+          count: row.song_count, periods: data.periods, settings: data.settings || {} };
+        if (existing >= 0) state.savedSetlists[existing] = sl;
+        else state.savedSetlists.push(sl);
+      });
+    }
+
+    // Load library
+    const libRow = await sbFetch(
+      `library?spotify_user_id=eq.${encodeURIComponent(userId)}`,
+      { method: 'GET', headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` } }
+    );
+    if (libRow?.[0]) {
+      const cloudLib = libRow[0].tracks || [];
+      const cloudSettings = libRow[0].track_settings || {};
+      // Merge cloud into local
+      cloudLib.forEach(l => {
+        if (!state.library.find(e => e.id === l.id)) state.library.push(l);
+      });
+      Object.entries(cloudSettings).forEach(([id, s]) => {
+        if (!state.trackSettings[id]) state.trackSettings[id] = s;
+      });
+    }
+
+    // Load quick buttons
+    const qbRow = await sbFetch(
+      `quick_buttons?spotify_user_id=eq.${encodeURIComponent(userId)}`,
+      { method: 'GET', headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` } }
+    );
+    if (qbRow?.[0]?.buttons?.length && !state.quickButtons.length) {
+      state.quickButtons = qbRow[0].buttons;
+    }
+
+    // Save merged data locally
+    saveLocalState();
+    renderQueue();
+    renderQuickBar();
+    console.log('☁️ Sky-data lastet inn');
+  } catch(e) {
+    console.warn('Supabase load feilet:', e.message);
+  }
+}
+
+// Save a single arrangement to cloud
+async function sbSaveArrangement(sl) {
+  const userId = state.user?.id;
+  if (!userId || !sl) return;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/arrangements`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'Prefer': 'resolution=merge-duplicates',
+      },
+      body: JSON.stringify({
+        id: sl.id,
+        spotify_user_id: userId,
+        spotify_display_name: state.user?.display_name || userId,
+        name: sl.name,
+        data: { periods: sl.periods, settings: sl.settings || {} },
+        is_public: sl.is_public || false,
+        song_count: sl.count || 0,
+        period_names: sl.periods?.map(p => p.name) || [],
+        updated_at: new Date().toISOString(),
+      })
+    });
+  } catch(e) { console.warn('sbSaveArrangement feilet:', e.message); }
+}
+
+// Save library to cloud (debounced)
+async function sbSaveLibrary() {
+  const userId = state.user?.id;
+  if (!userId) return;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/library`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'Prefer': 'resolution=merge-duplicates',
+      },
+      body: JSON.stringify({
+        spotify_user_id: userId,
+        spotify_display_name: state.user?.display_name || userId,
+        tracks: state.library,
+        track_settings: state.trackSettings,
+        updated_at: new Date().toISOString(),
+      })
+    });
+  } catch(e) { console.warn('sbSaveLibrary feilet:', e.message); }
+}
+
+// Save quick buttons to cloud
+async function sbSaveQuickButtons() {
+  const userId = state.user?.id;
+  if (!userId) return;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/quick_buttons`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'Prefer': 'resolution=merge-duplicates',
+      },
+      body: JSON.stringify({
+        spotify_user_id: userId,
+        buttons: state.quickButtons,
+        updated_at: new Date().toISOString(),
+      })
+    });
+  } catch(e) { console.warn('sbSaveQuickButtons feilet:', e.message); }
+}
+
+// Delete arrangement from cloud
+async function sbDeleteArrangement(id) {
+  const userId = state.user?.id;
+  if (!userId) return;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/arrangements?id=eq.${id}&spotify_user_id=eq.${encodeURIComponent(userId)}`, {
+      method: 'DELETE',
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
+    });
+  } catch(e) { console.warn('sbDeleteArrangement feilet:', e.message); }
+}
+
+// Load public arrangements for gallery
+async function sbLoadPublicArrangements(searchQuery = '') {
+  try {
+    let url = `${SUPABASE_URL}/rest/v1/arrangements?is_public=eq.true&order=updated_at.desc&limit=100`;
+    if (searchQuery) url += `&name=ilike.*${encodeURIComponent(searchQuery)}*`;
+    const res = await fetch(url, {
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
+    });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch(e) { return []; }
+}
+
+// Toggle public/private
+async function sbTogglePublic(arrangementId, isPublic) {
+  const userId = state.user?.id;
+  if (!userId) return;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/arrangements?id=eq.${arrangementId}&spotify_user_id=eq.${encodeURIComponent(userId)}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+      },
+      body: JSON.stringify({ is_public: isPublic })
+    });
+  } catch(e) { console.warn('sbTogglePublic feilet:', e.message); }
+}
+
+// ─── saveState: always save locally, sync to cloud ───────────
 function saveState() {
+  saveLocalState();
+  scheduleSbSync();
+}
+
+function saveLocalState() {
   localStorage.setItem('hd_periods', JSON.stringify(state.periods));
   localStorage.setItem('hd_active_period', state.activePeriodId);
   localStorage.setItem('hd_settings', JSON.stringify(state.trackSettings));
   localStorage.setItem('hd_played', JSON.stringify(state.playedTracks));
   localStorage.setItem('hd_library', JSON.stringify(state.library));
   localStorage.setItem('hd_quickbtns', JSON.stringify(state.quickButtons));
+  localStorage.setItem('hd_setlists', JSON.stringify(state.savedSetlists));
 }
 
+// Debounce cloud sync — max once per 2 seconds
+function scheduleSbSync() {
+  if (sbSyncTimeout) clearTimeout(sbSyncTimeout);
+  sbSyncTimeout = setTimeout(async () => {
+    if (!state.user?.id) return;
+    await sbSaveLibrary();
+    await sbSaveQuickButtons();
+    // Sync any arrangements that are marked dirty
+    if (state._dirtyArrangements?.size) {
+      for (const id of state._dirtyArrangements) {
+        const sl = state.savedSetlists.find(s => s.id === id);
+        if (sl) await sbSaveArrangement(sl);
+      }
+      state._dirtyArrangements.clear();
+    }
+  }, 2000);
+}
+
+// ============================================================
 // Period helpers
 function getActivePeriod() {
   return state.periods.find(p => p.id === state.activePeriodId) || state.periods[0];
