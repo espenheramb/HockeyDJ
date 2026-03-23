@@ -994,7 +994,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v54</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v55</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -1206,7 +1206,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v54</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v55</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
@@ -1392,10 +1392,8 @@
             <div class="empty-state"><div class="big-icon">—</div><p>Velg en sang først</p></div>
           </div>
         </div>
-        <!-- Arrangement mode: empty col3 -->
-        <div id="lmCol3Arr" style="display:none;flex-direction:column;height:100%;align-items:center;justify-content:center;">
-          <div class="empty-state"><div class="big-icon">—</div><p style="text-align:center;">Bygg spillelisten ved å<br>dra sanger fra Søk-panelet</p></div>
-        </div>
+        <!-- Arrangement mode: hide col3 entirely -->
+        <div id="lmCol3Arr" style="display:none;"></div>
       </div>
 
     </div>
@@ -1406,7 +1404,7 @@
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v54';
+const APP_VERSION = 'v55';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
@@ -1429,7 +1427,11 @@ const state = {
   savedSetlists: JSON.parse(localStorage.getItem('hd_setlists') || '[]'),
   library: JSON.parse(localStorage.getItem('hd_library') || '[]'), // Permanent sangbibliotek
   // Hurtigknapper: [{ id, trackId, label, key, periodId }]
-  quickButtons: JSON.parse(localStorage.getItem('hd_quickbtns') || '[]'),
+  quickButtons: JSON.parse(localStorage.getItem('hd_quickbtns') || 'null') || [
+    { id: 'qb_default_goal',    trackId: '', label: 'MÅL',       key: 'm', isPlaceholder: true },
+    { id: 'qb_default_pen',     trackId: '', label: 'UTVISNING', key: 'u', isPlaceholder: true },
+    { id: 'qb_default_full',    trackId: '', label: 'FULLTALLIG', key: 'f', isPlaceholder: true },
+  ],
   _dirtyArrangements: new Set(),
   _queueDirty: false,
   loadedIndex: -1,
@@ -3053,11 +3055,11 @@ function upgradeWaveform(trackId, duration) {
 function lmGenerateWave(trackId, duration) {
   const s = state.trackSettings[trackId] || {};
   const values = waveCache[trackId] || buildFallbackWave(trackId);
-  return buildWaveBarsHTML(trackId, duration, values, 80, 'small', s);
+  return buildWaveBarsHTML(trackId, duration, values, 60, 'main', s);
 }
 
 function upgradeLmWaveform(trackId, duration) {
-  generateWaveBarsAsync(trackId, duration, 'lmWaveBars', 'lmWaveMarkers', 80, 'small');
+  generateWaveBarsAsync(trackId, duration, 'lmWaveBars', 'lmWaveMarkers', 60, 'main');
 }
 
 
@@ -3844,7 +3846,6 @@ function renderQuickBar() {
   const btns = document.getElementById('quickBarBtns');
   if (!bar || !btns) return;
 
-  // Always show bar (even empty so user can add)
   bar.style.display = 'flex';
 
   const editToggle = document.getElementById('quickEditToggle');
@@ -3854,19 +3855,30 @@ function renderQuickBar() {
   if (addBtn) addBtn.style.display = quickEditMode ? 'block' : 'none';
 
   if (!state.quickButtons.length) {
-    btns.innerHTML = '';
-    // Show bar only if in edit mode
-    bar.style.display = 'flex';
-    btns.innerHTML = '<span style="font-size:11px;color:var(--text-faint);font-family:\'Barlow Condensed\',sans-serif;">Ingen hurtigknapper ennå — klikk + Legg til</span>';
+    btns.innerHTML = '<span style="font-size:11px;color:var(--text-faint);font-family:\'Barlow Condensed\',sans-serif;">Ingen hurtigknapper — klikk + Legg til</span>';
     return;
   }
 
   btns.innerHTML = state.quickButtons.map((qb, idx) => {
-    // Find track info
-    const track = findTrackAnywhere(qb.trackId);
-    if (!track) return '';
-    const isNow = state.isPlaying && isTrackCurrentlyPlaying(qb.trackId);
+    const isPlaceholder = qb.isPlaceholder || !qb.trackId;
+    const track = isPlaceholder ? null : findTrackAnywhere(qb.trackId);
+    const isNow = !isPlaceholder && state.isPlaying && isTrackCurrentlyPlaying(qb.trackId);
     const keyLabel = qb.key ? `<span class="qb-key">${qb.key.toUpperCase()}</span>` : '';
+
+    if (isPlaceholder) {
+      // Dashed placeholder — click to assign track
+      return `<button
+        class="quick-btn"
+        id="qbtn-${qb.id}"
+        onclick="assignQuickButton(${idx})"
+        oncontextmenu="quickBtnContextMenu(event,${idx})"
+        title="${esc(qb.label)} — klikk for å tildele sang"
+        style="border-style:dashed;opacity:0.6;">
+        <span>${esc(qb.label)}</span>
+        ${keyLabel}
+      </button>`;
+    }
+
     return `<button
       class="quick-btn${isNow ? ' active-now' : ''}"
       id="qbtn-${qb.id}"
@@ -3876,12 +3888,18 @@ function renderQuickBar() {
       ondragstart="qbDragStart(event,${idx})"
       ondragover="qbDragOver(event,${idx})"
       ondrop="qbDrop(event,${idx})"
-      title="${esc(track.name)}${qb.key ? ' [' + qb.key.toUpperCase() + ']' : ''}\nHøyreklikk for å redigere">
-      ${track.img ? `<img src="${track.img}">` : ''}
+      title="${esc(track?.name || '')}${qb.key ? ' [' + qb.key.toUpperCase() + ']' : ''}\nHøyreklikk for å redigere">
+      ${track?.img ? `<img src="${track.img}">` : ''}
       <span>${esc(qb.label)}</span>
       ${keyLabel}
     </button>`;
   }).filter(Boolean).join('');
+}
+
+function assignQuickButton(idx) {
+  // Open quick picker and pre-select this slot
+  window._assigningQuickIdx = idx;
+  openQuickAddPicker();
 }
 
 function findTrackAnywhere(trackId) {
@@ -4129,13 +4147,23 @@ function addQuickButton(trackId) {
   const track = findTrackAnywhere(trackId);
   if (!track) return;
   const s = state.trackSettings[trackId] || {};
-  // Default label: note or short name
-  const label = s.note?.trim().split(' ').slice(0,2).join(' ') || s.category || track.name.split(' ')[0];
-  const id = 'qb' + Date.now();
-  state.quickButtons.push({ id, trackId, label, key: '' });
+  const label = s.category ? catLabel(s.category) : track.name.split(' ')[0];
+
+  // If assigning to a placeholder slot, update it
+  const assignIdx = window._assigningQuickIdx;
+  if (assignIdx !== undefined && assignIdx !== null && state.quickButtons[assignIdx]?.isPlaceholder) {
+    state.quickButtons[assignIdx] = {
+      ...state.quickButtons[assignIdx],
+      trackId,
+      isPlaceholder: false,
+    };
+    window._assigningQuickIdx = null;
+  } else {
+    const id = 'qb' + Date.now();
+    state.quickButtons.push({ id, trackId, label, key: '' });
+  }
   saveState();
   renderQuickBar();
-  // Show bar
   document.getElementById('quickBar').style.display = 'flex';
   showToast(`"${label}" lagt til hurtigknapper`, 'success');
 }
@@ -4827,7 +4855,10 @@ function switchLibModalTab(tab) {
   document.getElementById('lmSongEditorPanel').style.display = isArr ? 'none' : 'flex';
   document.getElementById('lmArrDetailPanel').style.display  = isArr ? 'flex' : 'none';
   document.getElementById('lmCol3Songs').style.display = isArr ? 'none' : 'flex';
-  document.getElementById('lmCol3Arr').style.display   = isArr ? 'flex' : 'none';
+  document.getElementById('lmCol3Arr').style.display   = 'none';
+  // Collapse third column when in arrangement mode
+  const body = document.querySelector('.lib-modal-body');
+  if (body) body.style.gridTemplateColumns = isArr ? '320px 1fr' : '320px 1fr 300px';
   // Only Library and Arrangements tabs remain
   ['Library','Arrangements'].forEach(t => {
     document.getElementById('lmTab' + t)?.classList.toggle('active', tab === t.toLowerCase());
@@ -5524,11 +5555,10 @@ function renderLmEditor(track) {
 
     <div class="lm-section">
       <div class="lm-label">Tidslinje <span style="font-size:10px;color:var(--text-faint);font-weight:400;letter-spacing:0;">klikk for å sette markør</span></div>
-      <div style="background:var(--bg-raised);border:1px solid var(--border);border-radius:5px;padding:10px 10px 8px;cursor:crosshair;"
-           id="lmWaveWrap" onclick="lmWaveformClick(event,'${track.id}',${track.duration})">
-        <div style="display:flex;align-items:center;gap:1px;height:48px;margin-bottom:6px;" id="lmWaveBars">${lmGenerateWave(track.id, track.duration)}</div>
-        <div style="position:relative;height:16px;" id="lmWaveMarkers">${lmWaveMarkers(s, track.duration)}</div>
-        <div style="display:flex;justify-content:space-between;margin-top:2px;">
+      <div class="waveform-wrap" id="lmWaveWrap" onclick="lmWaveformClick(event,'${track.id}',${track.duration})">
+        <div class="waveform" id="lmWaveBars">${lmGenerateWave(track.id, track.duration)}</div>
+        <div class="waveform-markers" id="lmWaveMarkers">${lmWaveMarkers(s, track.duration)}</div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px;">
           <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--text-faint);">0:00</span>
           <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--text-faint);">${fmtTime(Math.round(track.duration/2))}</span>
           <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--text-faint);">${fmtTime(track.duration)}</span>
@@ -5784,12 +5814,23 @@ function updateLmPlayBtn(playing) {
 function renderLmPeriodList(track) {
   const el = document.getElementById('lmPeriodList');
   if (!track) { el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Velg en sang</p></div>'; return; }
-  el.innerHTML = state.periods.map(p => {
+
+  const currentArrName = localStorage.getItem('hd_current_setlist_name');
+  const activePeriodId = state.activePeriodId;
+
+  const header = currentArrName
+    ? `<div style="padding:8px 16px 4px;font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--accent);border-bottom:1px solid var(--border);margin-bottom:2px;">
+        ♪ ${esc(currentArrName)}
+       </div>`
+    : '';
+
+  el.innerHTML = header + state.periods.map(p => {
     const inPeriod = !!p.queue.find(t => t.id === track.id);
+    const isActive = p.id === activePeriodId;
     return `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border);gap:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 16px;border-bottom:1px solid var(--border);gap:10px;${isActive ? 'background:var(--accent-dim);' : ''}">
         <div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;">${esc(p.name)}</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;${isActive ? 'color:var(--accent);' : ''}">${esc(p.name)}${isActive ? ' <span style="font-size:10px;opacity:0.7;">← aktiv</span>' : ''}</div>
           <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">${p.queue.length} låter</div>
         </div>
         <button onclick="lmAddToPeriod('${track.id}','${p.id}')"
