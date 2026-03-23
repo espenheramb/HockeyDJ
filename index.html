@@ -994,7 +994,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v50</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v51</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -1177,6 +1177,23 @@
         <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="80" oninput="setVolume(this.value)">
       </div>
       <div class="next-up" id="nextUpInfo">Neste: —</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+        <label class="autoplay-toggle" onclick="toggleStopFade()" title="Fade ut volumet ved stopp">
+          <div class="toggle-pill" id="stopFadePill"></div>
+          Fade-stopp
+        </label>
+        <div id="stopFadeControls" style="display:flex;align-items:center;gap:3px;opacity:0.4;pointer-events:none;transition:opacity .2s;">
+          <button onclick="adjustStopFade(-0.5)"
+            style="background:none;border:1px solid var(--border);color:var(--text-dim);width:20px;height:20px;border-radius:3px;cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;transition:all .15s;"
+            onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">−</button>
+          <span id="stopFadeVal" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--text-dim);width:32px;text-align:center;">1.0s</span>
+          <button onclick="adjustStopFade(0.5)"
+            style="background:none;border:1px solid var(--border);color:var(--text-dim);width:20px;height:20px;border-radius:3px;cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;transition:all .15s;"
+            onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">+</button>
+        </div>
+      </div>
       <label class="autoplay-toggle" onclick="toggleAutoplay()">
         <div class="toggle-pill" id="autoplayPill"></div>
         Autoplay
@@ -1189,7 +1206,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v50</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v51</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
@@ -1405,7 +1422,7 @@
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v50';
+const APP_VERSION = 'v51';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
@@ -1438,6 +1455,8 @@ const state = {
   currentPos: 0,
   duration: 0,
   autoplay: true,
+  stopFadeEnabled: JSON.parse(localStorage.getItem('hd_stop_fade_enabled') || 'false'),
+  stopFadeDuration: parseFloat(localStorage.getItem('hd_stop_fade_duration') || '1.0'),
   activeTab: 'tracks',
   selectedTrackId: null,
   player: null,
@@ -1492,10 +1511,17 @@ window.onload = async () => {
   // Check for ?import= URL parameter
   checkImportParam();
   updateDirtyIndicator();
-  // Init search panel state
   setSearchPanelState('normal');
-  // Wake lock — prevent screen sleep
   initWakeLock();
+  // Init stop-fade UI
+  document.getElementById('stopFadePill')?.classList.toggle('on', state.stopFadeEnabled);
+  const ctrl = document.getElementById('stopFadeControls');
+  if (ctrl) {
+    ctrl.style.opacity = state.stopFadeEnabled ? '1' : '0.4';
+    ctrl.style.pointerEvents = state.stopFadeEnabled ? 'auto' : 'none';
+  }
+  const fv = document.getElementById('stopFadeVal');
+  if (fv) fv.textContent = state.stopFadeDuration.toFixed(1) + 's';
 };
 
 
@@ -1956,15 +1982,23 @@ async function doSearch() {
     searchUrl.searchParams.set('q', q);
     searchUrl.searchParams.set('type', 'track');
     searchUrl.searchParams.set('limit', '20');
-    searchUrl.searchParams.set('market', 'NO');
+    
     const data = await spotifyFetch(searchUrl.toString());
+    if (data.error) {
+      throw new Error(data.error.message || 'Spotify-feil');
+    }
     const spotify = data.tracks?.items || [];
     spotify.forEach(t => { searchResultCache[t.id] = t; });
     window._lastSpotifyResults = spotify;
-    renderMergedResults();
+    if (!spotify.length) {
+      el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Ingen Spotify-resultater</p></div>';
+    } else {
+      renderMergedResults();
+    }
   } catch(e) {
-    showToast(`Søk feilet: ${e.message}`, 'error');
-    el.innerHTML = `<div class="empty-state"><div class="big-icon">—</div><p>${e.message}</p></div>`;
+    console.error('doSearch error:', e);
+    showToast(`Spotify-søk feilet: ${e.message}`, 'error');
+    el.innerHTML = `<div class="empty-state"><div class="big-icon">—</div><p>${esc(e.message)}</p></div>`;
   }
 }
 
@@ -3169,8 +3203,7 @@ async function playTrack(idx) {
   updatePlayerUI();
 }
 
-function togglePlay() {
-  // Bruk lastet spor hvis ingenting spiller
+async function togglePlay() {
   const targetIdx = state.currentIndex >= 0 ? state.currentIndex : state.loadedIndex;
 
   if (targetIdx < 0) {
@@ -3178,9 +3211,20 @@ function togglePlay() {
     return;
   }
 
-  // Hvis et annet spor er lastet men ikke spiller — start det
   if (!state.isPlaying && state.loadedIndex >= 0 && state.loadedIndex !== state.currentIndex) {
     playTrack(state.loadedIndex);
+    return;
+  }
+
+  // Pausing — apply fade if enabled
+  if (state.isPlaying && state.stopFadeEnabled && state.stopFadeDuration > 0) {
+    stopTicker();
+    await fadeVolumeOut(state.stopFadeDuration, async () => {
+      if (state.player && !state.demoMode) await state.player.pause();
+      else state.isPlaying = false;
+      state.isPlaying = false;
+      updatePlayerUI();
+    });
     return;
   }
 
@@ -3189,7 +3233,6 @@ function togglePlay() {
   } else {
     state.isPlaying = !state.isPlaying;
     if (state.isPlaying) {
-      // Start fra lastet posisjon
       if (state.currentIndex !== targetIdx) playTrack(targetIdx);
       else startTicker();
     } else {
@@ -3328,6 +3371,45 @@ function updateProgressUI() {
 function toggleAutoplay() {
   state.autoplay = !state.autoplay;
   document.getElementById('autoplayPill').classList.toggle('on', state.autoplay);
+}
+
+function toggleStopFade() {
+  state.stopFadeEnabled = !state.stopFadeEnabled;
+  localStorage.setItem('hd_stop_fade_enabled', state.stopFadeEnabled);
+  document.getElementById('stopFadePill').classList.toggle('on', state.stopFadeEnabled);
+  const ctrl = document.getElementById('stopFadeControls');
+  ctrl.style.opacity = state.stopFadeEnabled ? '1' : '0.4';
+  ctrl.style.pointerEvents = state.stopFadeEnabled ? 'auto' : 'none';
+}
+
+function adjustStopFade(delta) {
+  state.stopFadeDuration = Math.max(0.5, Math.min(5, Math.round((state.stopFadeDuration + delta) * 10) / 10));
+  localStorage.setItem('hd_stop_fade_duration', state.stopFadeDuration);
+  document.getElementById('stopFadeVal').textContent = state.stopFadeDuration.toFixed(1) + 's';
+}
+
+// Fade volume to zero over duration, then execute callback
+async function fadeVolumeOut(durationSecs, callback) {
+  const steps = 20;
+  const interval = (durationSecs * 1000) / steps;
+  const volSlider = document.getElementById('volSlider');
+  const startVol = parseInt(volSlider?.value || '80') / 100;
+  let step = 0;
+  return new Promise(resolve => {
+    const timer = setInterval(async () => {
+      step++;
+      const vol = startVol * (1 - step / steps);
+      if (state.player && !state.demoMode) state.player.setVolume(Math.max(0, vol));
+      if (step >= steps) {
+        clearInterval(timer);
+        if (callback) await callback();
+        // Restore volume
+        const targetVol = parseInt(volSlider?.value || '80') / 100;
+        if (state.player && !state.demoMode) state.player.setVolume(targetVol);
+        resolve();
+      }
+    }, interval);
+  });
 }
 
 // ============================================================
@@ -5283,7 +5365,7 @@ async function doLibModalSearch() {
       searchUrl.searchParams.set('q', q);
       searchUrl.searchParams.set('type', 'track');
       searchUrl.searchParams.set('limit', '15');
-      searchUrl.searchParams.set('market', 'NO');
+      
       const data = await spotifyFetch(searchUrl.toString());
       spotifyTracks = data.tracks?.items || [];
       lmSearchCache = spotifyTracks;
