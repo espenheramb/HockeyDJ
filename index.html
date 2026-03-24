@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hockey DJ</title>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   /* ─── DESIGN TOKENS ─────────────────────────────────────── */
   :root {
@@ -29,10 +29,13 @@
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Barlow', sans-serif;
+    font-family: 'Inter', 'Barlow', system-ui, sans-serif;
     font-size: 14px;
     min-height: 100vh;
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   #app {
@@ -384,8 +387,8 @@
   .track-thumb img { width:100%; height:100%; object-fit:cover; }
 
   .track-info { flex: 1; min-width: 0; }
-  .track-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .track-artist { font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-top: 1px; }
+  .track-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .track-artist { font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-top: 1px; }
   .track-times { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
   .time-tag { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: var(--text-dim); }
   .time-tag.start-tag { color: var(--green); }
@@ -439,7 +442,7 @@
     position: relative;
     overflow: hidden;
   }
-  .waveform { display: flex; align-items: center; gap: 1px; height: 36px; margin-bottom: 4px; }
+  .waveform { display: block; width: 100%; margin-bottom: 4px; }
   .wave-bar { flex: 1; background: var(--accent); border-radius: 1px; opacity: 0.5; }
   .wave-bar.past { background: var(--text-faint); opacity: 0.4; }
 
@@ -947,8 +950,8 @@
   }
   .lm-thumb img { width:100%; height:100%; object-fit:cover; border-radius:4px; }
   .lm-info { flex: 1; min-width: 0; }
-  .lm-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .lm-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lm-name { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lm-sub { font-size: 12px; color: var(--text-dim); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   .lm-editor { padding: 16px; overflow-y: auto; flex: 1; }
   .lm-editor::-webkit-scrollbar { width: 3px; }
@@ -994,7 +997,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v55</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v57</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -1206,7 +1209,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v55</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v57</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
@@ -1404,7 +1407,7 @@
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v55';
+const APP_VERSION = 'v57';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
@@ -2898,168 +2901,74 @@ function renderTrackEditor(track) {
   upgradeWaveform(track.id, track.duration);
 }
 
-const waveCache = {}; // trackId → Float32Array (200 points, 0–1)
-
-async function fetchWaveData(trackId) {
-  if (waveCache[trackId]) return waveCache[trackId];
-  if (!state.token) return buildFallbackWave(trackId);
-  try {
-    // audio-features: energy, danceability, tempo, acousticness, valence
-    const f = await spotifyFetch(`https://api.spotify.com/v1/audio-features/${trackId}`);
-    const energy   = f.energy       ?? 0.5;
-    const dance    = f.danceability ?? 0.5;
-    const acoustic = f.acousticness ?? 0.3;
-    const tempo    = f.tempo        ?? 120;
-
-    const points = 200;
-    const values = new Float32Array(points);
-    const seed = trackId.split('').reduce((a,c,i) => a + c.charCodeAt(0) * (i+1), 0);
-    const bpm = tempo / 60; // beats per second
-
-    for (let i = 0; i < points; i++) {
-      const t = i / points;
-      // Three noise octaves with different frequencies
-      const n1 = Math.sin(seed * 0.0013 + t * 37.1) * 0.5 + 0.5;
-      const n2 = Math.sin(seed * 0.0031 + t * 83.7 + 1.4) * 0.5 + 0.5;
-      const n3 = Math.sin(seed * 0.0071 + t * 19.3 + 2.8) * 0.5 + 0.5;
-      // Beat pulse shaped by tempo and danceability
-      const beatPhase = (t * bpm * 4) % 1;
-      const beat = Math.pow(Math.max(0, 1 - beatPhase * 2.5), 2) * dance * 0.5;
-      // Blend
-      let v = n1 * 0.45 + n2 * 0.35 + n3 * 0.20 + beat;
-      // Scale by energy
-      v = v * (0.4 + energy * 0.7);
-      // Acoustic = smoother, less peaky
-      if (acoustic > 0.5) v = v * 0.65 + 0.12;
-      // Slight arc envelope (energy tends to peak mid-track)
-      v *= (0.82 + Math.sin(t * Math.PI) * 0.18);
-      values[i] = Math.max(0.06, Math.min(1, v));
-    }
-
-    // Smooth: weighted rolling average
-    for (let pass = 0; pass < 2; pass++) {
-      for (let i = 1; i < points - 1; i++) {
-        values[i] = values[i-1] * 0.2 + values[i] * 0.6 + values[i+1] * 0.2;
-      }
-    }
-
-    waveCache[trackId] = values;
-    return values;
-  } catch(e) {
-    console.warn('audio-features unavailable:', e.message);
-    return buildFallbackWave(trackId);
-  }
-}
-
-function buildFallbackWave(trackId) {
-  if (waveCache[trackId]) return waveCache[trackId];
-  const points = 200;
-  const values = new Float32Array(points);
-  const seed = trackId.split('').reduce((a,c,i) => a + c.charCodeAt(0) * (i+1), 0);
-  for (let i = 0; i < points; i++) {
-    const t = i / points;
-    const v = (Math.sin(seed * 0.0013 + t * 31.7) * 0.4 + 0.55)
-            * (Math.sin(seed * 0.0041 + t * 67.3 + 1.1) * 0.3 + 0.7)
-            * (0.82 + Math.sin(t * Math.PI) * 0.18);
-    values[i] = Math.max(0.06, Math.min(1, v));
-  }
-  for (let i = 1; i < points - 1; i++) {
-    values[i] = values[i-1] * 0.2 + values[i] * 0.6 + values[i+1] * 0.2;
-  }
-  waveCache[trackId] = values;
-  return values;
-}
-
 function buildWaveBarsHTML(trackId, duration, values, count, style, settings) {
   const s = settings || state.trackSettings[trackId] || {};
-  const startPct = (s.startTime || 0) / duration;
-  const endPct   = (s.endTime != null ? s.endTime : duration) / duration;
-  const hasCustomRange = (s.startTime > 0) || (s.endTime != null && s.endTime < duration);
-  let bars = '';
+  const startPct = (s.startTime || 0) / duration * 100;
+  const endPct   = (s.endTime != null ? s.endTime : duration) / duration * 100;
 
-  for (let i = 0; i < count; i++) {
-    const pct = i / count;
-    const inRange = pct >= startPct && pct <= endPct;
+  // Build simple flat timeline: one filled div with start/stop regions
+  // This is honest — we don't have real waveform data from Spotify
+  const beforeW = startPct.toFixed(2);
+  const activeW = (endPct - startPct).toFixed(2);
+  const afterW  = (100 - endPct).toFixed(2);
 
-    // Height: use audio data if available, else flat with slight variation at edges
-    let h;
-    if (values) {
-      const idx = Math.floor(pct * values.length);
-      h = Math.max(8, Math.round(values[idx] * 88 + 8));
-    } else {
-      // Flat fallback — consistent height, dip slightly outside range
-      h = inRange ? 40 : 20;
-    }
+  const h = style === 'small' ? 28 : 36;
 
-    if (style === 'small') {
-      const color   = inRange ? 'var(--accent)' : 'var(--text-faint)';
-      const opacity = inRange ? '0.8' : '0.22';
-      bars += `<div style="flex:1;background:${color};border-radius:1px;height:${h}%;opacity:${opacity};"></div>`;
-    } else {
-      // Main editor: color outside-range bars differently based on whether they're before or after
-      let cls = 'wave-bar';
-      if (!inRange) cls += ' past';
-      bars += `<div class="${cls}" style="height:${h}%"></div>`;
-    }
-  }
-  return bars;
+  return `
+    <div style="display:flex;width:100%;height:${h}px;border-radius:3px;overflow:hidden;align-items:center;">
+      ${parseFloat(beforeW) > 0 ? `
+        <div style="width:${beforeW}%;height:100%;background:var(--bg-hover);position:relative;flex-shrink:0;">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+            <div style="height:3px;width:100%;background:var(--border);border-radius:2px;"></div>
+          </div>
+        </div>` : ''}
+      <div style="width:${activeW}%;height:100%;background:var(--accent-dim);border-left:3px solid var(--green);border-right:3px solid var(--red);position:relative;flex-shrink:0;min-width:4px;">
+        <div style="position:absolute;inset:0;display:flex;align-items:center;">
+          <div style="height:4px;width:100%;background:var(--accent);opacity:0.4;border-radius:0;"></div>
+        </div>
+      </div>
+      ${parseFloat(afterW) > 0 ? `
+        <div style="width:${afterW}%;height:100%;background:var(--bg-hover);position:relative;flex-shrink:0;">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;">
+            <div style="height:3px;width:100%;background:var(--border);border-radius:2px;"></div>
+          </div>
+        </div>` : ''}
+    </div>`;
 }
 
 // Redraw bars without re-fetching (just apply new start/stop to existing data)
 function redrawWaveform(trackId, duration) {
   const s = state.trackSettings[trackId] || {};
-  const values = waveCache[trackId] || null;
   const el = document.getElementById('waveformBars');
-  if (el) el.innerHTML = buildWaveBarsHTML(trackId, duration, values, 60, 'main', s);
+  if (el) el.innerHTML = buildWaveBarsHTML(trackId, duration, null, 60, 'main', s);
   const mel = document.getElementById('waveformMarkers');
   if (mel) mel.innerHTML = renderWaveMarkers(s, duration);
-  // Also lib modal
   const lel = document.getElementById('lmWaveBars');
-  if (lel) lel.innerHTML = buildWaveBarsHTML(trackId, duration, values, 80, 'small', s);
+  if (lel) lel.innerHTML = buildWaveBarsHTML(trackId, duration, null, 60, 'main', s);
   const lmel = document.getElementById('lmWaveMarkers');
   if (lmel) lmel.innerHTML = lmWaveMarkers(s, duration);
 }
 
-async function generateWaveBarsAsync(trackId, duration, elId, markersElId, count, style) {
-  const el = document.getElementById(elId);
-  if (!el) return;
-  const s = state.trackSettings[trackId] || {};
-  // Instant fallback
-  const fallback = buildFallbackWave(trackId);
-  el.innerHTML = buildWaveBarsHTML(trackId, duration, fallback, count, style, s);
-  if (markersElId) {
-    const mel = document.getElementById(markersElId);
-    if (mel) mel.innerHTML = style === 'small' ? lmWaveMarkers(s, duration) : renderWaveMarkers(s, duration);
-  }
-  // Async upgrade with audio-features
-  if (state.token && !waveCache[trackId + '_final']) {
-    const values = await fetchWaveData(trackId);
-    waveCache[trackId + '_final'] = true;
-    const still = document.getElementById(elId);
-    if (values && still) {
-      still.innerHTML = buildWaveBarsHTML(trackId, duration, values, count, style, s);
-    }
-  }
-}
-
 function generateWaveBars(trackId, duration) {
   const s = state.trackSettings[trackId] || {};
-  const values = waveCache[trackId] || buildFallbackWave(trackId);
-  return buildWaveBarsHTML(trackId, duration, values, 60, 'main', s);
+  return buildWaveBarsHTML(trackId, duration, null, 60, 'main', s);
 }
 
 function upgradeWaveform(trackId, duration) {
-  generateWaveBarsAsync(trackId, duration, 'waveformBars', 'waveformMarkers', 60, 'main');
+  redrawWaveform(trackId, duration);
 }
 
 function lmGenerateWave(trackId, duration) {
   const s = state.trackSettings[trackId] || {};
-  const values = waveCache[trackId] || buildFallbackWave(trackId);
-  return buildWaveBarsHTML(trackId, duration, values, 60, 'main', s);
+  return buildWaveBarsHTML(trackId, duration, null, 60, 'main', s);
 }
 
 function upgradeLmWaveform(trackId, duration) {
-  generateWaveBarsAsync(trackId, duration, 'lmWaveBars', 'lmWaveMarkers', 60, 'main');
+  const s = state.trackSettings[trackId] || {};
+  const el = document.getElementById('lmWaveBars');
+  if (el) el.innerHTML = buildWaveBarsHTML(trackId, duration, null, 60, 'main', s);
+  const mel = document.getElementById('lmWaveMarkers');
+  if (mel) mel.innerHTML = lmWaveMarkers(s, duration);
 }
 
 
@@ -4899,10 +4808,16 @@ async function loadLmArrangements() {
           </div>
           ${periods ? `<div style="font-size:10px;color:var(--text-faint);margin-top:2px;">${esc(periods)}</div>` : ''}
         </div>
-        <button onclick="event.stopPropagation();lmDeleteArrangement('${sl.id}')"
-          style="background:none;border:none;color:var(--text-faint);font-size:14px;cursor:pointer;padding:4px;flex-shrink:0;transition:color .12s;"
-          onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-faint)'"
-          title="Slett">✕</button>
+        <div style="display:flex;gap:4px;flex-shrink:0;">
+          <button onclick="event.stopPropagation();lmCopyArrangement('${sl.id}')"
+            style="background:none;border:none;color:var(--text-faint);font-size:13px;cursor:pointer;padding:4px;transition:color .12s;"
+            onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-faint)'"
+            title="Kopier arrangement">⎘</button>
+          <button onclick="event.stopPropagation();lmDeleteArrangement('${sl.id}')"
+            style="background:none;border:none;color:var(--text-faint);font-size:14px;cursor:pointer;padding:4px;transition:color .12s;"
+            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-faint)'"
+            title="Slett">✕</button>
+        </div>
       </div>`;
   }).join('') || '<div class="empty-state"><div class="big-icon">—</div><p>Ingen arrangementer ennå</p></div>';
 }
@@ -5230,13 +5145,33 @@ async function lmDeleteArrangement(id) {
   saveLocalState();
   lmSelectedArrangement = null;
   lmEditingPeriodIdx = null;
-  // Clear editor
   document.getElementById('lmArrNameInput') && (document.getElementById('lmArrNameInput').value = '');
   document.getElementById('lmPeriodRows') && (document.getElementById('lmPeriodRows').innerHTML = '');
   document.getElementById('lmArrDetailTitle').textContent = 'Arrangement';
   document.getElementById('lmArrDetailActions').innerHTML = '';
   loadLmArrangements();
   showToast('Arrangement slettet', '');
+}
+
+function lmCopyArrangement(id) {
+  const sl = state.savedSetlists.find(s => s.id === id);
+  if (!sl) return;
+
+  // Deep copy with new ID and modified name
+  const copy = JSON.parse(JSON.stringify(sl));
+  copy.id = 'sl' + Date.now();
+  copy.name = sl.name + ' (kopi)';
+  copy.date = new Date().toISOString().slice(0, 10);
+  copy.is_public = false; // copies start private
+  delete copy.supabase_id;
+
+  state.savedSetlists.push(copy);
+  saveLocalState();
+  loadLmArrangements();
+
+  // Select the new copy for immediate editing
+  setTimeout(() => lmSelectArrangement(copy.id), 50);
+  showToast(`Kopiert til "${copy.name}"`, 'success');
 }
 
 function lmSaveCurrentArrangement() {
@@ -5353,54 +5288,47 @@ function setLmCatFilter(cat, btn) {
 // SEARCH
 async function doLibModalSearch() {
   const q = document.getElementById('lmSearchInput').value.trim();
-  if (!q) {
-    // Clear search — show library
-    renderLibModalList();
-    return;
-  }
-  // Always show in library tab
+  if (!q) { renderLibModalList(); return; }
   if (lmActiveTab !== 'library') switchLibModalTab('library');
 
   const el = document.getElementById('lmLibraryList');
+  if (!el) return;
   el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Søker...</p></div>';
 
-  // Filter local library first
+  // Library matches first
   const libMatches = state.library.filter(l =>
     l.name.toLowerCase().includes(q.toLowerCase()) ||
     l.artist.toLowerCase().includes(q.toLowerCase())
   );
 
-  // Fetch Spotify results
+  // Spotify search — same logic as sidebar doSearch
   let spotifyTracks = [];
-  let spotifyError = '';
   if (state.token) {
     try {
       const data = await spotifyFetch(
         `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=20&market=NO`
       );
       spotifyTracks = data.tracks?.items || [];
+      spotifyTracks.forEach(t => { searchResultCache[t.id] = t; });
       lmSearchCache = spotifyTracks;
     } catch(e) {
-      spotifyError = e.message;
-      console.error('Library modal Spotify search failed:', e);
+      console.error('Library Spotify search:', e.message);
+      el.innerHTML += `<div style="padding:8px 14px;font-size:11px;color:var(--red);">Spotify-feil: ${esc(e.message)}</div>`;
     }
   }
 
-  // Build merged results
   let html = '';
   if (libMatches.length) {
     html += `<div style="padding:4px 14px 2px;font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);">Bibliotek</div>`;
     html += libMatches.map(l => {
       const s = state.trackSettings[l.id] || l.settings || {};
-      return `
-        <div class="lm-item${lmSelectedTrack?.id === l.id ? ' selected' : ''}" id="lmli-${l.id}"
-             onclick="lmSelectLibTrack('${l.id}')">
-          <div class="lm-thumb">${l.img ? `<img src="${l.img}">` : ''}</div>
-          <div class="lm-info">
-            <div class="lm-name">${esc(l.name)}</div>
-            <div class="lm-sub">${esc(l.artist)} · ${fmtTime(l.duration)}${s.category ? ` · <span style="color:var(--accent)">${catLabel(s.category)}</span>` : ''}</div>
-          </div>
-        </div>`;
+      return `<div class="lm-item${lmSelectedTrack?.id === l.id ? ' selected' : ''}" id="lmli-${l.id}" onclick="lmSelectLibTrack('${l.id}')">
+        <div class="lm-thumb">${l.img ? `<img src="${l.img}">` : ''}</div>
+        <div class="lm-info">
+          <div class="lm-name">${esc(l.name)}</div>
+          <div class="lm-sub">${esc(l.artist)} · ${fmtTime(l.duration)}${s.category ? ` · <span style="color:var(--accent)">${catLabel(s.category)}</span>` : ''}</div>
+        </div>
+      </div>`;
     }).join('');
   }
 
@@ -5409,26 +5337,21 @@ async function doLibModalSearch() {
     html += `<div style="padding:4px 14px 2px;font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);">Spotify</div>`;
     html += spotifyTracks.map(t => {
       const inLib = !!state.library.find(l => l.id === t.id);
-      return `
-        <div class="lm-item${lmSelectedTrack?.id === t.id ? ' selected' : ''}" id="lmsi-${t.id}"
-             onclick="lmSelectSearchTrack('${t.id}')">
-          <div class="lm-thumb">${t.album.images[1] ? `<img src="${t.album.images[1].url}">` : ''}</div>
-          <div class="lm-info">
-            <div class="lm-name">${esc(t.name)}</div>
-            <div class="lm-sub">${esc(t.artists[0].name)} · ${fmtTime(Math.round(t.duration_ms/1000))}${inLib ? ' · <span style="color:var(--gold)">★</span>' : ''}</div>
-          </div>
-        </div>`;
+      return `<div class="lm-item${lmSelectedTrack?.id === t.id ? ' selected' : ''}" id="lmsi-${t.id}" onclick="lmSelectSearchTrack('${t.id}')">
+        <div class="lm-thumb">${t.album.images[1] ? `<img src="${t.album.images[1].url}">` : ''}</div>
+        <div class="lm-info">
+          <div class="lm-name">${esc(t.name)}</div>
+          <div class="lm-sub">${esc(t.artists[0].name)} · ${fmtTime(Math.round(t.duration_ms/1000))}${inLib ? ' · <span style="color:var(--gold)">★</span>' : ''}</div>
+        </div>
+      </div>`;
     }).join('');
   }
 
-  if (!html) {
-    if (spotifyError) {
-      html = `<div class="empty-state"><div class="big-icon">—</div><p>Spotify-feil: ${esc(spotifyError)}</p></div>`;
-    } else {
-      html = '<div class="empty-state"><div class="big-icon">—</div><p>Ingen resultater</p></div>';
-    }
-  }
+  if (!html) html = '<div class="empty-state"><div class="big-icon">—</div><p>Ingen resultater</p></div>';
   el.innerHTML = html;
+  // Hide hint
+  const hint = document.getElementById('lmSpotifyHint');
+  if (hint) hint.style.display = 'none';
 }
 
 function lmSelectSearchTrack(id) {
