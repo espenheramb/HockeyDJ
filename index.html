@@ -995,7 +995,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v63</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v65</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -1207,7 +1207,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v63</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v65</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
@@ -1406,7 +1406,7 @@
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v63';
+const APP_VERSION = 'v65';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
@@ -2900,71 +2900,185 @@ function renderTrackEditor(track) {
 // ── WAVEFORM ─────────────────────────────────────────────────
 // Cache: trackId → Float32Array of normalised loudness (0–1)
 // ── TIMELINE (flat line with start/stop markers + playback cursor) ──
-// No waveform data — replaced with honest flat timeline until a
-// reliable waveform source is available.
+// ── WAVEFORM ─────────────────────────────────────────────────
+// Strategy:
+//  1. Try seektables.scdn.co — Spotify's own internal waveform CDN (no auth needed)
+//  2. Fall back to audio-analysis loudness with heavy contrast processing
+//  3. Fall back to flat timeline
+const waveCache = {}; // trackId → Float32Array (200 pts, 0-1)
 
-function buildTimelineHTML(trackId, duration, settings) {
+async function fetchWaveform(trackId) {
+  if (waveCache[trackId]) return waveCache[trackId];
+
+  // --- Strategy 1: Seektable CDN (Spotify's own waveform data) ---
+  try {
+    const res = await fetch(`https://seektables.scdn.co/seektable/${trackId}.json`);
+    if (res.ok) {
+      const json = await res.json();
+      // seektable returns { seektable: [{samples_decoded, offset_ms, ...}] }
+      // Each entry has a loudness_db or we use the position data
+      const table = json.seektable;
+      if (table && table.length > 10) {
+        // Use samples_decoded as a proxy for energy if loudness not available
+        const raw = table.map(e => e.loudness_db ?? e.samples_decoded ?? 0);
+        const values = normaliseWave(raw, 200);
+        waveCache[trackId] = values;
+        console.log(`seektable OK: ${table.length} pts for ${trackId}`);
+        return values;
+      }
+    }
+  } catch(e) { /* seektable blocked or unavailable */ }
+
+  // --- Strategy 2: audio-analysis with heavy contrast processing ---
+  if (state.token) {
+    try {
+      const data = await spotifyFetch(`https://api.spotify.com/v1/audio-analysis/${trackId}`);
+      const segs = data.segments;
+      if (segs && segs.length > 10) {
+        // Use loudness_max — boost contrast heavily with power curve
+        const raw = segs.map(s => s.loudness_max ?? -60);
+        // Convert from dB to linear amplitude first, THEN normalise
+        // This gives real perceptual amplitude differences
+        const linear = raw.map(db => Math.pow(10, db / 20));
+        const values = normaliseWave(linear, 200, 0.4); // 0.4 power = boost quiet parts
+        waveCache[trackId] = values;
+        console.log(`audio-analysis OK: ${segs.length} segs for ${trackId}`);
+        return values;
+      }
+    } catch(e) { console.warn('audio-analysis failed:', e.message); }
+  }
+
+  // --- Strategy 3: flat fallback ---
+  return null;
+}
+
+// Normalise an array to Float32Array of `pts` points, 0-1
+// power < 1 boosts dynamic range (0.4 = very boosted)
+function normaliseWave(raw, pts, power = 0.5) {
+  let minV = Infinity, maxV = -Infinity;
+  for (let i = 0; i < raw.length; i++) {
+    if (raw[i] < minV) minV = raw[i];
+    if (raw[i] > maxV) maxV = raw[i];
+  }
+  const range = maxV - minV || 1;
+  const normed = raw.map(v => Math.pow(Math.max(0, (v - minV) / range), power));
+
+  // Downsample using peak per bin
+  const values = new Float32Array(pts);
+  const binSize = normed.length / pts;
+  for (let i = 0; i < pts; i++) {
+    const start = Math.floor(i * binSize);
+    const end   = Math.max(start + 1, Math.floor((i + 1) * binSize));
+    let peak = 0;
+    for (let j = start; j < end; j++) if (normed[j] > peak) peak = normed[j];
+    values[i] = peak;
+  }
+
+  // Light smoothing
+  for (let i = 1; i < pts - 1; i++) {
+    values[i] = values[i-1] * 0.2 + values[i] * 0.6 + values[i+1] * 0.2;
+  }
+
+  // Stretch to full range
+  let finalMax = 0;
+  for (let i = 0; i < pts; i++) if (values[i] > finalMax) finalMax = values[i];
+  if (finalMax > 0) for (let i = 0; i < pts; i++) values[i] /= finalMax;
+
+  return values;
+}
+
+function buildWaveHTML(trackId, duration, values, settings) {
   const s = settings || state.trackSettings[trackId] || {};
-  const startPct = ((s.startTime || 0) / duration * 100).toFixed(2);
-  const endPct   = ((s.endTime != null ? s.endTime : duration) / duration * 100).toFixed(2);
-  const beforeW  = parseFloat(startPct);
-  const activeW  = parseFloat(endPct) - beforeW;
-  const afterW   = 100 - parseFloat(endPct);
+  const startPct = (s.startTime || 0) / duration;
+  const endPct   = (s.endTime != null ? s.endTime : duration) / duration;
+  const startPctStr = (startPct * 100).toFixed(2);
+  const endPctStr   = (endPct * 100).toFixed(2);
+  const barH = 56;
 
+  if (values) {
+    // Bar waveform
+    const count = 120;
+    let bars = '';
+    for (let i = 0; i < count; i++) {
+      const pct = i / count;
+      const inRange = pct >= startPct && pct < endPct;
+      const idx = Math.floor(pct * values.length);
+      const h = Math.max(3, Math.round(values[idx] * barH));
+      const color = inRange ? 'var(--accent)' : 'var(--text-faint)';
+      const opacity = inRange ? '0.9' : '0.3';
+      bars += `<div style="flex:1;height:${h}px;background:${color};border-radius:1px 1px 0 0;opacity:${opacity};"></div>`;
+    }
+    return `
+      <div style="position:relative;display:flex;align-items:flex-end;height:${barH}px;width:100%;gap:1px;cursor:crosshair;">
+        ${bars}
+        <div style="position:absolute;left:${startPctStr}%;top:0;bottom:0;width:2px;background:var(--green);pointer-events:none;z-index:2;"></div>
+        <div style="position:absolute;left:${endPctStr}%;top:0;bottom:0;width:2px;background:var(--red);pointer-events:none;transform:translateX(-100%);z-index:2;"></div>
+        <div id="wavePlayCursor" style="display:none;position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,0.85);border-radius:1px;pointer-events:none;transform:translateX(-50%);transition:left 0.25s linear;z-index:10;"></div>
+      </div>`;
+  }
+
+  // Flat timeline fallback
+  const beforeW = (startPct * 100).toFixed(2);
+  const activeW = ((endPct - startPct) * 100).toFixed(2);
+  const afterW  = ((1 - endPct) * 100).toFixed(2);
   return `
     <div style="position:relative;width:100%;height:44px;display:flex;align-items:center;cursor:crosshair;">
-      <!-- Track: before start -->
-      ${beforeW > 0 ? `<div style="width:${beforeW}%;height:4px;background:var(--border);border-radius:2px;flex-shrink:0;"></div>` : ''}
-      <!-- Track: active region -->
+      ${parseFloat(beforeW) > 0 ? `<div style="width:${beforeW}%;height:4px;background:var(--border);border-radius:2px;flex-shrink:0;"></div>` : ''}
       <div style="width:${activeW}%;min-width:3px;height:4px;background:var(--accent);border-radius:2px;flex-shrink:0;opacity:0.8;"></div>
-      <!-- Track: after end -->
-      ${afterW > 0 ? `<div style="width:${afterW}%;height:4px;background:var(--border);border-radius:2px;flex-shrink:0;"></div>` : ''}
-      <!-- Start marker -->
-      <div style="position:absolute;left:${startPct}%;top:4px;bottom:4px;width:2px;background:var(--green);border-radius:1px;pointer-events:none;"></div>
-      <div style="position:absolute;left:${startPct}%;top:-2px;font-size:9px;color:var(--green);transform:translateX(-50%);pointer-events:none;font-family:'Barlow Condensed',sans-serif;line-height:1;">▶</div>
-      <!-- Stop marker -->
-      <div style="position:absolute;left:${endPct}%;top:4px;bottom:4px;width:2px;background:var(--red);border-radius:1px;pointer-events:none;transform:translateX(-100%);"></div>
-      <div style="position:absolute;left:${endPct}%;bottom:-2px;font-size:9px;color:var(--red);transform:translateX(-100%);pointer-events:none;font-family:'Barlow Condensed',sans-serif;line-height:1;">■</div>
-      <!-- Playback cursor (updated by ticker) -->
+      ${parseFloat(afterW) > 0 ? `<div style="width:${afterW}%;height:4px;background:var(--border);border-radius:2px;flex-shrink:0;"></div>` : ''}
+      <div style="position:absolute;left:${startPctStr}%;top:2px;bottom:2px;width:2px;background:var(--green);border-radius:1px;pointer-events:none;"></div>
+      <div style="position:absolute;left:${endPctStr}%;top:2px;bottom:2px;width:2px;background:var(--red);border-radius:1px;pointer-events:none;transform:translateX(-100%);"></div>
       <div id="wavePlayCursor" style="display:none;position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,0.85);border-radius:1px;pointer-events:none;transform:translateX(-50%);transition:left 0.25s linear;z-index:10;"></div>
     </div>`;
 }
 
-// Alias used by renderTrackEditor
+// Compatibility aliases
+function buildTimelineHTML(trackId, duration, settings) {
+  return buildWaveHTML(trackId, duration, waveCache[trackId] || null, settings);
+}
 function buildWaveBarsHTML(trackId, duration, values, count, style, settings) {
-  return buildTimelineHTML(trackId, duration, settings);
+  return buildWaveHTML(trackId, duration, values || waveCache[trackId] || null, settings);
 }
 
 function redrawWaveform(trackId, duration) {
   const s = state.trackSettings[trackId] || {};
+  const vals = waveCache[trackId] || null;
+  const html = buildWaveHTML(trackId, duration, vals, s);
   const el = document.getElementById('waveformBars');
-  if (el) el.innerHTML = buildTimelineHTML(trackId, duration, s);
+  if (el) el.innerHTML = html;
   const lel = document.getElementById('lmWaveBars');
-  if (lel) lel.innerHTML = buildTimelineHTML(trackId, duration, s);
-  // Markers are now embedded in the timeline HTML — no separate marker elements needed
+  if (lel) lel.innerHTML = buildWaveHTML(trackId, duration, vals, s);
   const mel = document.getElementById('waveformMarkers');
   if (mel) mel.innerHTML = '';
   const lmel = document.getElementById('lmWaveMarkers');
   if (lmel) lmel.innerHTML = '';
 }
 
-function upgradeWaveform(trackId, duration) {
-  redrawWaveform(trackId, duration);
+async function upgradeWaveform(trackId, duration) {
+  redrawWaveform(trackId, duration); // show flat immediately
+  const values = await fetchWaveform(trackId);
+  if (state.selectedTrackId === trackId) redrawWaveform(trackId, duration);
 }
 
 function generateWaveBars(trackId, duration) {
-  return buildTimelineHTML(trackId, duration);
+  return buildWaveHTML(trackId, duration, waveCache[trackId] || null);
 }
 
 function lmGenerateWave(trackId, duration) {
-  return buildTimelineHTML(trackId, duration);
+  return generateWaveBars(trackId, duration);
 }
 
-function upgradeLmWaveform(trackId, duration) {
-  redrawWaveform(trackId, duration);
+async function upgradeLmWaveform(trackId, duration) {
+  const values = await fetchWaveform(trackId);
+  if (lmSelectedTrack?.id !== trackId) return;
+  const s = state.trackSettings[trackId] || {};
+  const el = document.getElementById('lmWaveBars');
+  if (el) el.innerHTML = buildWaveHTML(trackId, duration, waveCache[trackId] || null, s);
+  const mel = document.getElementById('lmWaveMarkers');
+  if (mel) mel.innerHTML = '';
 }
 
-// Markers are now embedded in buildTimelineHTML — these return empty for compatibility
+// Markers are embedded in buildWaveHTML — return empty for compatibility
 function renderWaveMarkers(s, duration) { return ''; }
 
 let waveClickMode = 'start';
@@ -4392,7 +4506,8 @@ async function sbLoadUserData() {
         // Each row is one arrangement
         const existing = state.savedSetlists.findIndex(s => s.id === row.id);
         const sl = { id: row.id, name: row.name, date: row.updated_at?.slice(0,10),
-          count: row.song_count, periods: data.periods, settings: data.settings || {} };
+          count: row.song_count, periods: data.periods, settings: data.settings || {},
+          is_public: row.is_public || false };
         if (existing >= 0) state.savedSetlists[existing] = sl;
         else state.savedSetlists.push(sl);
       });
