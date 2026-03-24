@@ -997,7 +997,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v57</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v58</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -1209,7 +1209,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v57</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v58</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
@@ -1378,9 +1378,10 @@
             <div id="lmPeriodRows"></div>
           </div>
           <!-- Save / load actions -->
-          <div style="padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:6px;flex-shrink:0;">
+          <div style="padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;">
             <button onclick="lmSaveArrangement()" class="hdr-btn hdr-btn-blue" style="flex:1;">Lagre</button>
             <button onclick="lmLoadArrangement(lmSelectedArrangement?.id)" class="hdr-btn hdr-btn-green" style="flex:1;" id="lmLoadBtn">Last inn i kø</button>
+            <button onclick="lmCopyArrangement(lmSelectedArrangement?.id)" class="hdr-btn" style="flex:1;" title="Lag en kopi av dette arrangementet">Kopier</button>
             <button onclick="lmTogglePublic(lmSelectedArrangement?.id, !lmSelectedArrangement?.is_public)" class="hdr-btn" style="flex:1;" id="lmPublicBtn">Del</button>
           </div>
         </div>
@@ -1407,7 +1408,7 @@
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v57';
+const APP_VERSION = 'v58';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
@@ -4808,16 +4809,10 @@ async function loadLmArrangements() {
           </div>
           ${periods ? `<div style="font-size:10px;color:var(--text-faint);margin-top:2px;">${esc(periods)}</div>` : ''}
         </div>
-        <div style="display:flex;gap:4px;flex-shrink:0;">
-          <button onclick="event.stopPropagation();lmCopyArrangement('${sl.id}')"
-            style="background:none;border:none;color:var(--text-faint);font-size:13px;cursor:pointer;padding:4px;transition:color .12s;"
-            onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-faint)'"
-            title="Kopier arrangement">⎘</button>
-          <button onclick="event.stopPropagation();lmDeleteArrangement('${sl.id}')"
-            style="background:none;border:none;color:var(--text-faint);font-size:14px;cursor:pointer;padding:4px;transition:color .12s;"
-            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-faint)'"
-            title="Slett">✕</button>
-        </div>
+        <button onclick="event.stopPropagation();lmDeleteArrangement('${sl.id}')"
+          style="background:none;border:none;color:var(--text-faint);font-size:14px;cursor:pointer;padding:4px;flex-shrink:0;transition:color .12s;"
+          onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-faint)'"
+          title="Slett">✕</button>
       </div>`;
   }).join('') || '<div class="empty-state"><div class="big-icon">—</div><p>Ingen arrangementer ennå</p></div>';
 }
@@ -5154,6 +5149,7 @@ async function lmDeleteArrangement(id) {
 }
 
 function lmCopyArrangement(id) {
+  if (!id) { showToast('Velg et arrangement først', 'error'); return; }
   const sl = state.savedSetlists.find(s => s.id === id);
   if (!sl) return;
 
@@ -5306,7 +5302,7 @@ async function doLibModalSearch() {
   if (state.token) {
     try {
       const data = await spotifyFetch(
-        `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=20&market=NO`
+        `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=10&market=NO`
       );
       spotifyTracks = data.tracks?.items || [];
       spotifyTracks.forEach(t => { searchResultCache[t.id] = t; });
