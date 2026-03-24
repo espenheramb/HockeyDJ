@@ -995,7 +995,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v60</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v61</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -1207,7 +1207,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v60</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v61</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
@@ -1406,7 +1406,7 @@
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v60';
+const APP_VERSION = 'v61';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
@@ -2907,16 +2907,41 @@ async function fetchAudioAnalysis(trackId) {
   try {
     const data = await spotifyFetch(`https://api.spotify.com/v1/audio-analysis/${trackId}`);
     const segs = data.segments;
-    if (!segs || !segs.length) return buildFallbackWave(trackId);
-    // Use loudness_max per segment, normalise to 0-1
-    const raw = segs.map(s => s.loudness_max ?? s.loudness_start ?? -40);
-    const minL = Math.min(...raw);
-    const maxL = Math.max(...raw);
+    if (!segs || segs.length < 2) {
+      console.warn('audio-analysis: no segments for', trackId);
+      return buildFallbackWave(trackId);
+    }
+    // Use loudness_max per segment — this is real per-segment peak amplitude
+    const raw = segs.map(s => s.loudness_max ?? s.loudness_start ?? -60);
+
+    // Safe min/max — avoid spread stack overflow on large arrays
+    let minL = Infinity, maxL = -Infinity;
+    for (let i = 0; i < raw.length; i++) {
+      if (raw[i] < minL) minL = raw[i];
+      if (raw[i] > maxL) maxL = raw[i];
+    }
     const range = maxL - minL || 1;
-    const values = new Float32Array(raw.map(v => (v - minL) / range));
+
+    // Normalise 0-1
+    const normalised = raw.map(v => (v - minL) / range);
+
+    // Downsample to 200 points using average (preserves envelope shape)
+    const pts = 200;
+    const values = new Float32Array(pts);
+    const binSize = normalised.length / pts;
+    for (let i = 0; i < pts; i++) {
+      const start = Math.floor(i * binSize);
+      const end   = Math.floor((i + 1) * binSize);
+      let sum = 0;
+      for (let j = start; j < end; j++) sum += normalised[j];
+      values[i] = sum / (end - start || 1);
+    }
+
     waveCache[trackId] = values;
+    console.log(`audio-analysis OK: ${segs.length} segs → ${pts} pts for`, trackId);
     return values;
   } catch(e) {
+    console.error('fetchAudioAnalysis failed:', e.message, 'for', trackId);
     return buildFallbackWave(trackId);
   }
 }
@@ -2989,8 +3014,11 @@ async function upgradeWaveform(trackId, duration) {
   redrawWaveform(trackId, duration);
   if (!state.token) return;
   // Fetch real analysis async
-  const values = await fetchAudioAnalysis(trackId);
-  redrawWaveform(trackId, duration); // redraw with cached real data
+  await fetchAudioAnalysis(trackId);
+  // Only redraw if this track is still the one shown in the editor
+  if (state.selectedTrackId === trackId) {
+    redrawWaveform(trackId, duration);
+  }
 }
 
 function generateWaveBars(trackId, duration) {
@@ -3004,8 +3032,11 @@ function lmGenerateWave(trackId, duration) {
 }
 
 async function upgradeLmWaveform(trackId, duration) {
+  await fetchAudioAnalysis(trackId);
+  // Only redraw if this track is still shown in the library editor
+  if (lmSelectedTrack?.id !== trackId) return;
   const s = state.trackSettings[trackId] || {};
-  const values = await fetchAudioAnalysis(trackId);
+  const values = waveCache[trackId] || buildFallbackWave(trackId);
   const el = document.getElementById('lmWaveBars');
   if (el) el.innerHTML = buildWaveBarsHTML(trackId, duration, values, 80, 'main', s);
   const mel = document.getElementById('lmWaveMarkers');
