@@ -995,7 +995,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v61</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v62</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -1207,7 +1207,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v61</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v62</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
@@ -1406,7 +1406,7 @@
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v61';
+const APP_VERSION = 'v62';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
@@ -2911,10 +2911,11 @@ async function fetchAudioAnalysis(trackId) {
       console.warn('audio-analysis: no segments for', trackId);
       return buildFallbackWave(trackId);
     }
-    // Use loudness_max per segment — this is real per-segment peak amplitude
+
+    // loudness_max is in dB (typically -60 to 0). Use it directly.
     const raw = segs.map(s => s.loudness_max ?? s.loudness_start ?? -60);
 
-    // Safe min/max — avoid spread stack overflow on large arrays
+    // Safe min/max
     let minL = Infinity, maxL = -Infinity;
     for (let i = 0; i < raw.length; i++) {
       if (raw[i] < minL) minL = raw[i];
@@ -2922,23 +2923,37 @@ async function fetchAudioAnalysis(trackId) {
     }
     const range = maxL - minL || 1;
 
-    // Normalise 0-1
-    const normalised = raw.map(v => (v - minL) / range);
+    // Linear normalise to 0-1, then apply power curve to boost contrast
+    // power < 1 brings quiet parts up, > 1 pushes them down
+    // 0.5 = sqrt gives much more dynamic range visually
+    const normed = raw.map(v => Math.pow((v - minL) / range, 0.5));
 
-    // Downsample to 200 points using average (preserves envelope shape)
+    // Downsample to 200 points using max (preserves peaks better than average)
     const pts = 200;
     const values = new Float32Array(pts);
-    const binSize = normalised.length / pts;
+    const binSize = normed.length / pts;
     for (let i = 0; i < pts; i++) {
       const start = Math.floor(i * binSize);
-      const end   = Math.floor((i + 1) * binSize);
-      let sum = 0;
-      for (let j = start; j < end; j++) sum += normalised[j];
-      values[i] = sum / (end - start || 1);
+      const end   = Math.max(start + 1, Math.floor((i + 1) * binSize));
+      let peak = 0;
+      for (let j = start; j < end; j++) {
+        if (normed[j] > peak) peak = normed[j];
+      }
+      values[i] = peak;
     }
 
+    // Smooth slightly (3-point moving average) to reduce spikiness
+    for (let i = 1; i < pts - 1; i++) {
+      values[i] = values[i-1] * 0.25 + values[i] * 0.5 + values[i+1] * 0.25;
+    }
+
+    // Final contrast stretch: rescale so max = 1.0
+    let finalMax = 0;
+    for (let i = 0; i < pts; i++) if (values[i] > finalMax) finalMax = values[i];
+    if (finalMax > 0) for (let i = 0; i < pts; i++) values[i] /= finalMax;
+
     waveCache[trackId] = values;
-    console.log(`audio-analysis OK: ${segs.length} segs → ${pts} pts for`, trackId);
+    console.log(`audio-analysis OK: ${segs.length} segs → ${pts} pts, dB range: ${minL.toFixed(1)} to ${maxL.toFixed(1)}`);
     return values;
   } catch(e) {
     console.error('fetchAudioAnalysis failed:', e.message, 'for', trackId);
@@ -2968,7 +2983,8 @@ function buildWaveBarsHTML(trackId, duration, values, count, style, settings) {
   const s = settings || state.trackSettings[trackId] || {};
   const startPct = (s.startTime || 0) / duration;
   const endPct   = (s.endTime != null ? s.endTime : duration) / duration;
-  const barH     = style === 'small' ? 40 : 56; // px, container height
+  const barH     = style === 'small' ? 48 : 64; // px, container height
+  const minBarH  = 3; // minimum bar height in px
 
   const data = values || waveCache[trackId] || buildFallbackWave(trackId);
   let bars = '';
@@ -2976,18 +2992,18 @@ function buildWaveBarsHTML(trackId, duration, values, count, style, settings) {
     const pct = i / count;
     const inRange = pct >= startPct && pct < endPct;
     const idx = Math.floor(pct * data.length);
-    const h = Math.max(6, Math.round(data[idx] * (barH - 6) + 3));
+    const h = Math.max(minBarH, Math.round(data[idx] * barH));
     if (inRange) {
-      bars += `<div style="flex:1;height:${h}px;background:var(--accent);border-radius:1px;opacity:0.85;"></div>`;
+      bars += `<div style="flex:1;height:${h}px;background:var(--accent);border-radius:1px;opacity:0.9;"></div>`;
     } else {
-      bars += `<div style="flex:1;height:${h}px;background:var(--border);border-radius:1px;opacity:0.5;"></div>`;
+      bars += `<div style="flex:1;height:${h}px;background:var(--text-faint);border-radius:1px;opacity:0.35;"></div>`;
     }
   }
 
   // Start/stop border overlays
   const startLeft = (startPct * 100).toFixed(2);
   const endLeft   = (endPct * 100).toFixed(2);
-  return `<div style="position:relative;display:flex;align-items:center;gap:1px;height:${barH}px;width:100%;">
+  return `<div style="position:relative;display:flex;align-items:flex-end;gap:1px;height:${barH}px;width:100%;">
     ${bars}
     <div style="position:absolute;left:${startLeft}%;top:0;bottom:0;width:2px;background:var(--green);border-radius:1px;pointer-events:none;"></div>
     <div style="position:absolute;left:${endLeft}%;top:0;bottom:0;width:2px;background:var(--red);border-radius:1px;pointer-events:none;transform:translateX(-100%);"></div>
