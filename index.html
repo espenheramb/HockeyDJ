@@ -443,8 +443,6 @@
     overflow: hidden;
   }
   .waveform { display: block; width: 100%; margin-bottom: 4px; }
-  .wave-bar { flex: 1; background: var(--accent); border-radius: 1px; opacity: 0.5; }
-  .wave-bar.past { background: var(--text-faint); opacity: 0.4; }
 
   .waveform-markers { position: relative; height: 14px; }
   .wm-marker { position: absolute; top: 0; transform: translateX(-50%); width: 2px; height: 36px; border-radius: 1px; margin-top: -40px; pointer-events: none; }
@@ -997,7 +995,7 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v58</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v60</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
@@ -1209,7 +1207,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v58</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v60</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
@@ -1408,7 +1406,7 @@
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v58';
+const APP_VERSION = 'v60';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
@@ -2893,81 +2891,123 @@ function renderTrackEditor(track) {
     </div>
 
     <button class="save-btn" onclick="saveTrackSettings('${track.id}')">Lagre innstillinger</button>
-    <button onclick="saveToLibrary('${track.id}')" id="libSaveBtn-${track.id}"
-      style="width:100%;margin-top:8px;background:none;border:1px solid var(--border);color:var(--text-dim);padding:10px;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;"
-      onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'"
-      onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'"
-    >${inLib ? '★ I biblioteket' : '☆ Lagre til bibliotek'}</button>
+    <button onclick="toggleLibrary('${track.id}')" id="libSaveBtn-${track.id}"
+      style="width:100%;margin-top:8px;background:${inLib ? 'rgba(212,168,67,0.12)' : 'none'};border:1px solid ${inLib ? 'var(--gold)' : 'var(--border)'};color:${inLib ? 'var(--gold)' : 'var(--text-dim)'};padding:10px;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;"
+    >${inLib ? '★ Lagret i bibliotek' : '☆ Lagre til bibliotek'}</button>
   `;
   upgradeWaveform(track.id, track.duration);
 }
 
-function buildWaveBarsHTML(trackId, duration, values, count, style, settings) {
-  const s = settings || state.trackSettings[trackId] || {};
-  const startPct = (s.startTime || 0) / duration * 100;
-  const endPct   = (s.endTime != null ? s.endTime : duration) / duration * 100;
+// ── WAVEFORM ─────────────────────────────────────────────────
+// Cache: trackId → Float32Array of normalised loudness (0–1)
+const waveCache = {};
 
-  // Build simple flat timeline: one filled div with start/stop regions
-  // This is honest — we don't have real waveform data from Spotify
-  const beforeW = startPct.toFixed(2);
-  const activeW = (endPct - startPct).toFixed(2);
-  const afterW  = (100 - endPct).toFixed(2);
-
-  const h = style === 'small' ? 28 : 36;
-
-  return `
-    <div style="display:flex;width:100%;height:${h}px;border-radius:3px;overflow:hidden;align-items:center;">
-      ${parseFloat(beforeW) > 0 ? `
-        <div style="width:${beforeW}%;height:100%;background:var(--bg-hover);position:relative;flex-shrink:0;">
-          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
-            <div style="height:3px;width:100%;background:var(--border);border-radius:2px;"></div>
-          </div>
-        </div>` : ''}
-      <div style="width:${activeW}%;height:100%;background:var(--accent-dim);border-left:3px solid var(--green);border-right:3px solid var(--red);position:relative;flex-shrink:0;min-width:4px;">
-        <div style="position:absolute;inset:0;display:flex;align-items:center;">
-          <div style="height:4px;width:100%;background:var(--accent);opacity:0.4;border-radius:0;"></div>
-        </div>
-      </div>
-      ${parseFloat(afterW) > 0 ? `
-        <div style="width:${afterW}%;height:100%;background:var(--bg-hover);position:relative;flex-shrink:0;">
-          <div style="position:absolute;inset:0;display:flex;align-items:center;">
-            <div style="height:3px;width:100%;background:var(--border);border-radius:2px;"></div>
-          </div>
-        </div>` : ''}
-    </div>`;
+async function fetchAudioAnalysis(trackId) {
+  if (waveCache[trackId]) return waveCache[trackId];
+  try {
+    const data = await spotifyFetch(`https://api.spotify.com/v1/audio-analysis/${trackId}`);
+    const segs = data.segments;
+    if (!segs || !segs.length) return buildFallbackWave(trackId);
+    // Use loudness_max per segment, normalise to 0-1
+    const raw = segs.map(s => s.loudness_max ?? s.loudness_start ?? -40);
+    const minL = Math.min(...raw);
+    const maxL = Math.max(...raw);
+    const range = maxL - minL || 1;
+    const values = new Float32Array(raw.map(v => (v - minL) / range));
+    waveCache[trackId] = values;
+    return values;
+  } catch(e) {
+    return buildFallbackWave(trackId);
+  }
 }
 
-// Redraw bars without re-fetching (just apply new start/stop to existing data)
+function buildFallbackWave(trackId) {
+  // Deterministic flat-ish wave from track ID so it looks different per song
+  const seed = trackId.split('').reduce((a,c,i) => a + c.charCodeAt(0)*(i+1), 0);
+  const pts = 100;
+  const values = new Float32Array(pts);
+  for (let i = 0; i < pts; i++) {
+    const t = i / pts;
+    values[i] = Math.max(0.05, Math.min(0.95,
+      0.5 + Math.sin(seed * 0.003 + t * 18) * 0.2
+          + Math.sin(seed * 0.007 + t * 37) * 0.12
+          + Math.sin(t * Math.PI) * 0.1
+    ));
+  }
+  waveCache[trackId] = values;
+  return values;
+}
+
+// Build bar HTML from Float32Array values
+function buildWaveBarsHTML(trackId, duration, values, count, style, settings) {
+  const s = settings || state.trackSettings[trackId] || {};
+  const startPct = (s.startTime || 0) / duration;
+  const endPct   = (s.endTime != null ? s.endTime : duration) / duration;
+  const barH     = style === 'small' ? 40 : 56; // px, container height
+
+  const data = values || waveCache[trackId] || buildFallbackWave(trackId);
+  let bars = '';
+  for (let i = 0; i < count; i++) {
+    const pct = i / count;
+    const inRange = pct >= startPct && pct < endPct;
+    const idx = Math.floor(pct * data.length);
+    const h = Math.max(6, Math.round(data[idx] * (barH - 6) + 3));
+    if (inRange) {
+      bars += `<div style="flex:1;height:${h}px;background:var(--accent);border-radius:1px;opacity:0.85;"></div>`;
+    } else {
+      bars += `<div style="flex:1;height:${h}px;background:var(--border);border-radius:1px;opacity:0.5;"></div>`;
+    }
+  }
+
+  // Start/stop border overlays
+  const startLeft = (startPct * 100).toFixed(2);
+  const endLeft   = (endPct * 100).toFixed(2);
+  return `<div style="position:relative;display:flex;align-items:center;gap:1px;height:${barH}px;width:100%;">
+    ${bars}
+    <div style="position:absolute;left:${startLeft}%;top:0;bottom:0;width:2px;background:var(--green);border-radius:1px;pointer-events:none;"></div>
+    <div style="position:absolute;left:${endLeft}%;top:0;bottom:0;width:2px;background:var(--red);border-radius:1px;pointer-events:none;transform:translateX(-100%);"></div>
+  </div>`;
+}
+
+// Redraw without re-fetching (start/stop changed)
 function redrawWaveform(trackId, duration) {
   const s = state.trackSettings[trackId] || {};
+  const vals = waveCache[trackId] || null;
   const el = document.getElementById('waveformBars');
-  if (el) el.innerHTML = buildWaveBarsHTML(trackId, duration, null, 60, 'main', s);
+  if (el) el.innerHTML = buildWaveBarsHTML(trackId, duration, vals, 80, 'main', s);
   const mel = document.getElementById('waveformMarkers');
   if (mel) mel.innerHTML = renderWaveMarkers(s, duration);
   const lel = document.getElementById('lmWaveBars');
-  if (lel) lel.innerHTML = buildWaveBarsHTML(trackId, duration, null, 60, 'main', s);
+  if (lel) lel.innerHTML = buildWaveBarsHTML(trackId, duration, vals, 80, 'main', s);
   const lmel = document.getElementById('lmWaveMarkers');
   if (lmel) lmel.innerHTML = lmWaveMarkers(s, duration);
 }
 
-function generateWaveBars(trackId, duration) {
-  const s = state.trackSettings[trackId] || {};
-  return buildWaveBarsHTML(trackId, duration, null, 60, 'main', s);
+// Show fallback immediately, upgrade with real data async
+async function upgradeWaveform(trackId, duration) {
+  // Draw fallback instantly
+  redrawWaveform(trackId, duration);
+  if (!state.token) return;
+  // Fetch real analysis async
+  const values = await fetchAudioAnalysis(trackId);
+  redrawWaveform(trackId, duration); // redraw with cached real data
 }
 
-function upgradeWaveform(trackId, duration) {
-  redrawWaveform(trackId, duration);
+function generateWaveBars(trackId, duration) {
+  const s = state.trackSettings[trackId] || {};
+  const vals = waveCache[trackId] || buildFallbackWave(trackId);
+  return buildWaveBarsHTML(trackId, duration, vals, 80, 'main', s);
 }
 
 function lmGenerateWave(trackId, duration) {
-  const s = state.trackSettings[trackId] || {};
-  return buildWaveBarsHTML(trackId, duration, null, 60, 'main', s);
+  return generateWaveBars(trackId, duration);
 }
 
-function upgradeLmWaveform(trackId, duration) {
+async function upgradeLmWaveform(trackId, duration) {
   const s = state.trackSettings[trackId] || {};
+  const values = await fetchAudioAnalysis(trackId);
   const el = document.getElementById('lmWaveBars');
-  if (el) el.innerHTML = buildWaveBarsHTML(trackId, duration, null, 60, 'main', s);
+  if (el) el.innerHTML = buildWaveBarsHTML(trackId, duration, values, 80, 'main', s);
   const mel = document.getElementById('lmWaveMarkers');
   if (mel) mel.innerHTML = lmWaveMarkers(s, duration);
 }
@@ -3526,6 +3566,37 @@ function switchLeftTab(tab) {
 // ============================================================
 let librarySelection = new Set();
 
+function toggleLibrary(trackId) {
+  const inLib = !!state.library.find(l => l.id === trackId);
+  if (inLib) {
+    // Remove from library — no confirm needed for quick toggle
+    state.library = state.library.filter(l => l.id !== trackId);
+    librarySelection.delete(trackId);
+    saveState();
+    sbSaveLibrary();
+    updateLibBtn(trackId, false);
+    showToast('Fjernet fra biblioteket', '');
+  } else {
+    saveToLibrary(trackId);
+  }
+}
+
+function updateLibBtn(trackId, inLib) {
+  const btn = document.getElementById(`libSaveBtn-${trackId}`);
+  if (!btn) return;
+  if (inLib) {
+    btn.textContent = '★ Lagret i bibliotek';
+    btn.style.color = 'var(--gold)';
+    btn.style.borderColor = 'var(--gold)';
+    btn.style.background = 'rgba(212,168,67,0.12)';
+  } else {
+    btn.textContent = '☆ Lagre til bibliotek';
+    btn.style.color = 'var(--text-dim)';
+    btn.style.borderColor = 'var(--border)';
+    btn.style.background = 'none';
+  }
+}
+
 function saveToLibrary(trackId) {
   const track = getActiveQueue().find(t => t.id === trackId);
   if (!track) return;
@@ -3553,14 +3624,8 @@ function saveToLibrary(trackId) {
   }
 
   saveState();
-
-  // Update button text
-  const btn = document.getElementById(`libSaveBtn-${trackId}`);
-  if (btn) {
-    btn.textContent = '★ I biblioteket';
-    btn.style.color = 'var(--gold)';
-    btn.style.borderColor = 'var(--gold)';
-  }
+  sbSaveLibrary();
+  updateLibBtn(trackId, true);
 }
 
 function removeFromLibrary(trackId, e) {
@@ -5457,9 +5522,9 @@ function renderLmEditor(track) {
       onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
       onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'"
       id="lmPlayBtn">&#9654; Spill</button>
-    <button onclick="lmSaveToLibrary('${track.id}')"
-      style="background:${inLib ? 'var(--accent-dim)' : 'none'};border:1px solid ${inLib ? 'var(--accent)' : 'var(--border)'};color:${inLib ? 'var(--accent)' : 'var(--text-dim)'};padding:4px 12px;border-radius:4px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;transition:all .15s;"
-      id="lmSaveBtn">${inLib ? '★ Oppdater' : '☆ Lagre'}</button>`;
+    <button onclick="lmToggleLibrary('${track.id}')"
+      style="background:${inLib ? 'rgba(212,168,67,0.12)' : 'none'};border:1px solid ${inLib ? 'var(--gold)' : 'var(--border)'};color:${inLib ? 'var(--gold)' : 'var(--text-dim)'};padding:4px 12px;border-radius:4px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;transition:all .15s;"
+      id="lmSaveBtn">${inLib ? '★ Lagret i bibliotek' : '☆ Lagre til bibliotek'}</button>`;
 
   document.getElementById('lmEditor').innerHTML = `
     <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:16px;">
@@ -5652,6 +5717,24 @@ function lmSetNote(trackId, val) {
   if (s) s.note = val;
 }
 
+function lmToggleLibrary(trackId) {
+  const inLib = !!state.library.find(l => l.id === trackId);
+  if (inLib) {
+    state.library = state.library.filter(l => l.id !== trackId);
+    librarySelection.delete(trackId);
+    saveState();
+    sbSaveLibrary();
+    renderLibModalList();
+    renderLibrary();
+    const btn = document.getElementById('lmSaveBtn');
+    if (btn) { btn.textContent = '☆ Lagre til bibliotek'; btn.style.background = 'none'; btn.style.borderColor = 'var(--border)'; btn.style.color = 'var(--text-dim)'; }
+    document.getElementById('lmLibCount').textContent = state.library.length;
+    showToast('Fjernet fra biblioteket', '');
+  } else {
+    lmSaveToLibrary(trackId);
+  }
+}
+
 function lmSaveToLibrary(trackId) {
   const track = lmSelectedTrack;
   if (!track) return;
@@ -5667,12 +5750,12 @@ function lmSaveToLibrary(trackId) {
   if (existing >= 0) state.library[existing] = entry;
   else state.library.push(entry);
   saveState();
+  sbSaveLibrary();
   renderLibModalList();
   renderLibrary();
   showToast(`"${track.name}" lagret i biblioteket ✓`, 'success');
-  // Update save button
   const btn = document.getElementById('lmSaveBtn');
-  if (btn) { btn.textContent = '★ Oppdater'; btn.style.background = 'var(--accent-dim)'; btn.style.borderColor = 'var(--accent)'; btn.style.color = 'var(--accent)'; }
+  if (btn) { btn.textContent = '★ Lagret i bibliotek'; btn.style.background = 'rgba(212,168,67,0.12)'; btn.style.borderColor = 'var(--gold)'; btn.style.color = 'var(--gold)'; }
   document.getElementById('lmLibCount').textContent = state.library.length;
 }
 
