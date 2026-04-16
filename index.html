@@ -995,10 +995,11 @@
   <header>
     <div class="logo">
       <span class="logo-icon">🏒</span>
-      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v65</small></h1>
+      <h1>HOCKEY <span>DJ</span> <small style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--text-dim);" id="headerVersion">v68</small></h1>
     </div>
     <div class="header-setlist-name" id="headerSetlistName"></div>
     <div class="header-status">
+      <div id="realtimeIndicator" title="Realtime tilkobling" style="display:none;width:8px;height:8px;border-radius:50%;background:var(--green);opacity:0.8;flex-shrink:0;" title="Tilkoblet — live samarbeid aktivt"></div>
       <button onclick="openLibModal()" title="Bibliotek — sanger og arrangementer"
         class="hdr-btn hdr-btn-primary">Bibliotek</button>
       <button onclick="toggleFullscreen()" title="Fullskjerm (F)"
@@ -1207,7 +1208,7 @@
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v65</small></h2>
+    <h2>Hockey DJ <small style="font-size:13px;font-weight:400;color:var(--text-dim);letter-spacing:1px;" id="modalVersion">v68</small></h2>
     <p>Logg inn med Spotify for å søke, importere playlists og spille musikk direkte i nettleseren.</p>
     <div id="authStep1">
       <button class="modal-btn primary" onclick="startPKCEFlow()" style="margin-top:8px;">Logg inn med Spotify</button>
@@ -1406,7 +1407,7 @@
 // ============================================================
 // STATE
 // ============================================================
-const APP_VERSION = 'v65';
+const APP_VERSION = 'v68';
 const DEFAULT_PERIODS = ['Oppvarming', '1. omgang', '2. omgang', '3. omgang', 'Overtime/Straffer', 'Pauseshow'];
 
 // Hardkodet Client ID — ikke en hemmelighet, trenger ikke skjules
@@ -3153,6 +3154,11 @@ function resetTrackPosition(trackId) {
 function saveTrackSettings(trackId) {
   saveState();
   renderQueue();
+  // Sync to cloud if track is in library
+  const settings = state.trackSettings[trackId];
+  if (settings && state.library.find(l => l.id === trackId)) {
+    sbSaveUserTrackSettings(trackId, settings);
+  }
   showToast('Innstillinger lagret ✓', 'success');
 }
 
@@ -3272,40 +3278,68 @@ function setVolume(v) {
 let _ticker;
 function startTicker() {
   stopTicker();
-  _ticker = setInterval(() => {
+  _ticker = setInterval(async () => {
     if (!state.isPlaying) return;
-    state.currentPos += 0.5;
+
+    // Sync position from Spotify SDK if available (more accurate than incrementing)
+    if (state.player && !state.demoMode) {
+      try {
+        const sdkState = await state.player.getCurrentState();
+        if (sdkState) {
+          state.currentPos = sdkState.position / 1000;
+          state.isPlaying = !sdkState.paused;
+        }
+      } catch(e) {}
+    } else {
+      state.currentPos += 0.5;
+    }
+
     const track = getActiveQueue()[state.currentIndex];
     const s = track ? (state.trackSettings[track.id] || {}) : {};
     const endTime = s.endTime || state.duration;
     const fadeOut = s.fadeOut || 0;
 
-    // Fade out volume gradually
-    if (fadeOut > 0 && state.player) {
+    // Per-track fade out
+    if (fadeOut > 0 && state.player && !state.demoMode) {
       const timeLeft = endTime - state.currentPos;
       if (timeLeft <= fadeOut && timeLeft > 0) {
         const vol = Math.max(0, timeLeft / fadeOut);
         state.player.setVolume(vol * (document.getElementById('volSlider').value / 100));
       } else if (timeLeft > fadeOut) {
-        // Restore volume
         state.player.setVolume(document.getElementById('volSlider').value / 100);
       }
     }
 
     if (state.currentPos >= endTime) {
       state.currentPos = endTime;
-      state.isPlaying = false;
+      stopTicker();
+
+      // Actually stop Spotify
+      if (state.player && !state.demoMode) {
+        try {
+          // Seek to end position first so it doesn't continue playing
+          await state.player.seek(endTime * 1000);
+          await state.player.pause();
+        } catch(e) {}
+      }
+
       // Restore volume after fade
-      if (fadeOut > 0 && state.player) {
+      if (fadeOut > 0 && state.player && !state.demoMode) {
         state.player.setVolume(document.getElementById('volSlider').value / 100);
       }
+
+      // Apply stop-fade if enabled (overrides per-track fade)
+      if (state.stopFadeEnabled && state.stopFadeDuration > 0 && (!fadeOut)) {
+        await fadeVolumeOut(state.stopFadeDuration, null);
+      }
+
+      state.isPlaying = false;
       updatePlayerUI();
-      stopTicker();
       if (state.autoplay) setTimeout(nextTrack, 300);
       return;
     }
     updateProgressUI();
-  }, 500);
+  }, 250); // 250ms for smoother cursor + more responsive stop
 }
 
 function stopTicker() { clearInterval(_ticker); _ticker = null; }
@@ -3525,7 +3559,15 @@ function loadSetlist(id) {
   }
   Object.keys(sl.settings || {}).forEach(key => {
     if (!state.trackSettings[key]) state.trackSettings[key] = sl.settings[key];
+  // Load quick buttons from arrangement if saved there
+  if (sl.quickButtons?.length) {
+    state.quickButtons = JSON.parse(JSON.stringify(sl.quickButtons));
+  }
   });
+  // Load quick buttons from arrangement if saved there
+  if (sl.quickButtons?.length) {
+    state.quickButtons = JSON.parse(JSON.stringify(sl.quickButtons));
+  }
   state.playedTracks = [];
   state.currentIndex = -1;
   state.loadedIndex = -1;
@@ -3626,12 +3668,12 @@ let librarySelection = new Set();
 function toggleLibrary(trackId) {
   const inLib = !!state.library.find(l => l.id === trackId);
   if (inLib) {
-    // Remove from library — no confirm needed for quick toggle
     state.library = state.library.filter(l => l.id !== trackId);
     librarySelection.delete(trackId);
     saveState();
-    sbSaveLibrary();
+    sbRemoveFromUserLibrary(trackId);
     updateLibBtn(trackId, false);
+    renderLibrary();
     showToast('Fjernet fra biblioteket', '');
   } else {
     saveToLibrary(trackId);
@@ -3681,7 +3723,8 @@ function saveToLibrary(trackId) {
   }
 
   saveState();
-  sbSaveLibrary();
+  sbAddToGlobalLibrary(entry);
+  sbSaveUserTrackSettings(trackId, settings);
   updateLibBtn(trackId, true);
 }
 
@@ -3693,6 +3736,7 @@ function removeFromLibrary(trackId, e) {
   state.library = state.library.filter(l => l.id !== trackId);
   librarySelection.delete(trackId);
   saveState();
+  sbRemoveFromUserLibrary(trackId);
   renderLibrary();
   showToast('Fjernet fra biblioteket', '');
 }
@@ -4493,59 +4537,320 @@ async function sbLoadUserData() {
   if (!userId) return;
 
   try {
-    // Load arrangements
+    // ── 1. Arrangements ──────────────────────────────────────
     const arrangements = await sbFetch(
       `arrangements?spotify_user_id=eq.${encodeURIComponent(userId)}&order=updated_at.desc`,
-      { method: 'GET', headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` } }
+      { method: 'GET' }
     );
     if (arrangements?.length) {
-      // Merge with local — cloud takes precedence for matching IDs
       arrangements.forEach(row => {
         const data = row.data;
         if (!data) return;
-        // Each row is one arrangement
         const existing = state.savedSetlists.findIndex(s => s.id === row.id);
         const sl = { id: row.id, name: row.name, date: row.updated_at?.slice(0,10),
           count: row.song_count, periods: data.periods, settings: data.settings || {},
+          quickButtons: data.quickButtons || [],
           is_public: row.is_public || false };
         if (existing >= 0) state.savedSetlists[existing] = sl;
         else state.savedSetlists.push(sl);
       });
     }
 
-    // Load library
-    const libRow = await sbFetch(
-      `library?spotify_user_id=eq.${encodeURIComponent(userId)}`,
-      { method: 'GET', headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` } }
+    // ── 2. Global library + user's saved tracks ───────────────
+    await sbLoadGlobalLibrary(userId);
+
+    // ── 3. User track settings ────────────────────────────────
+    const settingsRows = await sbFetch(
+      `user_track_settings?spotify_user_id=eq.${encodeURIComponent(userId)}`,
+      { method: 'GET' }
     );
-    if (libRow?.[0]) {
-      const cloudLib = libRow[0].tracks || [];
-      const cloudSettings = libRow[0].track_settings || {};
-      // Merge cloud into local
-      cloudLib.forEach(l => {
-        if (!state.library.find(e => e.id === l.id)) state.library.push(l);
+    if (settingsRows?.length) {
+      settingsRows.forEach(row => {
+        if (!state.trackSettings[row.track_id]) {
+          state.trackSettings[row.track_id] = row.settings;
+        }
       });
-      Object.entries(cloudSettings).forEach(([id, s]) => {
-        if (!state.trackSettings[id]) state.trackSettings[id] = s;
-      });
+    } else {
+      // Fallback: old library table format
+      const libRow = await sbFetch(
+        `library?spotify_user_id=eq.${encodeURIComponent(userId)}`,
+        { method: 'GET' }
+      );
+      if (libRow?.[0]) {
+        const cloudSettings = libRow[0].track_settings || {};
+        Object.entries(cloudSettings).forEach(([id, s]) => {
+          if (!state.trackSettings[id]) state.trackSettings[id] = s;
+        });
+      }
     }
 
-    // Load quick buttons
+    // ── 4. Quick buttons (legacy fallback) ────────────────────
     const qbRow = await sbFetch(
       `quick_buttons?spotify_user_id=eq.${encodeURIComponent(userId)}`,
-      { method: 'GET', headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` } }
+      { method: 'GET' }
     );
-    if (qbRow?.[0]?.buttons?.length && !state.quickButtons.length) {
+    if (qbRow?.[0]?.buttons?.length && !state.quickButtons.filter(q => !q.isPlaceholder).length) {
       state.quickButtons = qbRow[0].buttons;
     }
 
-    // Save merged data locally
     saveLocalState();
     renderQueue();
     renderQuickBar();
+    renderLibrary();
     console.log('☁️ Sky-data lastet inn');
+
+    // ── 5. Start Realtime subscription ───────────────────────
+    sbSubscribeRealtime();
+
   } catch(e) {
     console.warn('Supabase load feilet:', e.message);
+  }
+}
+
+// ── GLOBAL LIBRARY ────────────────────────────────────────────
+
+async function sbLoadGlobalLibrary(userId) {
+  // Load tracks the user has saved ("My Library")
+  const userLib = await sbFetch(
+    `user_library?spotify_user_id=eq.${encodeURIComponent(userId)}&select=track_id`,
+    { method: 'GET' }
+  );
+  const savedTrackIds = new Set((userLib || []).map(r => r.track_id));
+
+  // Load track info for saved tracks from global_library
+  if (savedTrackIds.size > 0) {
+    const ids = [...savedTrackIds].map(id => `"${id}"`).join(',');
+    const tracks = await sbFetch(
+      `global_library?track_id=in.(${ids})`,
+      { method: 'GET' }
+    );
+    if (tracks?.length) {
+      tracks.forEach(t => {
+        if (!state.library.find(l => l.id === t.track_id)) {
+          state.library.push({
+            id: t.track_id, name: t.name, artist: t.artist,
+            duration: t.duration, img: t.img || '', imgLg: t.img_lg || '',
+            uri: t.uri,
+          });
+        }
+      });
+    }
+  }
+
+  // Also migrate existing local library to global_library if not already there
+  if (state.library.length > 0) {
+    sbMigrateLocalLibrary(userId);
+  }
+}
+
+async function sbMigrateLocalLibrary(userId) {
+  // Push local library entries to global_library + user_library (fire and forget)
+  for (const track of state.library) {
+    try {
+      // Upsert to global_library
+      await fetch(`${SUPABASE_URL}/rest/v1/global_library`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON,
+          'Authorization': `Bearer ${SUPABASE_ANON}`,
+          'Prefer': 'resolution=ignore-duplicates',
+        },
+        body: JSON.stringify({
+          track_id: track.id, name: track.name, artist: track.artist,
+          duration: track.duration, img: track.img || '', img_lg: track.imgLg || '',
+          uri: track.uri, added_by: userId,
+        })
+      });
+      // Add to user_library
+      await fetch(`${SUPABASE_URL}/rest/v1/user_library`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON,
+          'Authorization': `Bearer ${SUPABASE_ANON}`,
+          'Prefer': 'resolution=ignore-duplicates',
+        },
+        body: JSON.stringify({ spotify_user_id: userId, track_id: track.id })
+      });
+    } catch(e) { /* ignore migration errors */ }
+  }
+}
+
+async function sbAddToGlobalLibrary(track) {
+  const userId = state.user?.id;
+  if (!userId) return;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/global_library`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'Prefer': 'resolution=ignore-duplicates',
+      },
+      body: JSON.stringify({
+        track_id: track.id, name: track.name, artist: track.artist,
+        duration: track.duration, img: track.img || '', img_lg: track.imgLg || '',
+        uri: track.uri, added_by: userId,
+      })
+    });
+    await fetch(`${SUPABASE_URL}/rest/v1/user_library`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'Prefer': 'resolution=ignore-duplicates',
+      },
+      body: JSON.stringify({ spotify_user_id: userId, track_id: track.id })
+    });
+  } catch(e) { console.warn('sbAddToGlobalLibrary feilet:', e.message); }
+}
+
+async function sbRemoveFromUserLibrary(trackId) {
+  const userId = state.user?.id;
+  if (!userId) return;
+  try {
+    await fetch(
+      `${SUPABASE_URL}/rest/v1/user_library?spotify_user_id=eq.${encodeURIComponent(userId)}&track_id=eq.${trackId}`,
+      { method: 'DELETE', headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` } }
+    );
+  } catch(e) { console.warn('sbRemoveFromUserLibrary feilet:', e.message); }
+}
+
+async function sbSaveUserTrackSettings(trackId, settings) {
+  const userId = state.user?.id;
+  if (!userId) return;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/user_track_settings`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'Prefer': 'resolution=merge-duplicates',
+      },
+      body: JSON.stringify({
+        spotify_user_id: userId,
+        track_id: trackId,
+        settings,
+        updated_at: new Date().toISOString(),
+      })
+    });
+  } catch(e) { console.warn('sbSaveUserTrackSettings feilet:', e.message); }
+}
+
+// Global library search — search global_library for tracks others have added
+async function sbSearchGlobalLibrary(q) {
+  if (!q || q.length < 2) return [];
+  try {
+    const term = encodeURIComponent(q.toLowerCase());
+    const rows = await sbFetch(
+      `global_library?or=(name.ilike.*${term}*,artist.ilike.*${term}*)&limit=20`,
+      { method: 'GET' }
+    );
+    return (rows || []).map(t => ({
+      id: t.track_id, name: t.name, artist: t.artist,
+      duration: t.duration, img: t.img || '', imgLg: t.img_lg || '',
+      uri: t.uri,
+    }));
+  } catch(e) { return []; }
+}
+
+// ── REALTIME COLLABORATION ─────────────────────────────────────
+
+let _realtimeWs = null;
+let _realtimeHeartbeat = null;
+
+function sbSubscribeRealtime() {
+  if (_realtimeWs) return; // already connected
+
+  const wsUrl = SUPABASE_URL.replace('https://', 'wss://') + '/realtime/v1/websocket'
+    + `?apikey=${SUPABASE_ANON}&vsn=1.0.0`;
+
+  try {
+    _realtimeWs = new WebSocket(wsUrl);
+
+    _realtimeWs.onopen = () => {
+      console.log('🔴 Realtime connected');
+      document.getElementById('realtimeIndicator')?.style && (document.getElementById('realtimeIndicator').style.display = 'block');
+      // Join the arrangements channel
+      _realtimeWs.send(JSON.stringify({
+        topic: 'realtime:public:arrangements',
+        event: 'phx_join',
+        payload: { config: { broadcast: { self: false }, presence: { key: '' } } },
+        ref: '1'
+      }));
+      // Heartbeat every 30s
+      _realtimeHeartbeat = setInterval(() => {
+        if (_realtimeWs?.readyState === WebSocket.OPEN) {
+          _realtimeWs.send(JSON.stringify({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: 'hb' }));
+        }
+      }, 30000);
+    };
+
+    _realtimeWs.onmessage = (evt) => {
+      try {
+        const msg = JSON.parse(evt.data);
+        if (msg.event === 'INSERT' || msg.event === 'UPDATE') {
+          handleRealtimeArrangementChange(msg.payload?.record || msg.payload?.new);
+        }
+      } catch(e) {}
+    };
+
+    _realtimeWs.onclose = () => {
+      console.log('🔴 Realtime disconnected — reconnecting in 5s');
+      document.getElementById('realtimeIndicator')?.style && (document.getElementById('realtimeIndicator').style.display = 'none');
+      _realtimeWs = null;
+      clearInterval(_realtimeHeartbeat);
+      setTimeout(sbSubscribeRealtime, 5000);
+    };
+
+    _realtimeWs.onerror = () => {
+      _realtimeWs?.close();
+    };
+  } catch(e) {
+    console.warn('Realtime setup feilet:', e.message);
+  }
+}
+
+function handleRealtimeArrangementChange(record) {
+  if (!record?.id) return;
+  const userId = state.user?.id;
+
+  // Update our local copy
+  const data = record.data || {};
+  const sl = {
+    id: record.id, name: record.name,
+    date: record.updated_at?.slice(0,10),
+    count: record.song_count,
+    periods: data.periods || [],
+    settings: data.settings || {},
+    quickButtons: data.quickButtons || [],
+    is_public: record.is_public || false,
+  };
+  const idx = state.savedSetlists.findIndex(s => s.id === record.id);
+  if (idx >= 0) state.savedSetlists[idx] = sl;
+  else state.savedSetlists.push(sl);
+
+  // If this is the currently loaded arrangement, notify user
+  const currentName = localStorage.getItem('hd_current_setlist_name');
+  const isLoaded = currentName === record.name;
+  if (isLoaded && record.spotify_user_id !== userId) {
+    showToast(`📡 "${record.name}" ble oppdatert av ${record.spotify_display_name || 'noen'}`, 'info');
+    // Auto-update queue if user hasn't made local changes
+    if (!state._queueDirty) {
+      state.periods = JSON.parse(JSON.stringify(sl.periods || []));
+      renderPeriodTabs();
+      renderQueue();
+      updateHeaderSetlistName(sl.name);
+    }
+  }
+  saveLocalState();
+  // Refresh arrangement list if open
+  if (document.getElementById('lmArrangementsView')?.style.display !== 'none') {
+    loadLmArrangements();
   }
 }
 
@@ -4567,7 +4872,7 @@ async function sbSaveArrangement(sl) {
         spotify_user_id: userId,
         spotify_display_name: state.user?.display_name || userId,
         name: sl.name,
-        data: { periods: sl.periods, settings: sl.settings || {} },
+        data: { periods: sl.periods, settings: sl.settings || {}, quickButtons: sl.quickButtons || [] },
         is_public: sl.is_public || false,
         song_count: sl.count || 0,
         period_names: sl.periods?.map(p => p.name) || [],
@@ -4725,7 +5030,6 @@ function scheduleSbSync() {
   if (sbSyncTimeout) clearTimeout(sbSyncTimeout);
   sbSyncTimeout = setTimeout(async () => {
     if (!state.user?.id) return;
-    await sbSaveLibrary();
     await sbSaveQuickButtons();
     // Sync any arrangements that are marked dirty
     if (state._dirtyArrangements?.size) {
@@ -5190,6 +5494,8 @@ async function lmSaveArrangement() {
   lmSelectedArrangement.name = name;
   lmSelectedArrangement.count = lmSelectedArrangement.periods?.reduce((s, p) => s + (p.queue?.length || 0), 0) || 0;
   lmSelectedArrangement.date = new Date().toISOString().slice(0,10);
+  // Save current quick buttons with the arrangement
+  lmSelectedArrangement.quickButtons = JSON.parse(JSON.stringify(state.quickButtons));
 
   const isNew = !state.savedSetlists.find(s => s.id === lmSelectedArrangement.id);
   if (isNew) lmSelectedArrangement.id = lmSelectedArrangement.id || ('sl' + Date.now());
@@ -5414,31 +5720,35 @@ async function doLibModalSearch() {
   if (!el) return;
   el.innerHTML = '<div class="empty-state"><div class="big-icon">—</div><p>Søker...</p></div>';
 
-  // Library matches first
-  const libMatches = state.library.filter(l =>
-    l.name.toLowerCase().includes(q.toLowerCase()) ||
-    l.artist.toLowerCase().includes(q.toLowerCase())
-  );
+  // Run all searches in parallel
+  const [libMatches, globalTracks, spotifyTracks] = await Promise.all([
+    // 1. My library
+    Promise.resolve(state.library.filter(l =>
+      l.name.toLowerCase().includes(q.toLowerCase()) ||
+      l.artist.toLowerCase().includes(q.toLowerCase())
+    )),
+    // 2. Global library (tracks others have added)
+    sbSearchGlobalLibrary(q),
+    // 3. Spotify
+    (state.token ? spotifyFetch(
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=10&market=NO`
+    ).then(data => {
+      const tracks = data.tracks?.items || [];
+      tracks.forEach(t => { searchResultCache[t.id] = t; });
+      lmSearchCache = tracks;
+      return tracks;
+    }).catch(e => { console.error('Spotify search:', e.message); return []; }) : Promise.resolve([]))
+  ]);
 
-  // Spotify search — same logic as sidebar doSearch
-  let spotifyTracks = [];
-  if (state.token) {
-    try {
-      const data = await spotifyFetch(
-        `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=10&market=NO`
-      );
-      spotifyTracks = data.tracks?.items || [];
-      spotifyTracks.forEach(t => { searchResultCache[t.id] = t; });
-      lmSearchCache = spotifyTracks;
-    } catch(e) {
-      console.error('Library Spotify search:', e.message);
-      el.innerHTML += `<div style="padding:8px 14px;font-size:11px;color:var(--red);">Spotify-feil: ${esc(e.message)}</div>`;
-    }
-  }
+  // Deduplicate: remove global/Spotify results already in myLib
+  const myLibIds = new Set(state.library.map(l => l.id));
+  const globalNew = globalTracks.filter(t => !myLibIds.has(t.id));
+  const spotifyNew = spotifyTracks.filter(t => !myLibIds.has(t.id) && !globalTracks.find(g => g.id === t.id));
 
   let html = '';
+
   if (libMatches.length) {
-    html += `<div style="padding:4px 14px 2px;font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);">Bibliotek</div>`;
+    html += `<div style="padding:4px 14px 2px;font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);">Mitt bibliotek</div>`;
     html += libMatches.map(l => {
       const s = state.trackSettings[l.id] || l.settings || {};
       return `<div class="lm-item${lmSelectedTrack?.id === l.id ? ' selected' : ''}" id="lmli-${l.id}" onclick="lmSelectLibTrack('${l.id}')">
@@ -5451,16 +5761,27 @@ async function doLibModalSearch() {
     }).join('');
   }
 
-  if (spotifyTracks.length) {
-    if (libMatches.length) html += `<div style="height:1px;background:var(--border);margin:4px 0;"></div>`;
+  if (globalNew.length) {
+    if (html) html += `<div style="height:1px;background:var(--border);margin:4px 0;"></div>`;
+    html += `<div style="padding:4px 14px 2px;font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);">Globalt bibliotek</div>`;
+    html += globalNew.map(t => `<div class="lm-item${lmSelectedTrack?.id === t.id ? ' selected' : ''}" id="lmli-${t.id}" onclick="lmSelectLibTrack('${t.id}')">
+      <div class="lm-thumb">${t.img ? `<img src="${t.img}">` : ''}</div>
+      <div class="lm-info">
+        <div class="lm-name">${esc(t.name)}</div>
+        <div class="lm-sub">${esc(t.artist)} · ${fmtTime(t.duration)}</div>
+      </div>
+    </div>`).join('');
+  }
+
+  if (spotifyNew.length) {
+    if (html) html += `<div style="height:1px;background:var(--border);margin:4px 0;"></div>`;
     html += `<div style="padding:4px 14px 2px;font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);">Spotify</div>`;
-    html += spotifyTracks.map(t => {
-      const inLib = !!state.library.find(l => l.id === t.id);
+    html += spotifyNew.map(t => {
       return `<div class="lm-item${lmSelectedTrack?.id === t.id ? ' selected' : ''}" id="lmsi-${t.id}" onclick="lmSelectSearchTrack('${t.id}')">
         <div class="lm-thumb">${t.album.images[1] ? `<img src="${t.album.images[1].url}">` : ''}</div>
         <div class="lm-info">
           <div class="lm-name">${esc(t.name)}</div>
-          <div class="lm-sub">${esc(t.artists[0].name)} · ${fmtTime(Math.round(t.duration_ms/1000))}${inLib ? ' · <span style="color:var(--gold)">★</span>' : ''}</div>
+          <div class="lm-sub">${esc(t.artists[0].name)} · ${fmtTime(Math.round(t.duration_ms/1000))}</div>
         </div>
       </div>`;
     }).join('');
@@ -5468,7 +5789,6 @@ async function doLibModalSearch() {
 
   if (!html) html = '<div class="empty-state"><div class="big-icon">—</div><p>Ingen resultater</p></div>';
   el.innerHTML = html;
-  // Hide hint
   const hint = document.getElementById('lmSpotifyHint');
   if (hint) hint.style.display = 'none';
 }
@@ -5539,11 +5859,24 @@ function renderLibModalList() {
 
 function lmSelectLibTrack(id) {
   lmIsPlaying = false; updateLmPlayBtn(false);
-  const entry = state.library.find(l => l.id === id);
-  if (!entry) return;
+  // Look in local library first, then global search results
+  let entry = state.library.find(l => l.id === id);
+  if (!entry) {
+    // Could be from global library search — find in sidebar search cache
+    const cached = searchResultCache[id];
+    if (cached) {
+      entry = { id: cached.id, name: cached.name, artist: cached.artists?.[0]?.name || '',
+        duration: Math.round((cached.duration_ms||0)/1000), img: cached.album?.images?.[1]?.url || '',
+        imgLg: cached.album?.images?.[0]?.url || '', uri: cached.uri, source: 'global' };
+    } else {
+      // Must be from global library — reconstruct from DOM data isn't ideal,
+      // but we can just use what we have from the search result cache
+      return;
+    }
+  }
   document.querySelectorAll('#lmLibraryList .lm-item').forEach(el => el.classList.remove('selected'));
   document.getElementById('lmli-' + id)?.classList.add('selected');
-  lmSelectedTrack = { ...entry, source: 'library' };
+  lmSelectedTrack = { ...entry, source: entry.source || 'library' };
   if (!state.trackSettings[id]) state.trackSettings[id] = entry.settings || { startTime: 0, endTime: entry.duration, category: '', note: '', fadeOut: 0 };
   else if (entry.settings) Object.assign(state.trackSettings[id], entry.settings);
   renderLmEditor(lmSelectedTrack);
@@ -5774,7 +6107,7 @@ function lmToggleLibrary(trackId) {
     state.library = state.library.filter(l => l.id !== trackId);
     librarySelection.delete(trackId);
     saveState();
-    sbSaveLibrary();
+    sbRemoveFromUserLibrary(trackId);
     renderLibModalList();
     renderLibrary();
     const btn = document.getElementById('lmSaveBtn');
@@ -5801,7 +6134,8 @@ function lmSaveToLibrary(trackId) {
   if (existing >= 0) state.library[existing] = entry;
   else state.library.push(entry);
   saveState();
-  sbSaveLibrary();
+  sbAddToGlobalLibrary(entry);
+  sbSaveUserTrackSettings(track.id, s);
   renderLibModalList();
   renderLibrary();
   showToast(`"${track.name}" lagret i biblioteket ✓`, 'success');
