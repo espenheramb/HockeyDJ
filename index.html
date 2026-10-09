@@ -224,6 +224,7 @@
   .filter-btn .fn { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: .6px; }
   .filter-btn.on { border-color: var(--green); color: var(--green); background: rgba(46,204,114,.08); }
   .hint-box { font-size: 11px; color: var(--text-dim); line-height: 1.5; border: 1px dashed var(--border); border-radius: 8px; padding: 8px 10px; margin-top: 10px; }
+  .tile.playing { border-color: var(--green); }
 </style>
 </head>
 <body>
@@ -476,6 +477,7 @@
     started: false,
     cursor: {},            // trackId -> posisjon (sekunder) når sangen ikke spiller
     catFilter: 'hoved',    // kategori som vises i arrangementvisningen
+    nextId: null,          // sangen som er gjort klar som neste (null = standard)
     selectedId: null, playingId: null, isPlaying: false, freePlay: false,
     pos: 0, duration: 0,
     query: '', unusedOnly: false, editMode: false,
@@ -615,6 +617,8 @@
       state.stopFadeDuration = d.stopFade.enabled === false ? 0 : (Number(d.stopFade.duration) || 0);
     }
     if (state.activeArr && !getArr(state.activeArr)) state.activeArr = null;
+    // Rydder opp i eldre data: sanger på en tast skal ligge i Hendelser
+    state.arrangements.forEach(syncHendelse);
     if (state.selectedId && !getTrack(state.selectedId)) state.selectedId = null;
     saveCache();
     renderAll();
@@ -1020,6 +1024,32 @@
   }
 
   // Spill en sang. free = spill fritt (fra sangvinduet), ellers stopper ved stopp-punktet.
+  // Sangen spilleren viser og styrer: den som spiller, ellers den valgte
+  const displayedId = () => (state.isPlaying ? state.playingId : state.selectedId);
+
+  // Neste sang: den du har gjort klar, ellers sangen etter den som spiller (eller den valgte, når ingen spiller)
+  function currentNext() {
+    if (state.nextId && getTrack(state.nextId)) return getTrack(state.nextId);
+    if (!state.isPlaying) return getTrack(state.selectedId);
+    const list = visibleTracks();
+    const i = list.findIndex(t => t.id === state.playingId);
+    return list[i + 1] || null;
+  }
+
+  // Klikk i listen: gjør sangen klar som neste. Klikk på sangen som spiller nullstiller til standard.
+  function selectTrack(id) {
+    if (state.isPlaying) state.nextId = id === state.playingId ? null : id;
+    else { state.selectedId = id; state.nextId = null; }
+    renderAll();
+  }
+
+  // Klasse for flisen: grønn for den som spiller, blå for neste
+  function tileCls(id) {
+    if (state.isPlaying && id === state.playingId) return 'playing';
+    const nx = currentNext();
+    return nx && id === nx.id ? 'selected' : '';
+  }
+
   // Posisjonen en sang har når den ikke spiller: der den sist ble stoppet, ellers startpunktet
   const cursorOf = t => (state.cursor[t.id] != null ? state.cursor[t.id] : settingsFor(t).start);
 
@@ -1035,6 +1065,7 @@
     stopTicker();
     state.selectedId = id;
     state.playingId = id;
+    state.nextId = null;
     state.freePlay = free;
     state.pos = from !== null ? from : cursorOf(t);
     state.duration = t.duration;
@@ -1057,7 +1088,7 @@
 
   // Space: spiller den valgte sangen eller pauser den. Pause husker posisjonen.
   async function togglePlay() {
-    const t = getTrack(state.selectedId);
+    const t = getTrack(displayedId());
     if (!t) return;
     if (state.isPlaying && state.playingId === t.id) {
       if (state.stopFadeDuration > 0) await fadeOut(state.stopFadeDuration);
@@ -1072,20 +1103,17 @@
     return startTrack(t.id);
   }
 
-  // Enter: neste sang i den synlige listen starter med en gang
+  // Enter: start neste sang (den som er gjort klar, ellers standard)
   function nextTrack() {
-    const list = visibleTracks();
-    if (!list.length) return;
-    if (!state.isPlaying) return startTrack(state.selectedId || list[0].id);
-    const i = list.findIndex(t => t.id === state.playingId);
-    const next = list[i + 1];
-    if (!next) { toast('Slutt på listen', 'error'); return; }
-    startTrack(next.id);
+    const nx = currentNext();
+    if (!nx) { toast('Slutt på listen', 'error'); return; }
+    state.nextId = null;
+    startTrack(nx.id);
   }
 
   // «Til start»: flytter markøren til startpunktet uten å starte
   function toStart() {
-    const t = getTrack(state.selectedId);
+    const t = getTrack(displayedId());
     if (!t) return;
     if (state.isPlaying && state.playingId === t.id) { toast('Stopp avspillingen først', 'error'); return; }
     delete state.cursor[t.id];
@@ -1106,6 +1134,7 @@
     state.started = false;
     const first = arrangementTracks()[0];
     state.cursor = {};
+    state.nextId = null;
     state.selectedId = first ? first.id : null;
     state.playingId = null;
     state.pos = 0;
@@ -1129,7 +1158,6 @@
     })));
   }
 
-  function selectTrack(id) { state.selectedId = id; renderAll(); }
   function stepSelection(delta) {
     const list = visibleTracks();
     if (!list.length) return;
@@ -1170,7 +1198,7 @@
       $('grid').innerHTML = list.length ? list.map(t => {
         const s = settingsFor(t);
         const plays = (arr.plays || {})[t.id] || 0;
-        return `<div class="tile ${t.id === state.selectedId ? 'selected' : ''} ${plays ? 'played' : ''}" draggable="true" data-id="${t.id}">
+        return `<div class="tile ${tileCls(t.id)} ${plays ? 'played' : ''}" draggable="true" data-id="${t.id}">
           <div class="thumb">${t.img ? `<img src="${esc(t.img)}" alt="">` : ''}</div>
           <div style="min-width:0">
             <div class="t">${esc(t.name)}</div>
@@ -1200,7 +1228,7 @@
         const n = arrCount(t.id);
         mark = `<span class="mk num" title="${n ? 'Brukt i ' + n + (n > 1 ? ' arrangementer' : ' arrangement') : 'Ikke brukt i noe arrangement'}">${n || ''}</span>`;
       }
-      return `<div class="tile ${t.id === state.selectedId ? 'selected' : ''}" draggable="true" data-id="${t.id}">
+      return `<div class="tile ${tileCls(t.id)}" draggable="true" data-id="${t.id}">
         <div class="thumb">${t.img ? `<img src="${esc(t.img)}" alt="">` : ''}</div>
         <div style="min-width:0">
           <div class="t">${esc(t.name)}</div>
@@ -1292,9 +1320,7 @@
   }
 
   function renderNextLine() {
-    const list = visibleTracks();
-    const idx = list.findIndex(t => t.id === state.playingId);
-    const nx = state.isPlaying ? list[idx + 1] : getTrack(state.selectedId);
+    const nx = currentNext();
     const el = $('nextLine');
     if (!nx) { el.innerHTML = 'Slutt på listen'; el.className = 'next-line end'; return; }
     el.innerHTML = `Neste: <b>${esc(nx.name)}</b> · ${fmt(settingsFor(nx).start)}`;
@@ -1302,7 +1328,7 @@
   }
 
   function renderPlayer() {
-    const t = getTrack(state.selectedId);
+    const t = getTrack(displayedId());
     if (!t) {
       $('npTitle').textContent = 'Ingen sang valgt';
       $('npArtist').textContent = 'Klikk en sang i biblioteket';
@@ -1816,7 +1842,7 @@
     // Dra den hvite streken i spilleren: velger hvor avspillingen starter
     let ptlDrag = false;
     const setCursorAt = e => {
-      const t = getTrack(state.selectedId);
+      const t = getTrack(displayedId());
       if (!t) return;
       const r = $('ptl').getBoundingClientRect();
       const sec = Math.round(Math.max(0, Math.min(t.duration, (e.clientX - r.left) / r.width * t.duration)) * 10) / 10;
