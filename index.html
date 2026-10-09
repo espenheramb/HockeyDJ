@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hockey DJ v72</title>
+<title>Hockey DJ v74</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -11,142 +11,143 @@
     --border: #2e3138; --text: #f0f1f2; --text-dim: #8b95a3; --text-faint: #4a5160;
     --accent: #4a8ff5; --accent-dim: rgba(74,143,245,0.14);
     --green: #2ecc72; --red: #e05252; --gold: #d4a843;
-    --played: rgba(224,82,82,0.16);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; font-size: 13px; }
   body { display: grid; grid-template-rows: 52px auto auto 1fr 92px; height: 100vh; overflow: hidden; }
-  .cond { font-family: 'Barlow Condensed', sans-serif; letter-spacing: .5px; }
-  button { font: inherit; color: inherit; background: none; border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+  button, input[type=text], select { font: inherit; color: var(--text); }
+  button { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; cursor: pointer; white-space: nowrap; }
   button:hover { background: var(--bg-hover); }
-  input[type=text] { font: inherit; color: var(--text); background: var(--bg-raised); border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px; width: 100%; }
-  select { font: inherit; color: var(--text); background: var(--bg-raised); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; }
+  button:disabled { opacity: .4; cursor: default; }
+  input[type=text] { background: var(--bg-raised); border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px; width: 100%; }
+  .cond { font-family: 'Barlow Condensed', sans-serif; letter-spacing: .5px; }
+  .dim { color: var(--text-dim); }
+  .faint { color: var(--text-faint); }
+  .spacer { flex: 1; }
+  .primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .primary:hover { background: #3d7fe0; }
+  .danger:hover { color: var(--red); border-color: var(--red); }
+  .field-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 4px; }
+  .title { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 15px; letter-spacing: 1px; text-transform: uppercase; }
+  .chipbtn { font-size: 12px; border-radius: 999px; padding: 4px 12px; color: var(--text-dim); }
+  .chipbtn.ok { color: var(--green); border-color: var(--green); }
+  .warn-btn { border-color: var(--gold) !important; color: var(--gold) !important; }
 
-  /* Header: logo, arrangement, search, file */
+  /* Header */
   header { display: flex; align-items: center; gap: 14px; padding: 0 16px; border-bottom: 1px solid var(--border); background: var(--bg-panel); }
   .logo { font-family: 'Barlow Condensed'; font-weight: 700; font-size: 20px; letter-spacing: 1px; white-space: nowrap; }
   .logo span { color: var(--accent); }
-  .arr-name { color: var(--text-dim); font-size: 13px; white-space: nowrap; }
-  .arr-name b { color: var(--text); font-weight: 600; }
+  .ver { font-size: 11px; color: var(--text-faint); font-family: Inter, sans-serif; font-weight: 400; letter-spacing: 0; }
   .search { flex: 1; max-width: 420px; margin-left: auto; }
-  .file-chip { font-size: 12px; color: var(--text-dim); border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
 
-  /* Hotkey icon row */
-  .hotkeys { display: flex; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--bg); align-items: stretch; overflow-x: auto; }
-  .hk { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 84px; height: 62px; padding: 6px 8px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; }
+  /* Hurtigvalg, låst til aktivt arrangement */
+  .hotkeys { display: flex; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--bg); align-items: center; overflow-x: auto; }
+  .hk-context { font-size: 12px; color: var(--text-dim); min-width: 170px; max-width: 200px; white-space: normal; line-height: 1.35; }
+  .hk-context b { color: var(--text); font-weight: 600; }
+  .hk-context.none { color: var(--text-faint); font-style: italic; }
+  .hk-spacer { width: 1px; background: var(--border); margin: 6px 4px; align-self: stretch; }
+  .hk { position: relative; width: 104px; min-width: 104px; max-width: 104px; height: 62px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; }
   .hk:hover { border-color: var(--text-dim); background: var(--bg-hover); }
-  .hk.loaded { border-color: var(--accent); }
+  .hk.loaded { border-color: var(--green); }
+  .hk.empty { border-style: dashed; color: var(--text-faint); }
+  .hk.editing { border-style: dashed; border-color: var(--accent); }
+  .hk.locked { opacity: .35; pointer-events: none; }
+  .hk .keycap { position: absolute; top: 4px; left: 5px; font-family: 'Barlow Condensed'; font-weight: 700; font-size: 12px; line-height: 1; background: var(--bg); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 2px 5px; }
+  .hk .keycap.none { color: var(--text-faint); border-style: dashed; }
   .hk .emoji { font-size: 18px; line-height: 1; }
   .hk .label { font-family: 'Barlow Condensed'; font-weight: 700; font-size: 12px; letter-spacing: .8px; }
-  .hk .key { position: absolute; top: 4px; left: 6px; font-family: 'Barlow Condensed'; font-size: 10px; color: var(--text-faint); }
-  .hk.empty { border-style: dashed; color: var(--text-faint); }
+  .hk .pen { position: absolute; top: 5px; right: 6px; font-size: 11px; color: var(--accent); }
   .hk .tip { position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 11px; color: var(--text-dim); background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; opacity: 0; pointer-events: none; transition: opacity .15s; z-index: 5; }
   .hk:hover .tip { opacity: 1; }
-  .hk-spacer { width: 1px; background: var(--border); margin: 6px 4px; }
+  .hk-edit { margin-left: auto; align-self: center; }
+  .hk-edit.on { border-color: var(--accent); color: var(--accent); }
 
-  /* Toolbar: arrangement filter, reset */
+  /* Verktøylinje */
   .toolbar { display: flex; gap: 10px; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--border); }
-  .count { font-family: 'Barlow Condensed'; color: var(--text-dim); font-size: 13px; }
-  .tabs { display: flex; gap: 4px; }
-  .tab { border: none; border-radius: 6px 6px 0 0; padding: 6px 12px; color: var(--text-dim); }
-  .tab.active { color: var(--text); background: var(--bg-raised); }
-  .placeholder { color: var(--text-dim); padding: 40px 0; text-align: center; }
-  .spacer { flex: 1; }
-  .reset { color: var(--text-dim); }
-  .reset:hover { color: var(--red); border-color: var(--red); }
+  .toolbar .count { font-family: 'Barlow Condensed'; color: var(--text-dim); font-size: 13px; }
+  .toolbar button.on { border-color: var(--gold); color: var(--gold); }
+  .toolbar .hint { font-size: 11px; color: var(--text-faint); }
 
-  main { display: grid; grid-template-columns: 1fr 230px; min-height: 0; }
+  /* Hoved */
+  main { display: grid; grid-template-columns: 1fr 340px; min-height: 0; }
   .library { overflow: auto; padding: 14px 16px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
-  .tile { display: grid; grid-template-columns: 40px 1fr auto 26px; gap: 10px; align-items: center; padding: 8px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; border-left: 3px solid transparent; user-select: none; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; align-content: start; }
+  .tile { display: grid; grid-template-columns: 40px 1fr auto 26px; gap: 10px; align-items: center; padding: 8px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; user-select: none; }
   .tile:hover { background: var(--bg-hover); }
-  .tile.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
-  .tile.played { background: var(--played); border-color: rgba(224,82,82,.55); }
-  .tile .cnt { font-family: 'Barlow Condensed'; font-weight: 700; font-size: 12px; color: var(--red); min-width: 22px; text-align: center; }
-  .tile .cnt:empty { display: none; }
-  .tile .thumb { width: 40px; height: 40px; border-radius: 4px; background: linear-gradient(135deg, #2a3140, #14171d); border: 1px solid var(--border); }
+  .tile.selected { border-color: var(--accent); }
+  .tile.dragging { opacity: .4; }
+  .tile .thumb { width: 40px; height: 40px; border-radius: 4px; background: linear-gradient(135deg, #2a3140, #14171d); border: 1px solid var(--border); overflow: hidden; }
+  .tile .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .tile .t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tile .a { color: var(--text-dim); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tile .r { font-family: 'Barlow Condensed'; color: var(--text-faint); font-size: 12px; }
-  .tile .pencil { width: 26px; height: 26px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; border-radius: 6px; color: var(--text-dim); }
+  .tile .pencil { width: 26px; height: 26px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 6px; color: var(--text-dim); }
   .tile .pencil:hover { color: var(--accent); border-color: var(--accent); }
+  .mk { min-width: 22px; height: 22px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed'; font-weight: 700; font-size: 12px; padding: 0 6px; }
+  .mk.num { color: var(--text); background: var(--bg-hover); border: 1px solid var(--border); }
+  .mk.ring { width: 22px; border: 1px dashed var(--text-faint); background: none; padding: 0; cursor: pointer; }
+  .mk.ring:hover { border-color: var(--green); }
+  .mk.sym { font-size: 14px; background: var(--bg-hover); border: 1px solid var(--border); padding: 0 6px; cursor: pointer; }
+  .mk.sym:hover { border-color: var(--text-dim); }
+  .empty-msg { color: var(--text-dim); padding: 40px 0; text-align: center; grid-column: 1 / -1; }
 
-  /* Right: groups */
-  aside { border-left: 1px solid var(--border); overflow: auto; padding: 14px; background: var(--bg-panel); }
-  .group { margin-bottom: 18px; }
-  .group-title { font-family: 'Barlow Condensed'; font-weight: 600; font-size: 12px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-dim); display: flex; justify-content: space-between; margin-bottom: 6px; }
-  .group .row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; }
-  .group .row:hover { background: var(--bg-hover); border-color: var(--border); }
-  .group .row.selected { border-color: var(--accent); }
-  .group .row .t { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .group .row .a { color: var(--text-dim); font-size: 11px; }
-  .group .row .r { font-family: 'Barlow Condensed'; color: var(--text-faint); font-size: 11px; }
+  /* Høyre kolonne: arrangementer */
+  aside { border-left: 1px solid var(--border); background: var(--bg-panel); overflow: auto; padding: 12px; }
+  .aside-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 6px; }
+  .aside-head span { display: flex; gap: 6px; }
+  .arr { border: 1px solid var(--border); border-radius: 10px; background: var(--bg-raised); margin-bottom: 8px; overflow: hidden; }
+  .arr.open { border-color: var(--accent); }
+  .arr-head { padding: 10px 12px; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+  .arr-head:hover { background: var(--bg-hover); }
+  .arr-name { font-weight: 600; }
+  .arr-desc { color: var(--text-dim); font-size: 12px; }
+  .arr-meta { color: var(--text-faint); font-size: 11px; }
+  .arr-body { border-top: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 10px; }
+  .cat { border: 1px dashed var(--border); border-radius: 8px; padding: 8px 10px; min-height: 44px; }
+  .cat.over { border-color: var(--accent); background: var(--accent-dim); }
+  .cat-title { display: flex; justify-content: space-between; align-items: center; font-family: 'Barlow Condensed'; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-dim); }
+  .count-badge { font-family: 'Barlow Condensed'; font-weight: 700; color: var(--text); background: var(--bg-hover); border-radius: 999px; padding: 0 8px; }
+  .arr-actions { display: flex; gap: 6px; justify-content: flex-end; border-top: 1px solid var(--border); padding-top: 8px; }
+  .aside-msg { color: var(--text-faint); font-size: 12px; font-style: italic; padding: 4px 0; }
 
-  /* Player */
+  /* Spiller */
   .player { display: grid; grid-template-columns: 280px 1fr 280px; align-items: center; gap: 18px; padding: 0 18px; background: var(--bg-panel); border-top: 1px solid var(--border); }
   .now { display: flex; gap: 12px; align-items: center; min-width: 0; }
-  .art { width: 52px; height: 52px; border-radius: 6px; background: linear-gradient(135deg, #2a3140, #14171d); border: 1px solid var(--border); flex-shrink: 0; }
-  .now .t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .art { width: 52px; height: 52px; border-radius: 6px; background: linear-gradient(135deg, #2a3140, #14171d); border: 1px solid var(--border); flex-shrink: 0; background-size: cover; background-position: center; }
+  .now .t, .now .a { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .now .a { color: var(--text-dim); font-size: 12px; }
   .transport { display: flex; flex-direction: column; gap: 8px; align-items: center; }
   .transport .btns { display: flex; gap: 10px; align-items: center; }
   .transport .play { width: 44px; height: 44px; border-radius: 50%; background: var(--green); border-color: var(--green); color: #0a0a0a; font-size: 16px; font-weight: 700; padding: 0; }
+  .transport .play:hover { background: #26b865; }
   .progress { width: 100%; height: 6px; background: var(--bg-raised); border-radius: 999px; position: relative; }
   .progress .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); border-radius: 999px; width: 0%; }
-  .progress .stop { position: absolute; top: -4px; bottom: -4px; width: 3px; background: var(--red); border-radius: 2px; left: 62%; }
+  .progress .stop { position: absolute; top: -4px; bottom: -4px; width: 3px; background: var(--red); border-radius: 2px; display: none; }
   .progress-times { display: flex; justify-content: space-between; width: 100%; font-family: 'Barlow Condensed'; font-size: 12px; color: var(--text-dim); }
+  .hint { font-size: 11px; color: var(--text-faint); }
   .right { display: flex; gap: 14px; justify-content: flex-end; align-items: center; }
-  .stopfade { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-dim); }
-  .pill { width: 34px; height: 18px; background: var(--bg-hover); border-radius: 999px; position: relative; }
+  .pill { width: 34px; height: 18px; background: var(--bg-hover); border-radius: 999px; position: relative; cursor: pointer; }
   .pill::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--text-dim); }
   .pill.on { background: var(--accent); }
   .pill.on::after { left: 18px; background: #fff; }
+  .stopfade { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-dim); }
   .vol { width: 110px; accent-color: var(--accent); }
-  .hint { font-size: 11px; color: var(--text-faint); }
 
-  /* Edit popup */
+  /* Overlegg */
   .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none; align-items: center; justify-content: center; z-index: 20; }
   .overlay.open { display: flex; }
-  .modal { width: 540px; max-width: 92vw; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+  .modal { width: 540px; max-width: 94vw; max-height: 92vh; overflow: auto; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
   .modal-head { display: flex; justify-content: space-between; align-items: flex-start; }
   .modal-head h3 { font-family: 'Barlow Condensed'; font-size: 20px; font-weight: 700; }
   .modal-head .sub { color: var(--text-dim); font-size: 12px; }
-  .wave { height: 52px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: 8px; position: relative; overflow: hidden; }
-  .wave .range { position: absolute; top: 0; bottom: 0; background: var(--accent-dim); border-left: 2px solid var(--green); border-right: 2px solid var(--red); }
-  .times { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .time-box { background: var(--bg-raised); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
-  .field-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 4px; }
-  .time-box .v { font-family: 'Barlow Condensed'; font-size: 26px; font-weight: 700; }
-  .time-box .row { display: flex; gap: 4px; margin-top: 6px; }
-  .time-box button { flex: 1; padding: 4px; font-size: 12px; }
-  .checks { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-  .check { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 12px; }
-  .check.on { border-color: var(--accent); background: var(--accent-dim); }
-  .check .box { width: 14px; height: 14px; border: 1px solid var(--border); border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; }
-  .check.on .box { background: var(--accent); border-color: var(--accent); color: #fff; }
   .modal-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; border-top: 1px solid var(--border); padding-top: 12px; }
-  .primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
-  .primary:hover { background: #3d7fe0; }
-
-  .keycap { position: absolute; top: 4px; left: 5px; font-family: 'Barlow Condensed'; font-weight: 700; font-size: 12px; line-height: 1; background: var(--bg); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 2px 5px; color: var(--text); }
-  .hk .pen { position: absolute; top: 5px; right: 6px; font-size: 11px; color: var(--accent); }
-  .hk.editing { border-style: dashed; border-color: var(--accent); }
-  .hk.loaded { border-color: var(--green); }
-  .hk-edit { margin-left: auto; align-self: center; white-space: nowrap; }
-  .hk-edit.on { border-color: var(--accent); color: var(--accent); }
-  .keys { display: grid; grid-template-columns: repeat(9, 1fr); gap: 6px; }
-  .keyopt { padding: 8px 0; text-align: center; font-family: 'Barlow Condensed'; font-weight: 700; font-size: 16px; }
-  .keyopt.on { border-color: var(--green); color: var(--green); }
-  .keyopt:disabled { opacity: .3; cursor: not-allowed; }
-  .picklist { max-height: 220px; overflow: auto; border: 1px solid var(--border); border-radius: 6px; margin-top: 6px; }
-  .pick { display: flex; justify-content: space-between; gap: 10px; padding: 7px 10px; cursor: pointer; border-bottom: 1px solid var(--border); }
+  .modal-foot .right2 { display: flex; gap: 8px; }
+  .picklist { max-height: 240px; overflow: auto; border: 1px solid var(--border); border-radius: 6px; }
+  .pick { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 7px 10px; cursor: pointer; border-bottom: 1px solid var(--border); }
   .pick:last-child { border-bottom: none; }
   .pick:hover { background: var(--bg-hover); }
   .pick.on { background: var(--accent-dim); }
   .pick .pa { color: var(--text-dim); font-size: 12px; }
-  .danger { color: var(--text-dim); }
-  .danger:hover { color: var(--red); border-color: var(--red); }
-
   .symbols { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; }
   .symopt { padding: 6px 0; font-size: 18px; line-height: 1; }
   .symopt.on { border-color: var(--green); background: var(--bg-hover); }
@@ -155,77 +156,59 @@
   .capkey { display: inline-block; min-width: 26px; text-align: center; font-weight: 700; background: var(--bg); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 0 6px; margin-right: 8px; }
   .warn { margin-top: 8px; font-size: 12px; color: var(--gold); background: rgba(212,168,67,.1); border: 1px solid rgba(212,168,67,.4); border-radius: 6px; padding: 7px 9px; display: none; }
   .warn.show { display: block; }
-  .keycap.none { color: var(--text-faint); border-style: dashed; }
-
-  body { grid-template-rows: 52px auto auto 1fr 92px; }
-  .search { flex: 1; max-width: 420px; margin-left: auto; }
-  .ver { font-size: 11px; color: var(--text-faint); font-family: Inter, sans-serif; font-weight: 400; letter-spacing: 0; }
-  .chipbtn { font-size: 12px; border-radius: 999px; padding: 4px 12px; color: var(--text-dim); white-space: nowrap; }
-  .chipbtn.ok { color: var(--green); border-color: var(--green); }
-  .warn-btn { border-color: var(--gold) !important; color: var(--gold) !important; }
-  .toolbar { display: flex; gap: 10px; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--border); }
-  .tabs { display: flex; gap: 4px; }
-  .tab { border: none; border-radius: 6px 6px 0 0; padding: 6px 12px; color: var(--text-dim); }
-  .tab.active { color: var(--text); background: var(--bg-raised); }
-  .count { font-family: 'Barlow Condensed', sans-serif; color: var(--text-dim); font-size: 13px; }
-  .spacer { flex: 1; }
-  .reset:hover { color: var(--red); border-color: var(--red); }
-  .placeholder, .empty { color: var(--text-dim); padding: 40px 0; text-align: center; grid-column: 1 / -1; }
-  .tile .thumb { overflow: hidden; }
-  .tile .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .hint { font-size: 11px; color: var(--text-faint); }
-  .progress-times { display: flex; justify-content: space-between; width: 100%; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; color: var(--text-dim); }
-  .picklist.tall { max-height: 280px; }
-  .pill { cursor: pointer; }
-  .danger { color: var(--text-dim); }
-  .danger:hover { color: var(--red); border-color: var(--red); }
-  .toast { position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%); background: var(--bg-raised); border: 1px solid var(--border); padding: 8px 14px; border-radius: 8px; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 50; }
+  .ctx-menu, .sym-menu { position: fixed; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 4px; z-index: 40; min-width: 210px; box-shadow: 0 10px 30px rgba(0,0,0,.4); display: none; flex-direction: column; }
+  .ctx-menu.open, .sym-menu.open { display: flex; }
+  .ctx-menu-item, .sym-item { display: flex; gap: 10px; align-items: center; text-align: left; border: none; padding: 7px 10px; border-radius: 6px; background: none; cursor: pointer; }
+  .ctx-menu-item:hover, .sym-item:hover { background: var(--bg-hover); }
+  .sym-item.on { color: var(--green); }
+  .sym-item.remove { color: var(--text-dim); border-top: 1px solid var(--border); margin-top: 4px; border-radius: 0 0 6px 6px; }
+  .toast { position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%); background: var(--bg-raised); border: 1px solid var(--border); padding: 8px 14px; border-radius: 8px; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 50; max-width: 80vw; }
   .toast.show { opacity: 1; }
   .toast.success { border-color: var(--green); }
   .toast.error { border-color: var(--red); }
-  .ctx-menu { position: fixed; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 4px; z-index: 40; min-width: 220px; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
-  .ctx-menu-item { display: block; width: 100%; text-align: left; border: none; padding: 7px 10px; border-radius: 6px; background: none; }
-  .ctx-menu-item:hover { background: var(--bg-hover); }
-  .keycap { font-family: 'Barlow Condensed', sans-serif; }
-  .hk .pen { position: absolute; top: 5px; right: 6px; font-size: 11px; color: var(--accent); }
-  .hk.editing { border-style: dashed; border-color: var(--accent); }
-  .hk.loaded { border-color: var(--green); }
-  .hk-edit { margin-left: auto; align-self: center; white-space: nowrap; }
-  .hk-edit.on { border-color: var(--accent); color: var(--accent); }
-  .capkey { display: inline-block; min-width: 26px; text-align: center; font-weight: 700; background: var(--bg); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 0 6px; margin-right: 8px; }
-  .symbols { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; }
-  .symopt { padding: 6px 0; font-size: 18px; line-height: 1; }
-  .symopt.on { border-color: var(--green); background: var(--bg-hover); }
-  .capture { width: 100%; text-align: left; padding: 9px 10px; font-family: 'Barlow Condensed', sans-serif; font-size: 15px; }
-  .capture.waiting { border-color: var(--accent); color: var(--accent); }
-  .warn { margin-top: 8px; font-size: 12px; color: var(--gold); background: rgba(212,168,67,.1); border: 1px solid rgba(212,168,67,.4); border-radius: 6px; padding: 7px 9px; display: none; }
-  .warn.show { display: block; }
-  .picklist { max-height: 220px; overflow: auto; border: 1px solid var(--border); border-radius: 6px; margin-top: 6px; }
-  .pick { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 7px 10px; cursor: pointer; border-bottom: 1px solid var(--border); }
-  .pick:last-child { border-bottom: none; }
-  .pick:hover { background: var(--bg-hover); }
-  .pick.on { background: var(--accent-dim); }
-  .pick .pa { color: var(--text-dim); font-size: 12px; }
-  .pick button { font-size: 12px; padding: 4px 10px; }
-  .modal-head h3, .modal h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; }
-  .modal-head .sub, .sub { color: var(--text-dim); font-size: 12px; }
-  .modal input[type=text] { margin-top: 0; }
-  .tile { cursor: pointer; }
-  .tile .a .r { font-family: 'Barlow Condensed', sans-serif; }
-  .art { background-size: cover; background-position: center; }
-  .now .t, .now .a { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .progress .stop { position: absolute; top: -4px; bottom: -4px; width: 3px; background: var(--red); border-radius: 2px; }
-  .times { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .time-box .v { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700; }
-  .time-box .row { display: flex; gap: 4px; margin-top: 6px; }
-  .time-box button { flex: 1; padding: 4px; font-size: 12px; }
+
+  /* Sangvindu: tidslinje */
+  .zoombar { display: flex; gap: 8px; align-items: center; }
+  .zoombar .view { font-family: 'Barlow Condensed'; font-size: 13px; color: var(--text-dim); }
+  .timeline { position: relative; height: 130px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; user-select: none; touch-action: none; }
+  .ruler { position: absolute; left: 0; right: 0; bottom: 0; height: 26px; border-top: 1px solid var(--border); }
+  .tick { position: absolute; bottom: 0; width: 1px; height: 6px; background: var(--text-faint); }
+  .tick.major { height: 12px; background: var(--text-dim); }
+  .tick span { position: absolute; top: -18px; left: 4px; font-family: 'Barlow Condensed'; font-size: 11px; color: var(--text-dim); white-space: nowrap; }
+  .range { position: absolute; top: 0; bottom: 26px; background: var(--accent-dim); }
+  .outside { position: absolute; top: 0; bottom: 26px; background: rgba(0,0,0,.45); }
+  .marker { position: absolute; top: 0; bottom: 26px; width: 14px; margin-left: -7px; cursor: ew-resize; z-index: 3; display: flex; justify-content: center; }
+  .marker::before { content: ''; position: absolute; top: 0; bottom: 0; width: 2px; background: var(--green); }
+  .marker.end::before { background: var(--red); }
+  .marker .sym { position: absolute; top: 4px; width: 22px; height: 22px; border-radius: 50%; background: var(--green); color: #0a0a0a; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+  .marker.end .sym { background: var(--red); color: #fff; }
+  .playhead { position: absolute; top: 0; bottom: 26px; width: 16px; margin-left: -8px; cursor: ew-resize; z-index: 4; display: flex; justify-content: center; }
+  .playhead::before { content: ''; position: absolute; top: 0; bottom: 0; width: 2px; background: #fff; }
+  .playhead .knob { position: absolute; top: 60px; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,.15); }
+  .hidden { display: none !important; }
+  .times { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .time-card { background: var(--bg-raised); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+  .time-card input { font-family: 'Barlow Condensed'; font-size: 24px; font-weight: 700; background: transparent; border: none; padding: 0; width: 100%; }
+  .time-card input:focus { outline: 1px solid var(--accent); border-radius: 4px; }
+  .nudges { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 8px; }
+  .nudges button { padding: 4px 0; font-size: 12px; }
+  .playback { display: flex; align-items: center; gap: 14px; }
+  .play-big { width: 52px; height: 52px; border-radius: 50%; background: var(--green); border-color: var(--green); color: #0a0a0a; font-size: 18px; font-weight: 700; padding: 0; flex-shrink: 0; }
+  .play-big:hover { background: #26b865; }
+  .play-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .play-meta .cond { font-size: 18px; font-weight: 700; }
+  .flag { font-size: 11px; color: var(--text-dim); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; margin-left: 6px; }
+  .flag.before { color: var(--green); border-color: rgba(46,204,114,.5); }
+  .flag.after { color: var(--red); border-color: rgba(224,82,82,.5); }
+  .fade-choices { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .fade-opt.on { border-color: var(--green); color: var(--green); }
+  .modal-wide { width: 760px; }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">HOCKEY <span>DJ</span> <small class="ver">v72</small></div>
-  <div class="arr-name">Arrangement: <b>Ikke valgt</b></div>
+  <div class="logo">HOCKEY <span>DJ</span> <small class="ver">v74</small></div>
   <input class="search" id="search" type="text" placeholder="Søk i biblioteket…">
   <button id="libFileBtn" class="chipbtn">📁 Ingen fil</button>
   <button id="userBtn" class="chipbtn">Logg inn</button>
@@ -234,21 +217,21 @@
 <nav class="hotkeys" id="hotkeys"></nav>
 
 <div class="toolbar">
-  <div class="tabs">
-    <button class="tab active" id="tabAll">Alle sanger</button>
-    <button class="tab" id="tabArr">Arrangementer</button>
-  </div>
+  <span class="title">Bibliotek</span>
   <span class="count" id="count"></span>
-  <div class="spacer"></div>
+  <button id="unusedBtn" title="Vis bare sanger som ikke er brukt i noe arrangement">Ubrukte</button>
+  <span class="spacer"></span>
+  <span class="hint">Blyant = rediger sang · ring = legg til Hovedliste · symbol = kategori</span>
   <button id="addBtn">+ Legg til fra Spotify</button>
-  <button class="reset" id="resetBtn">Nullstill</button>
+  <button id="exportLibBtn">Eksporter bibliotek</button>
+  <button id="importBtn">Importer…</button>
 </div>
 
 <main>
   <section class="library">
     <div class="grid" id="grid"></div>
-    <div class="placeholder" id="arrPh" style="display:none">Arrangementer kommer i neste steg.</div>
   </section>
+  <aside id="aside"></aside>
 </main>
 
 <footer class="player">
@@ -265,10 +248,7 @@
       <button class="play" id="playBtn">▶</button>
       <button id="nextBtn">⏭</button>
     </div>
-    <div class="progress">
-      <div class="fill" id="fill"></div>
-      <div class="stop" id="stopMark" style="display:none"></div>
-    </div>
+    <div class="progress"><div class="fill" id="fill"></div><div class="stop" id="stopMark"></div></div>
     <div class="progress-times">
       <span id="tNow">0:00</span>
       <span class="hint">Mellomrom = start / stopp · ← → velg sang</span>
@@ -276,59 +256,88 @@
     </div>
   </div>
   <div class="right">
-    <div class="stopfade">
-      <span>Fade-stopp</span>
-      <div class="pill" id="stopFadePill" role="switch" tabindex="0" style="cursor:pointer"></div>
-    </div>
+    <div class="stopfade"><span>Fade-stopp</span><div class="pill" id="stopFadePill" role="switch" tabindex="0"></div></div>
     <input class="vol" id="volSlider" type="range" min="0" max="100" value="80">
   </div>
 </footer>
 
-<!-- Rediger sang -->
-<div class="overlay" id="overlay">
-  <div class="modal" role="dialog">
+<!-- Rediger sang (blyanten). Gjelder alle arrangementer. -->
+<div class="overlay" id="songEdit">
+  <div class="modal modal-wide" role="dialog">
     <div class="modal-head">
       <div>
-        <h3 id="eTitle"></h3>
-        <div class="sub" id="eSub"></div>
+        <h3 id="seTitle"></h3>
+        <div class="sub" id="seSub"></div>
       </div>
-      <button id="eCancel">✕</button>
+      <button id="seX">✕</button>
+    </div>
+
+    <div class="zoombar">
+      <span class="view" id="seView"></span>
+      <span class="spacer"></span>
+      <button id="seZoomIn" title="Zoom inn">＋</button>
+      <button id="seZoomOut" title="Zoom ut">−</button>
+      <button id="seZoomAll" title="Vis hele sangen">Hele</button>
+      <button id="seZoomAround" title="Vis rundt start og stopp">Rundt start/stopp</button>
+    </div>
+
+    <div class="timeline" id="tl">
+      <div class="outside" id="outL"></div>
+      <div class="range" id="rng"></div>
+      <div class="outside" id="outR"></div>
+      <div class="marker" id="mStart"><span class="sym">▶</span></div>
+      <div class="marker end" id="mEnd"><span class="sym">■</span></div>
+      <div class="playhead" id="ph"><span class="knob"></span></div>
+      <div class="ruler" id="ruler"></div>
     </div>
 
     <div class="times">
-      <div class="time-box">
+      <div class="time-card">
         <div class="field-label">Start</div>
-        <div class="v" id="eStart">0:00.0</div>
-        <div class="row"><button id="eStartMinus">−1s</button><button id="eStartPlus">+1s</button><button id="eStartSet">Sett</button></div>
+        <input type="text" id="inStart" aria-label="Starttid">
+        <div class="nudges" data-point="start">
+          <button data-step="-1">−1</button><button data-step="-0.1">−0,1</button><button data-step="0.1">+0,1</button><button data-step="1">+1</button>
+        </div>
       </div>
-      <div class="time-box">
+      <div class="time-card">
         <div class="field-label">Stopp</div>
-        <div class="v" id="eEnd">0:00.0</div>
-        <div class="row"><button id="eEndMinus">−1s</button><button id="eEndPlus">+1s</button><button id="eEndSet">Sett</button></div>
+        <input type="text" id="inEnd" aria-label="Stopptid">
+        <div class="nudges" data-point="end">
+          <button data-step="-1">−1</button><button data-step="-0.1">−0,1</button><button data-step="0.1">+0,1</button><button data-step="1">+1</button>
+        </div>
       </div>
+    </div>
+
+    <div class="playback">
+      <button class="play-big" id="sePlay" title="Spill av / pause">▶</button>
+      <div class="play-meta">
+        <span><span class="cond" id="sePos">0:00.0</span><span class="flag" id="seFlag"></span></span>
+        <span class="dim" style="font-size:12px">Spiller fritt: stopper ikke ved punktene</span>
+      </div>
+      <span class="spacer"></span>
+      <button id="seFromStart">⏮ Til start</button>
     </div>
 
     <div>
       <div class="field-label">Fade ut før stopp</div>
-      <div style="display:flex;gap:10px;align-items:center">
-        <input type="range" id="eFade" min="0" max="10" step="1" style="flex:1;accent-color:var(--accent)">
-        <span class="cond" id="eFadeVal" style="width:36px;color:var(--text-dim)">0s</span>
+      <div class="fade-choices" id="fadeChoices">
+        <button class="fade-opt" data-fade="0">Av</button>
+        <button class="fade-opt" data-fade="0.5">0,5 s</button>
+        <button class="fade-opt" data-fade="1">1 s</button>
+        <button class="fade-opt" data-fade="2">2 s</button>
       </div>
     </div>
 
     <div>
       <div class="field-label">Notat</div>
-      <input type="text" id="eNote" placeholder="F.eks. «spill ut ved mål for hjemmelaget»">
+      <input type="text" id="seNote" placeholder="F.eks. «spill ut ved mål for hjemmelaget»">
     </div>
 
     <div class="modal-foot">
-      <div style="display:flex;gap:8px">
-        <button id="ePreview">▶ Forhåndslytt</button>
-        <button class="danger" id="eRemove">Fjern fra bibliotek</button>
-      </div>
-      <div style="display:flex;gap:8px">
-        <button id="eCancel2" onclick="closeEdit()">Avbryt</button>
-        <button class="primary" id="eSave">Lagre</button>
+      <button class="danger" id="seRemove">Fjern fra bibliotek</button>
+      <div class="right2">
+        <button id="seCancel">Avbryt</button>
+        <button class="primary" id="seSave">Lagre</button>
       </div>
     </div>
   </div>
@@ -340,9 +349,9 @@
     <div class="modal-head">
       <div>
         <h3>Rediger hurtigvalg</h3>
-        <div class="sub">Navn, symbol, tast og sang</div>
+        <div class="sub" id="hkSub"></div>
       </div>
-      <button id="hkCancelX" onclick="closeHkEdit()">✕</button>
+      <button id="hkX">✕</button>
     </div>
     <div>
       <div class="field-label">Navn</div>
@@ -358,13 +367,13 @@
       <div class="warn" id="hkWarn"></div>
     </div>
     <div>
-      <div class="field-label">Sang</div>
-      <input type="text" id="hkSearch" placeholder="Søk i biblioteket…">
+      <div class="field-label">Sang i arrangementet</div>
+      <input type="text" id="hkSearch" placeholder="Søk…">
       <div class="picklist" id="hkList"></div>
     </div>
     <div class="modal-foot">
       <button class="danger" id="hkClear">Gjør ledig</button>
-      <div style="display:flex;gap:8px">
+      <div class="right2">
         <button id="hkCancel">Avbryt</button>
         <button class="primary" id="hkSave">Lagre</button>
       </div>
@@ -380,13 +389,13 @@
         <h3>Legg til fra Spotify</h3>
         <div class="sub">Søk etter sang og legg den til i biblioteket</div>
       </div>
-      <button id="addClose">✕</button>
+      <button id="addX">✕</button>
     </div>
     <div style="display:flex;gap:8px">
       <input type="text" id="addQuery" placeholder="Artist eller sangtittel…">
       <button class="primary" id="addSearchBtn">Søk</button>
     </div>
-    <div class="picklist tall" id="addResults"></div>
+    <div class="picklist" id="addResults"></div>
   </div>
 </div>
 
@@ -400,7 +409,7 @@
       </div>
     </div>
     <div class="modal-foot">
-      <span class="sub">Bibliotekfilen din kan åpnes også uten innlogging.</span>
+      <span class="sub">Biblioteksfilen kan åpnes også uten innlogging.</span>
       <button class="primary" id="loginBtn">Logg inn</button>
     </div>
   </div>
@@ -408,71 +417,71 @@
 
 <input type="file" id="importInput" accept=".json" style="display:none">
 <div class="toast" id="toast"></div>
+<div class="sym-menu" id="symMenu"></div>
 
 <script>
-
-  const APP_VERSION = 'v72';
   const SPOTIFY_CLIENT_ID = 'fbcfbbe397814636b480e45c52abf3a7';
   const SCOPES = 'user-read-private user-read-email streaming user-modify-playback-state user-read-playback-state playlist-read-private playlist-read-collaborative';
-  const LIB_FORMAT = 'hockeydj-library';
-  const CACHE_KEY = 'hd72_cache';
-  const LIB_TYPES = [{ description: 'Hockey DJ bibliotek', accept: { 'application/json': ['.json'] } }];
+  const FMT_LIB = 'hockeydj-library';
+  const FMT_ARR = 'hockeydj-arrangement';
+  const CACHE_KEY = 'hd74_cache';
+  const FILE_TYPES = [{ description: 'Hockey DJ', accept: { 'application/json': ['.json'] } }];
 
+  const CATS = [
+    { id: 'hoved', label: 'Hovedliste', sym: '⭐' },
+    { id: 'intro', label: 'Intro', sym: '🎤' },
+    { id: 'pause', label: 'Pause', sym: '☕' },
+    { id: 'outro', label: 'Outro', sym: '🎉' },
+  ];
   const SYMBOLS = ['🥅','⚡','🏒','🔥','⏸','🎤','☕','🎉','⭐','📣','🚨','🎵','🛑','⏱','🏁','🧊','🎯','👏','🔔','💥'];
-
-  // Hurtigvalg: key = A–Z eller 1–9 (null = ingen tast). trackId = null betyr ledig.
-  const DEFAULT_HOTKEYS = [
-    { label:'MÅL',       emoji:'🥅', key:'M' },
-    { label:'UTVISNING', emoji:'⚡', key:'U' },
-    { label:'ICING',     emoji:'🏒', key:'I' },
-    { label:'PUMP',      emoji:'🔥', key:'P' },
-    { label:'TIMEOUT',   emoji:'⏸', key:'T' },
-    { label:'INTRO',     emoji:'🎤', key:'N' },
-    { label:'PAUSE',     emoji:'☕', key:'A' },
-    { label:'OUTRO',     emoji:'🎉', key:'O' },
-    { label:'LEDIG',     emoji:'＋', key:'L' },
-  ].map(h => ({ ...h, trackId: null }));
+  const DEFAULT_HK = [
+    { label:'MÅL', emoji:'🥅', key:'M' }, { label:'UTVISNING', emoji:'⚡', key:'U' },
+    { label:'ICING', emoji:'🏒', key:'I' }, { label:'PUMP', emoji:'🔥', key:'P' },
+    { label:'TIMEOUT', emoji:'⏸', key:'T' }, { label:'INTRO', emoji:'🎤', key:'N' },
+    { label:'PAUSE', emoji:'☕', key:'A' }, { label:'OUTRO', emoji:'🎉', key:'O' },
+    { label:'LEDIG', emoji:'＋', key:'L' },
+  ];
+  const newHotkeys = () => DEFAULT_HK.map(h => ({ ...h, trackId: null }));
+  const uid = p => p + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
   const state = {
     token: localStorage.getItem('spotify_token') || null,
     tokenExpiry: parseInt(localStorage.getItem('spotify_token_expiry') || '0', 10),
-    user: null,
-    player: null,
-    deviceId: null,          // null = demo-modus (ingen ekte avspilling)
-    masterVol: 0.8,
-    volFactor: 1,
-    library: [],             // { id, name, artist, duration (sek), img, uri, plays }
-    settings: {},            // id -> { startTime, endTime, fadeOut, note }
-    hotkeys: DEFAULT_HOTKEYS.map(h => ({ ...h })),
-    stopFadeEnabled: false,
-    stopFadeDuration: 1.0,
-    selectedId: null,
-    playingId: null,
-    isPlaying: false,
-    pos: 0,
-    duration: 0,
-    tab: 'all',
-    query: '',
-    editMode: false,
+    user: null, player: null, deviceId: null,
+    masterVol: 0.8, volFactor: 1,
+    library: [],          // { id, name, artist, duration, img, uri }
+    settings: {},         // trackId -> { startTime, endTime, fadeOut, note }
+    arrangements: [],     // { id, name, desc, items: { trackId: catId }, hotkeys: [9] }
+    activeArr: null,
+    stopFadeEnabled: false, stopFadeDuration: 1.0,
+    selectedId: null, playingId: null, isPlaying: false, freePlay: false,
+    pos: 0, duration: 0,
+    query: '', unusedOnly: false, editMode: false,
   };
 
-  let tickTimer = null;
-  let stopping = false;
-  let libFileHandle = null;
-  let libFileTimer = null;
-  let libFileStatus = 'none';
-  let editDraft = null, editTrackId = null;
+  let tickTimer = null, stopping = false;
+  let libFileHandle = null, libFileTimer = null, libFileStatus = 'none';
+  let songEdit = null;        // { id, start, end, fade, note, pos, win, view }
   let hkEditIdx = null, hkDraft = null, capturing = false;
+  let dragId = null;
+  let symTrack = null;
 
   // ============================================================
   // HJELPERE
   // ============================================================
   const $ = id => document.getElementById(id);
   const getTrack = id => state.library.find(t => t.id === id);
-  const fmt = sec => {
-    sec = Math.max(0, sec || 0);
-    return Math.floor(sec / 60) + ':' + String(Math.floor(sec % 60)).padStart(2, '0');
-  };
+  const getArr = id => state.arrangements.find(a => a.id === id) || null;
+  const activeArr = () => getArr(state.activeArr);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  const r1 = v => Math.round(v * 10) / 10;
+  const fmt = sec => { sec = Math.max(0, sec || 0); return Math.floor(sec / 60) + ':' + String(Math.floor(sec % 60)).padStart(2, '0'); };
+  const fmtFine = sec => { sec = Math.max(0, sec || 0); return Math.floor(sec / 60) + ':' + (sec % 60).toFixed(1).padStart(4, '0'); };
+  const fmtFade = f => (f === 0 ? 'Av' : f.toFixed(1).replace('.', ',') + ' s');
+  function parseTime(str) {
+    const m = String(str).trim().replace(',', '.').match(/^(?:(\d+):)?(\d+(?:\.\d+)?)$/);
+    return m ? (m[1] ? Number(m[1]) * 60 : 0) + parseFloat(m[2]) : null;
+  }
   function settingsFor(t) {
     const s = state.settings[t.id] || {};
     return {
@@ -482,32 +491,53 @@
       note: s.note || '',
     };
   }
+  const arrCount = trackId => state.arrangements.filter(a => a.items[trackId]).length;
+  const catOf = (arr, trackId) => arr && arr.items[trackId];
+  const catInfo = id => CATS.find(c => c.id === id);
   function visibleTracks() {
     const q = state.query.trim().toLowerCase();
-    return state.library.filter(t => !q || (t.name + ' ' + t.artist).toLowerCase().includes(q));
+    return state.library.filter(t =>
+      (!q || (t.name + ' ' + t.artist).toLowerCase().includes(q)) &&
+      (!state.unusedOnly || arrCount(t.id) === 0));
   }
   function toast(msg, type) {
     const el = $('toast');
     el.textContent = msg;
     el.className = 'toast show ' + (type || '');
     clearTimeout(toast._t);
-    toast._t = setTimeout(() => el.className = 'toast', 2800);
+    toast._t = setTimeout(() => { el.className = 'toast'; }, 2800);
+  }
+  function showMenu(x, y, items) {
+    document.querySelectorAll('.ctx-menu').forEach(m => m.remove());
+    const menu = document.createElement('div');
+    menu.className = 'ctx-menu open';
+    menu.style.left = x + 'px';
+    menu.style.top = y + 'px';
+    items.forEach(it => {
+      const b = document.createElement('button');
+      b.className = 'ctx-menu-item';
+      b.textContent = it.label;
+      b.onclick = () => { menu.remove(); it.action(); };
+      menu.appendChild(b);
+    });
+    document.body.appendChild(menu);
+    setTimeout(() => document.addEventListener('click', function close(ev) {
+      if (!menu.contains(ev.target)) { menu.remove(); document.removeEventListener('click', close); }
+    }), 0);
   }
 
   // ============================================================
-  // LAGRING: lokal cache + bibliotekfil
+  // LAGRING
   // ============================================================
   function buildData() {
     return {
-      format: LIB_FORMAT,
-      version: 2,
+      format: FMT_LIB,
+      version: 3,
       savedAt: new Date().toISOString(),
       library: state.library,
       trackSettings: state.settings,
-      hotkeys: state.hotkeys,
+      arrangements: state.arrangements,
       stopFade: { enabled: state.stopFadeEnabled, duration: state.stopFadeDuration },
-      savedSetlists: [],
-      quickButtons: [],
     };
   }
 
@@ -520,27 +550,39 @@
     scheduleFileSave();
   }
 
-  // Leser både v72-filer og v71-sikkerhetskopier (sanger med settings inni)
+  function normalizeHotkeys(hk) {
+    const base = newHotkeys();
+    if (!Array.isArray(hk)) return base;
+    return base.map((b, i) => hk[i] ? { label: hk[i].label || b.label, emoji: hk[i].emoji || b.emoji, key: hk[i].key || null, trackId: hk[i].trackId || null } : b);
+  }
+
   function applyData(d) {
-    if (!d || d.format !== LIB_FORMAT) throw new Error('Ikke en Hockey DJ-fil');
+    if (!d || d.format !== FMT_LIB) throw new Error('Ikke en Hockey DJ-biblioteksfil');
     const lib = Array.isArray(d.library) ? d.library : [];
     state.library = lib.map(t => ({
       id: t.id, name: t.name, artist: t.artist || '',
       duration: Number(t.duration) || 0, img: t.img || '', uri: t.uri,
-      plays: Number(t.plays) || 0,
     }));
     const ts = { ...(d.trackSettings || {}) };
     lib.forEach(t => { if (t.settings && !ts[t.id]) ts[t.id] = t.settings; });
     state.settings = ts;
-    if (Array.isArray(d.hotkeys) && d.hotkeys.length) {
-      state.hotkeys = d.hotkeys.map(h => ({
-        label: h.label, emoji: h.emoji, key: h.key || null, trackId: h.trackId || null,
+
+    if (Array.isArray(d.arrangements)) {
+      state.arrangements = d.arrangements.map(a => ({
+        id: a.id, name: a.name, desc: a.desc || '',
+        items: a.items || {}, hotkeys: normalizeHotkeys(a.hotkeys),
       }));
+    } else if (Array.isArray(d.hotkeys)) {
+      // Fil fra v72/v73: hurtigvalgene blir et arrangement
+      state.arrangements = [{ id: uid('arr'), name: 'Importert', desc: 'Hurtigvalg fra tidligere versjon', items: {}, hotkeys: normalizeHotkeys(d.hotkeys) }];
+    } else {
+      state.arrangements = [];
     }
     if (d.stopFade) {
       state.stopFadeEnabled = !!d.stopFade.enabled;
       state.stopFadeDuration = Number(d.stopFade.duration) || 1.0;
     }
+    if (state.activeArr && !getArr(state.activeArr)) state.activeArr = null;
     if (state.selectedId && !getTrack(state.selectedId)) state.selectedId = null;
     saveCache();
     renderAll();
@@ -553,10 +595,12 @@
     } catch (e) { console.warn('Cache feilet', e); }
   }
 
-  // IndexedDB: husk fil-håndtaket mellom økter
+  // ============================================================
+  // BIBLIOTEKFIL (File System Access API, Chrome/Edge)
+  // ============================================================
   function libDbOpen() {
     return new Promise((res, rej) => {
-      const req = indexedDB.open('hockeydj72', 1);
+      const req = indexedDB.open('hockeydj74', 1);
       req.onupgradeneeded = () => req.result.createObjectStore('handles');
       req.onsuccess = () => res(req.result);
       req.onerror = () => rej(req.error);
@@ -579,10 +623,7 @@
       tx.onerror = () => rej(tx.error);
     });
   }
-
-  function libFileSupported() {
-    return typeof window.showOpenFilePicker === 'function' && typeof indexedDB !== 'undefined';
-  }
+  const libFileSupported = () => typeof window.showOpenFilePicker === 'function' && typeof indexedDB !== 'undefined';
 
   function setLibFileStatus(status) {
     libFileStatus = status;
@@ -619,7 +660,7 @@
     libFileTimer = setTimeout(writeLibraryFile, 500);
   }
 
-  async function readLibraryFile(handle) {
+  async function readFileJson(handle) {
     const file = await handle.getFile();
     if (file.size === 0) return null;
     return JSON.parse(await file.text());
@@ -627,17 +668,12 @@
 
   async function loadFromHandle() {
     try {
-      const data = await readLibraryFile(libFileHandle);
-      if (data === null) {
-        await writeLibraryFile();
-        toast('Ny bibliotekfil klar', 'success');
-        return;
-      }
+      const data = await readFileJson(libFileHandle);
+      if (data === null) { await writeLibraryFile(); toast('Ny bibliotekfil klar', 'success'); return; }
       applyData(data);
       setLibFileStatus('ok');
-      toast(`Bibliotek lastet: ${state.library.length} sanger`, 'success');
+      toast(`Bibliotek lastet: ${state.library.length} sanger, ${state.arrangements.length} arrangementer`, 'success');
     } catch (e) {
-      console.warn(e);
       setLibFileStatus('error');
       toast('Kunne ikke lese filen: ' + e.message, 'error');
     }
@@ -652,14 +688,12 @@
       const perm = await h.queryPermission({ mode: 'readwrite' });
       if (perm === 'granted') await loadFromHandle();
       else setLibFileStatus('needs-permission');
-    } catch (e) {
-      setLibFileStatus('none');
-    }
+    } catch (e) { setLibFileStatus('none'); }
   }
 
   async function openLibraryFile() {
     try {
-      const [h] = await window.showOpenFilePicker({ types: LIB_TYPES, multiple: false });
+      const [h] = await window.showOpenFilePicker({ types: FILE_TYPES, multiple: false });
       libFileHandle = h;
       await libDbSet('handle', h);
       await loadFromHandle();
@@ -668,7 +702,7 @@
 
   async function createLibraryFile() {
     try {
-      const h = await window.showSaveFilePicker({ suggestedName: 'hockeydj-bibliotek.json', types: LIB_TYPES });
+      const h = await window.showSaveFilePicker({ suggestedName: 'hockeydj-bibliotek.json', types: FILE_TYPES });
       libFileHandle = h;
       await libDbSet('handle', h);
       await writeLibraryFile();
@@ -682,22 +716,71 @@
     else toast('Tilgang ble ikke gitt', 'error');
   }
 
-  function exportJson() {
-    const blob = new Blob([JSON.stringify(buildData(), null, 2)], { type: 'application/json' });
+  function downloadJson(obj, name) {
+    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `hockeydj-bibliotek-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = name;
     a.click();
     URL.revokeObjectURL(a.href);
+  }
+
+  function exportLibrary() {
+    downloadJson(buildData(), `hockeydj-bibliotek-${new Date().toISOString().slice(0, 10)}.json`);
+    toast(`Eksporterte biblioteket (${state.library.length} sanger, uten arrangementer)`, 'success');
+  }
+
+  // Arrangement med sangene det bruker. Mottakeren får sangene via Spotify-ID.
+  function exportArrangement(id) {
+    const arr = getArr(id);
+    if (!arr) return;
+    const trackIds = Object.keys(arr.items);
+    const songs = trackIds.map(tid => {
+      const t = getTrack(tid);
+      if (!t) return null;
+      return { ...t, settings: state.settings[tid] || null };
+    }).filter(Boolean);
+    const hotkeys = arr.hotkeys.map(h => ({ ...h, trackId: h.trackId && arr.items[h.trackId] ? h.trackId : null }));
+    downloadJson({
+      format: FMT_ARR,
+      version: 1,
+      arrangement: { name: arr.name, desc: arr.desc, items: arr.items, hotkeys },
+      songs,
+    }, `${arr.name.replace(/[^\wæøåÆØÅ -]+/g, '').trim() || 'arrangement'}.arrangement.json`);
+    toast(`Eksporterte «${arr.name}» med ${songs.length} sanger`, 'success');
+  }
+
+  function importArrangement(data) {
+    if (data.format !== FMT_ARR) throw new Error('Ikke en arrangementfil');
+    // Sanger som mangler, legges til. Sanger som finnes, beholdes uendret.
+    (data.songs || []).forEach(s => {
+      if (!getTrack(s.id)) {
+        state.library.push({ id: s.id, name: s.name, artist: s.artist || '', duration: s.duration || 0, img: s.img || '', uri: s.uri });
+        if (s.settings) state.settings[s.id] = s.settings;
+      }
+    });
+    const a = data.arrangement;
+    const arr = {
+      id: uid('arr'),
+      name: a.name + (state.arrangements.some(x => x.name === a.name) ? ' (importert)' : ''),
+      desc: a.desc || '',
+      items: { ...a.items },
+      hotkeys: normalizeHotkeys(a.hotkeys),
+    };
+    state.arrangements.push(arr);
+    state.activeArr = arr.id;
+    saveAll();
+    renderAll();
+    toast(`Importert «${arr.name}»`, 'success');
   }
 
   function importJsonFile(file) {
     const reader = new FileReader();
     reader.onload = () => {
       try {
-        applyData(JSON.parse(reader.result));
-        scheduleFileSave();
-        toast(`Importert: ${state.library.length} sanger`, 'success');
+        const data = JSON.parse(reader.result);
+        if (data.format === FMT_ARR) importArrangement(data);
+        else { applyData(data); scheduleFileSave(); toast(`Importert bibliotek: ${state.library.length} sanger`, 'success'); }
       } catch (e) { toast('Import feilet: ' + e.message, 'error'); }
     };
     reader.readAsText(file);
@@ -711,64 +794,39 @@
       items.push({ label: 'Åpne eksisterende fil…', action: openLibraryFile });
       items.push({ label: 'Lag ny fil…', action: createLibraryFile });
     }
-    items.push({ label: 'Eksporter kopi…', action: exportJson });
-    items.push({ label: 'Importer JSON…', action: () => $('importInput').click() });
     showMenu(r.left, r.bottom + 4, items);
   }
 
-  function showMenu(x, y, items) {
-    document.querySelectorAll('.ctx-menu').forEach(m => m.remove());
-    const menu = document.createElement('div');
-    menu.className = 'ctx-menu';
-    menu.style.left = x + 'px';
-    menu.style.top = y + 'px';
-    items.forEach(it => {
-      const b = document.createElement('button');
-      b.className = 'ctx-menu-item';
-      b.textContent = it.label;
-      b.onclick = () => { menu.remove(); it.action(); };
-      menu.appendChild(b);
-    });
-    document.body.appendChild(menu);
-    setTimeout(() => document.addEventListener('click', function close(ev) {
-      if (!menu.contains(ev.target)) { menu.remove(); document.removeEventListener('click', close); }
-    }), 0);
-  }
-
   // ============================================================
-  // SPOTIFY: innlogging (PKCE) fra v71
+  // SPOTIFY (innlogging, SDK) fra v71–v73
   // ============================================================
-  function getRedirectUri() {
-    return window.location.origin + window.location.pathname;
-  }
+  const getRedirectUri = () => window.location.origin + window.location.pathname;
 
   function b64url(bytes) {
     let s = '';
     bytes.forEach(b => s += String.fromCharCode(b));
     return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   }
-
   async function generateCodeVerifier() {
     const a = new Uint8Array(64);
     crypto.getRandomValues(a);
     return b64url(a);
   }
-
-  async function generateCodeChallenge(verifier) {
-    const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+  async function generateCodeChallenge(v) {
+    const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(v));
     return b64url(new Uint8Array(d));
   }
 
   async function startLogin() {
-    const verifier = await generateCodeVerifier();
-    const challenge = await generateCodeChallenge(verifier);
-    sessionStorage.setItem('pkce_verifier', verifier);
+    const v = await generateCodeVerifier();
+    const c = await generateCodeChallenge(v);
+    sessionStorage.setItem('pkce_verifier', v);
     const u = new URL('https://accounts.spotify.com/authorize');
     u.searchParams.set('client_id', SPOTIFY_CLIENT_ID);
     u.searchParams.set('response_type', 'code');
     u.searchParams.set('redirect_uri', getRedirectUri());
     u.searchParams.set('code_challenge_method', 'S256');
-    u.searchParams.set('code_challenge', challenge);
+    u.searchParams.set('code_challenge', c);
     u.searchParams.set('scope', SCOPES);
     window.location.href = u.toString();
   }
@@ -782,15 +840,12 @@
   }
 
   async function handleCallback(code) {
-    const verifier = sessionStorage.getItem('pkce_verifier');
-    if (!verifier) throw new Error('Sesjonsdata mangler. Prøv å logge inn igjen.');
+    const v = sessionStorage.getItem('pkce_verifier');
+    if (!v) throw new Error('Sesjonsdata mangler. Prøv å logge inn igjen.');
     const res = await fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code', code,
-        redirect_uri: getRedirectUri(), client_id: SPOTIFY_CLIENT_ID, code_verifier: verifier,
-      }),
+      body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: getRedirectUri(), client_id: SPOTIFY_CLIENT_ID, code_verifier: v }),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -816,7 +871,6 @@
     } catch (e) { return false; }
   }
 
-  // Kall mot Spotify Web API med automatisk fornyelse av token
   async function api(method, path, body) {
     if (Date.now() > state.tokenExpiry - 60000) await refreshAccessToken();
     const res = await fetch('https://api.spotify.com/v1/' + path, {
@@ -838,12 +892,9 @@
       state.user = await api('GET', 'me');
       $('userBtn').textContent = state.user?.display_name || 'Innlogget';
       $('userBtn').classList.add('ok');
-    } catch (e) {
-      console.warn('Profil feilet', e);
-    }
+    } catch (e) { console.warn('Profil feilet', e); }
   }
 
-  // Spotify Web Playback SDK, fra v71
   function initPlayer() {
     if (!state.token || state.player) return;
     window.onSpotifyWebPlaybackSDKReady = () => {
@@ -855,10 +906,7 @@
         },
         volume: state.masterVol,
       });
-      p.addListener('ready', ({ device_id }) => {
-        state.deviceId = device_id;
-        toast('Spotify klar', 'success');
-      });
+      p.addListener('ready', ({ device_id }) => { state.deviceId = device_id; toast('Spotify klar', 'success'); });
       p.addListener('not_ready', () => { state.deviceId = null; toast('Spotify frakoblet', 'error'); });
       p.addListener('player_state_changed', onPlayerState);
       p.connect();
@@ -872,26 +920,20 @@
   function onPlayerState(s) {
     if (!s || !state.playingId) return;
     const t = getTrack(state.playingId);
-    const uri = s.track_window?.current_track?.uri;
-    if (!t || uri !== t.uri) return;
+    if (!t || s.track_window?.current_track?.uri !== t.uri) return;
     const was = state.isPlaying;
     state.isPlaying = !s.paused;
-    if (was !== state.isPlaying) {
-      if (state.isPlaying) startTicker(); else stopTicker();
-    }
-    updatePlayerUI();
+    if (was !== state.isPlaying) { if (state.isPlaying) startTicker(); else stopTicker(); }
+    renderPlayer();
   }
 
   // ============================================================
-  // AVSPILLING: start, stopp ved sluttpunkt, fade
+  // AVSPILLING
   // ============================================================
   function setVolFactor(f) {
     state.volFactor = f;
-    if (state.player && state.deviceId) {
-      state.player.setVolume(Math.max(0, Math.min(1, state.masterVol * f))).catch(() => {});
-    }
+    if (state.player && state.deviceId) state.player.setVolume(Math.max(0, Math.min(1, state.masterVol * f))).catch(() => {});
   }
-
   function fadeOut(secs) {
     return new Promise(res => {
       const steps = Math.max(1, Math.round(secs * 20));
@@ -903,84 +945,73 @@
       }, secs * 1000 / steps);
     });
   }
+  async function pauseDevice() { if (state.player && state.deviceId) await state.player.pause().catch(() => {}); }
+  async function resumeDevice() { if (state.player && state.deviceId) await state.player.resume().catch(() => {}); }
+  async function seekDevice(sec) { if (state.player && state.deviceId) await state.player.seek(Math.round(sec * 1000)).catch(() => {}); }
 
-  async function pauseDevice() {
-    if (state.player && state.deviceId) await state.player.pause().catch(() => {});
-  }
-  async function resumeDevice() {
-    if (state.player && state.deviceId) await state.player.resume().catch(() => {});
-  }
-
-  function startTicker() {
-    stopTicker();
-    tickTimer = setInterval(tick, 250);
-  }
-  function stopTicker() {
-    clearInterval(tickTimer);
-    tickTimer = null;
-  }
+  function startTicker() { stopTicker(); tickTimer = setInterval(tick, 250); }
+  function stopTicker() { clearInterval(tickTimer); tickTimer = null; }
 
   async function tick() {
     if (stopping || !state.isPlaying || !state.playingId) return;
     const t = getTrack(state.playingId);
     if (!t) return;
-
     if (state.player && state.deviceId) {
       const cs = await state.player.getCurrentState().catch(() => null);
       if (!cs) return;
       state.pos = cs.position / 1000;
       if (cs.duration) state.duration = cs.duration / 1000;
     } else {
-      state.pos += 0.25;              // demo-modus: simuler tid
+      state.pos += 0.25;                       // demo-modus
     }
-
-    const s = settingsFor(t);
-    const end = s.end || state.duration;
-    if (s.fade > 0 && end - state.pos <= s.fade && end - state.pos > 0) {
-      setVolFactor((end - state.pos) / s.fade);
+    if (!state.freePlay) {
+      const s = settingsFor(t);
+      if (s.fade > 0 && s.end - state.pos <= s.fade && s.end - state.pos > 0) setVolFactor((s.end - state.pos) / s.fade);
+      if (state.pos >= s.end) { await finishPlayback(s.fade, s.end); return; }
+    } else if (state.pos >= state.duration) {
+      await finishPlayback(0, state.duration);
+      return;
     }
-    if (state.pos >= end) {
-      stopping = true;
-      stopTicker();
-      if (!(s.fade > 0) && state.stopFadeEnabled && state.stopFadeDuration > 0) {
-        await fadeOut(state.stopFadeDuration);
-      }
-      await pauseDevice();
-      setVolFactor(1);
-      state.isPlaying = false;
-      state.pos = end;
-      stopping = false;
-    }
-    updatePlayerUI();
+    renderPlayer();
+    renderSongEditPos();
   }
 
-  async function startTrack(id, { count = true } = {}) {
+  async function finishPlayback(fade, endAt) {
+    stopping = true;
+    stopTicker();
+    if (!(fade > 0) && state.stopFadeEnabled && state.stopFadeDuration > 0) await fadeOut(state.stopFadeDuration);
+    await pauseDevice();
+    setVolFactor(1);
+    state.isPlaying = false;
+    state.pos = endAt;
+    stopping = false;
+    renderAll();
+  }
+
+  // Spill en sang. free = spill fritt (fra sangvinduet), ellers stopper ved stopp-punktet.
+  async function startTrack(id, { free = false, from = null } = {}) {
     const t = getTrack(id);
     if (!t) return;
     const s = settingsFor(t);
     stopTicker();
     state.selectedId = id;
     state.playingId = id;
-    state.pos = s.start;
+    state.freePlay = free;
+    state.pos = from !== null ? from : s.start;
     state.duration = t.duration;
-    if (count) t.plays += 1;
     if (state.player && state.deviceId) {
       try {
-        await api('PUT', `me/player/play?device_id=${state.deviceId}`, {
-          uris: [t.uri], position_ms: Math.round(s.start * 1000),
-        });
+        await api('PUT', `me/player/play?device_id=${state.deviceId}`, { uris: [t.uri], position_ms: Math.round(state.pos * 1000) });
       } catch (e) { toast('Avspilling feilet: ' + e.message, 'error'); }
     }
     state.isPlaying = true;
     setVolFactor(1);
     startTicker();
-    saveAll();
     renderAll();
   }
 
   async function togglePlay() {
     if (!state.selectedId) return;
-    // Valgt sang er ikke den som spiller: start den
     if (state.playingId !== state.selectedId) return startTrack(state.selectedId);
     if (state.isPlaying) {
       if (state.stopFadeEnabled && state.stopFadeDuration > 0) await fadeOut(state.stopFadeDuration);
@@ -993,19 +1024,15 @@
       state.isPlaying = true;
       startTicker();
     }
-    updatePlayerUI();
-  }
-
-  function selectTrack(id) {
-    state.selectedId = id;
     renderAll();
   }
 
+  function selectTrack(id) { state.selectedId = id; renderAll(); }
   function stepSelection(delta) {
     const list = visibleTracks();
     if (!list.length) return;
     const i = list.findIndex(t => t.id === state.selectedId);
-    const next = list[Math.max(0, Math.min(list.length - 1, (i < 0 ? 0 : i + delta)))];
+    const next = list[Math.max(0, Math.min(list.length - 1, i < 0 ? 0 : i + delta))];
     selectTrack(next.id);
   }
 
@@ -1013,74 +1040,113 @@
   // RENDER
   // ============================================================
   function renderAll() {
-    renderTiles();
+    renderGrid();
+    renderAside();
     renderHotkeys();
-    updatePlayerUI();
+    renderPlayer();
     $('stopFadePill').classList.toggle('on', state.stopFadeEnabled);
+    $('unusedBtn').classList.toggle('on', state.unusedOnly);
     $('volSlider').value = Math.round(state.masterVol * 100);
   }
 
-  function renderTiles() {
+  function renderGrid() {
     const list = visibleTracks();
+    const arr = activeArr();
     $('count').textContent = `${list.length} av ${state.library.length} sanger`;
-    $('grid').style.display = state.tab === 'all' ? 'grid' : 'none';
-    $('arrPh').style.display = state.tab === 'arr' ? 'block' : 'none';
     if (!state.library.length) {
-      $('grid').innerHTML = `<div class="empty">Ingen sanger ennå. Klikk «+ Legg til fra Spotify» eller importer en fil.</div>`;
+      $('grid').innerHTML = '<div class="empty-msg">Ingen sanger ennå. Klikk «+ Legg til fra Spotify» eller importer en fil.</div>';
       return;
     }
     $('grid').innerHTML = list.map(t => {
-      const cls = ['tile',
-        t.id === state.selectedId ? 'selected' : '',
-        t.plays >= 1 ? 'played' : ''].join(' ');
       const s = settingsFor(t);
-      return `
-        <div class="${cls}" data-id="${t.id}">
-          <div class="thumb">${t.img ? `<img src="${t.img}" alt="">` : ''}</div>
-          <div style="min-width:0">
-            <div class="t">${esc(t.name)}</div>
-            <div class="a">${esc(t.artist)} · <span class="r">${fmt(s.start)}–${fmt(s.end)}</span></div>
-          </div>
-          <span class="cnt">${t.plays ? t.plays + '×' : ''}</span>
-          <button class="pencil" data-edit="${t.id}" title="Rediger">✎</button>
-        </div>`;
+      let mark;
+      if (arr) {
+        const c = catOf(arr, t.id);
+        mark = c
+          ? `<button class="mk sym" data-sym="${t.id}" title="${catInfo(c).label} · klikk for å endre">${catInfo(c).sym}</button>`
+          : `<button class="mk ring" data-ring="${t.id}" title="Legg til i Hovedliste"></button>`;
+      } else {
+        const n = arrCount(t.id);
+        mark = `<span class="mk num" title="${n ? 'Brukt i ' + n + (n > 1 ? ' arrangementer' : ' arrangement') : 'Ikke brukt i noe arrangement'}">${n || ''}</span>`;
+      }
+      return `<div class="tile ${t.id === state.selectedId ? 'selected' : ''}" draggable="true" data-id="${t.id}">
+        <div class="thumb">${t.img ? `<img src="${esc(t.img)}" alt="">` : ''}</div>
+        <div style="min-width:0">
+          <div class="t">${esc(t.name)}</div>
+          <div class="a">${esc(t.artist)} · <span class="r">${fmt(s.start)}–${fmt(s.end)}</span></div>
+        </div>
+        ${mark}
+        <button class="pencil" data-edit="${t.id}" title="Rediger sang (gjelder alle arrangementer)">✎</button>
+      </div>`;
     }).join('');
   }
 
-  function esc(s) {
-    return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  function renderAside() {
+    const arrHtml = state.arrangements.map(a => {
+      const isOpen = state.activeArr === a.id;
+      const n = Object.keys(a.items).length;
+      let body = '';
+      if (isOpen) {
+        const cats = CATS.map(c => {
+          const count = Object.values(a.items).filter(x => x === c.id).length;
+          return `<div class="cat" data-arr="${a.id}" data-cat="${c.id}">
+            <div class="cat-title"><span>${c.sym} ${c.label}</span><span class="count-badge">${count}</span></div>
+          </div>`;
+        }).join('');
+        body = `<div class="arr-body">${cats}
+          <div class="arr-actions">
+            <button data-dupe="${a.id}">Dupliser</button>
+            <button data-export-arr="${a.id}">Eksporter</button>
+          </div></div>`;
+      }
+      return `<div class="arr ${isOpen ? 'open' : ''}">
+        <div class="arr-head" data-open="${a.id}">
+          <span class="arr-name">${esc(a.name)}</span>
+          ${a.desc ? `<span class="arr-desc">${esc(a.desc)}</span>` : ''}
+          <span class="arr-meta">${n} sanger</span>
+        </div>
+        ${body}
+      </div>`;
+    }).join('');
+    $('aside').innerHTML = `
+      <div class="aside-head">
+        <span class="title">Arrangementer</span>
+        <span><button id="importArrBtn">Importer…</button><button id="newArrBtn">+ Nytt</button></span>
+      </div>
+      ${state.arrangements.length ? arrHtml : '<div class="aside-msg">Ingen arrangementer ennå. Lag et nytt, eller importer ett.</div>'}`;
   }
 
   function renderHotkeys() {
-    const nav = $('hotkeys');
-    const items = state.hotkeys.map((h, i) => {
+    const arr = activeArr();
+    const ctx = $('hotkeys');
+    const items = arr ? arr.hotkeys.map((h, i) => {
       const t = h.trackId ? getTrack(h.trackId) : null;
       const tip = t ? `${t.name} · ${fmt(settingsFor(t).start)}–${fmt(settingsFor(t).end)}` : 'Ikke tildelt';
-      const cls = ['hk',
-        t ? '' : 'empty',
-        (t && t.id === state.selectedId) ? 'loaded' : '',
-        state.editMode ? 'editing' : ''].join(' ');
+      const cls = ['hk', t ? '' : 'empty', t && t.id === state.selectedId ? 'loaded' : '', state.editMode ? 'editing' : ''].join(' ');
       return `${i === 5 ? '<div class="hk-spacer"></div>' : ''}
-        <div class="${cls}" data-hk="${i}" title="${esc(tip)}">
+        <div class="${cls}" data-hk="${i}">
           <span class="keycap${h.key ? '' : ' none'}">${h.key || '–'}</span>
           <span class="emoji">${h.emoji}</span>
           <span class="label">${esc(h.label)}</span>
           ${state.editMode ? '<span class="pen">✎</span>' : ''}
           <span class="tip">${h.key ? h.key + ' · ' : ''}${esc(tip)}</span>
         </div>`;
-    }).join('');
-    nav.innerHTML = items +
-      `<button class="hk-edit${state.editMode ? ' on' : ''}" id="hkEditBtn">✎ ${state.editMode ? 'Ferdig' : 'Rediger hurtigvalg'}</button>`;
+    }).join('') : '';
+    const context = arr
+      ? `<div class="hk-context"><b>${esc(arr.name)}</b><br>hurtigvalg for dette arrangementet</div>`
+      : `<div class="hk-context none">Velg et arrangement for å bruke hurtigvalg</div>`;
+    ctx.innerHTML = context + (arr ? items : '') +
+      `<button class="hk-edit${state.editMode ? ' on' : ''}" id="hkEditBtn"${arr ? '' : ' disabled'}>✎ ${state.editMode ? 'Ferdig' : 'Rediger hurtigvalg'}</button>`;
   }
 
-  function updatePlayerUI() {
+  function renderPlayer() {
     const t = getTrack(state.selectedId);
     if (!t) {
       $('npTitle').textContent = 'Ingen sang valgt';
       $('npArtist').textContent = 'Klikk en sang i biblioteket';
       $('npArt').style.backgroundImage = '';
       $('tNow').textContent = '0:00';
-      $('tEnd').textContent = '0:00';
+      $('tEnd').textContent = 'stopp 0:00';
       $('fill').style.width = '0%';
       $('stopMark').style.display = 'none';
       $('playBtn').textContent = '▶';
@@ -1095,107 +1161,248 @@
     $('npArt').style.backgroundImage = t.img ? `url(${t.img})` : '';
     $('tNow').textContent = fmt(pos);
     $('tEnd').textContent = 'stopp ' + fmt(s.end);
-    const pct = dur ? pos / dur * 100 : 0;
-    $('fill').style.width = Math.min(100, pct) + '%';
-    const stopPct = dur ? s.end / dur * 100 : 100;
+    $('fill').style.width = Math.min(100, dur ? pos / dur * 100 : 0) + '%';
     $('stopMark').style.display = 'block';
-    $('stopMark').style.left = Math.min(100, stopPct) + '%';
+    $('stopMark').style.left = Math.min(100, dur ? s.end / dur * 100 : 100) + '%';
     $('playBtn').textContent = here && state.isPlaying ? '❚❚' : '▶';
   }
 
   // ============================================================
-  // BIBLIOTEK: sang-redigering (blyant)
+  // ARRANGEMENT
   // ============================================================
-  function openEdit(id) {
+  function setItem(trackId, cat) {
+    const arr = activeArr();
+    if (!arr) return;
+    if (cat) arr.items[trackId] = cat; else delete arr.items[trackId];
+    saveAll();
+    renderAll();
+  }
+
+  function newArrangement() {
+    const name = prompt('Navn på arrangementet:', 'Nytt arrangement');
+    if (!name || !name.trim()) return;
+    const desc = prompt('Kort beskrivelse (valgfri):', '') || '';
+    const arr = { id: uid('arr'), name: name.trim(), desc: desc.trim(), items: {}, hotkeys: newHotkeys() };
+    state.arrangements.push(arr);
+    state.activeArr = arr.id;
+    saveAll();
+    renderAll();
+  }
+
+  function duplicateArrangement(srcId) {
+    const src = getArr(srcId);
+    if (!src) return;
+    const copy = {
+      id: uid('arr'),
+      name: src.name + ' (kopi)',
+      desc: src.desc,
+      items: { ...src.items },
+      hotkeys: src.hotkeys.map(h => ({ ...h })),
+    };
+    state.arrangements.push(copy);
+    state.activeArr = copy.id;
+    saveAll();
+    toast(`Kopi laget av «${src.name}». Endringene gjelder bare kopien.`, 'success');
+    renderAll();
+  }
+
+  function toggleArrangement(id) {
+    state.activeArr = state.activeArr === id ? null : id;
+    state.editMode = false;
+    renderAll();
+  }
+
+  // ============================================================
+  // SANGVINDU (blyanten): tidslinje, start/stopp, fade, notat
+  // ============================================================
+  const ZOOMS = [10, 20, 40, 80];
+  const songPos = () => (state.playingId === songEdit.id ? state.pos : songEdit.pos);
+  const pctOf = t => (t - songEdit.view) / songEdit.win * 100;
+  const inView = t => t >= songEdit.view && t <= songEdit.view + songEdit.win;
+
+  function openSongEdit(id) {
     const t = getTrack(id);
     if (!t) return;
-    editTrackId = id;
     const s = settingsFor(t);
-    editDraft = { start: s.start, end: s.end, fade: s.fade, note: s.note };
-    $('eTitle').textContent = t.name;
-    $('eSub').textContent = `${t.artist} · ${fmt(t.duration)} totalt`;
-    $('eNote').value = s.note;
-    renderEdit();
-    $('overlay').classList.add('open');
+    songEdit = { id, start: s.start, end: s.end, fade: s.fade, note: s.note, pos: s.start, win: 40, view: 0 };
+    state.selectedId = id;
+    $('seTitle').textContent = t.name;
+    $('seSub').textContent = `${t.artist} · ${fmt(t.duration)} totalt · gjelder alle arrangementer`;
+    $('seNote').value = s.note;
+    clampView();
+    renderSongEdit();
+    $('songEdit').classList.add('open');
   }
 
-  function renderEdit() {
-    $('eStart').textContent = fmtFine(editDraft.start);
-    $('eEnd').textContent = fmtFine(editDraft.end);
-    $('eFade').value = editDraft.fade;
-    $('eFadeVal').textContent = editDraft.fade + 's';
+  function closeSongEdit() {
+    $('songEdit').classList.remove('open');
+    songEdit = null;
   }
 
-  function fmtFine(sec) {
-    return fmt(sec) + '.' + String(Math.floor((sec % 1) * 10));
+  function clampView() {
+    const dur = (getTrack(songEdit.id)?.duration) || 225;
+    songEdit.view = Math.max(0, Math.min(dur - songEdit.win, songEdit.view));
   }
 
-  function nudge(type, d) {
-    const t = getTrack(editTrackId);
-    const max = t ? t.duration : 9999;
-    editDraft[type] = Math.max(0, Math.min(max, Math.round((editDraft[type] + d) * 10) / 10));
-    renderEdit();
+  function followSongPos() {
+    const p = songPos();
+    if (p > songEdit.view + songEdit.win * 0.8 || p < songEdit.view) {
+      songEdit.view = p - songEdit.win * 0.2;
+      clampView();
+    }
   }
 
-  function setFromPlayhead(type) {
-    if (state.playingId !== editTrackId) { toast('Start sangen (▶) først, og klikk «Sett» igjen', 'error'); return; }
-    editDraft[type] = Math.round(state.pos * 10) / 10;
-    renderEdit();
+  function renderRuler() {
+    const step = songEdit.win <= 40 ? 1 : 5;
+    const labelEvery = songEdit.win <= 40 ? 5 : 30;
+    const first = Math.ceil(songEdit.view / step) * step;
+    let html = '';
+    for (let t = first; t <= songEdit.view + songEdit.win; t += step) {
+      const major = t % labelEvery === 0;
+      html += `<div class="tick ${major ? 'major' : ''}" style="left:${pctOf(t)}%">${major ? `<span>${fmt(t)}</span>` : ''}</div>`;
+    }
+    $('ruler').innerHTML = html;
   }
 
-  function saveEdit() {
-    const t = getTrack(editTrackId);
-    if (!t) return closeEdit();
-    if (editDraft.end <= editDraft.start) { toast('Slutt må være etter start', 'error'); return; }
+  function renderSongEdit() {
+    if (!songEdit) return;
+    clampView();
+    renderRuler();
+    const place = (el, t) => { el.classList.toggle('hidden', !inView(t)); el.style.left = pctOf(t) + '%'; };
+    place($('mStart'), songEdit.start);
+    place($('mEnd'), songEdit.end);
+    const p = Math.max(songEdit.view, Math.min(songEdit.view + songEdit.win, songPos()));
+    $('ph').style.left = pctOf(p) + '%';
+    const a = Math.max(0, Math.min(100, pctOf(songEdit.start)));
+    const b = Math.max(0, Math.min(100, pctOf(songEdit.end)));
+    $('outL').style.left = '0'; $('outL').style.width = a + '%';
+    $('rng').style.left = a + '%'; $('rng').style.width = (b - a) + '%';
+    $('outR').style.left = b + '%'; $('outR').style.right = '0';
+    if (document.activeElement !== $('inStart')) $('inStart').value = fmtFine(songEdit.start);
+    if (document.activeElement !== $('inEnd')) $('inEnd').value = fmtFine(songEdit.end);
+    $('seView').textContent = `Viser ${fmt(songEdit.view)}–${fmt(songEdit.view + songEdit.win)}`;
+    document.querySelectorAll('#fadeChoices .fade-opt').forEach(btn =>
+      btn.classList.toggle('on', Number(btn.dataset.fade) === songEdit.fade));
+    renderSongEditPos();
+  }
+
+  function renderSongEditPos() {
+    if (!songEdit || !$('songEdit').classList.contains('open')) return;
+    const playingThis = state.playingId === songEdit.id;
+    const p = songPos();
+    $('sePos').textContent = fmtFine(p);
+    $('sePlay').textContent = playingThis && state.isPlaying ? '❚❚' : '▶';
+    const flag = $('seFlag');
+    if (p < songEdit.start) { flag.textContent = 'før start'; flag.className = 'flag before'; }
+    else if (p > songEdit.end) { flag.textContent = 'etter stopp'; flag.className = 'flag after'; }
+    else { flag.textContent = ''; flag.className = 'flag'; }
+    followSongPos();
+    const ph = Math.max(songEdit.view, Math.min(songEdit.view + songEdit.win, p));
+    $('ph').style.left = pctOf(ph) + '%';
+    $('seView').textContent = `Viser ${fmt(songEdit.view)}–${fmt(songEdit.view + songEdit.win)}`;
+  }
+
+  function nudgeSong(point, d) {
+    if (point === 'start') songEdit.start = r1(Math.max(0, Math.min(songEdit.end - 0.1, songEdit.start + d)));
+    else songEdit.end = r1(Math.max(songEdit.start + 0.1, Math.min((getTrack(songEdit.id)?.duration) || 9999, songEdit.end + d)));
+    renderSongEdit();
+  }
+
+  function commitSongTime(point, str) {
+    const v = parseTime(str);
+    const dur = (getTrack(songEdit.id)?.duration) || 9999;
+    if (v === null || v > dur) { toast('Ugyldig tid', 'error'); renderSongEdit(); return; }
+    if (point === 'start') {
+      if (v >= songEdit.end) { toast('Start må være før stopp', 'error'); renderSongEdit(); return; }
+      songEdit.start = r1(v);
+    } else {
+      if (v <= songEdit.start) { toast('Stopp må være etter start', 'error'); renderSongEdit(); return; }
+      songEdit.end = r1(v);
+    }
+    renderSongEdit();
+  }
+
+  async function playSongEdit() {
+    const id = songEdit.id;
+    if (state.playingId === id && state.isPlaying) {
+      // Pause, samme som hovedspilleren
+      await pauseDevice();
+      state.isPlaying = false;
+      stopTicker();
+      renderAll();
+      renderSongEdit();
+      return;
+    }
+    if (state.playingId === id && !state.isPlaying && state.pos > 0 && state.pos < state.duration) {
+      await resumeDevice();
+      state.isPlaying = true;
+      startTicker();
+      renderAll();
+      return;
+    }
+    await startTrack(id, { free: true, from: songEdit.pos });
+    renderSongEdit();
+  }
+
+  async function seekSongEdit(t) {
+    songEdit.pos = t;
+    if (state.playingId === songEdit.id) {
+      state.pos = t;
+      await seekDevice(t);
+    }
+    renderSongEdit();
+  }
+
+  function saveSongEdit() {
+    const t = getTrack(songEdit.id);
+    if (!t) return closeSongEdit();
     state.settings[t.id] = {
-      startTime: editDraft.start,
-      endTime: editDraft.end,
-      fadeOut: editDraft.fade,
-      note: $('eNote').value.trim(),
+      startTime: songEdit.start,
+      endTime: songEdit.end,
+      fadeOut: songEdit.fade,
+      note: $('seNote').value.trim(),
     };
-    closeEdit();
+    closeSongEdit();
     saveAll();
     renderAll();
   }
 
   function removeTrack() {
-    const t = getTrack(editTrackId);
-    if (!t || !confirm(`Fjerne «${t.name}» fra biblioteket?`)) return;
+    const t = getTrack(songEdit.id);
+    if (!t || !confirm(`Fjerne «${t.name}» fra biblioteket og fra alle arrangementer?`)) return;
     state.library = state.library.filter(x => x.id !== t.id);
     delete state.settings[t.id];
-    state.hotkeys.forEach(h => { if (h.trackId === t.id) h.trackId = null; });
+    state.arrangements.forEach(a => {
+      delete a.items[t.id];
+      a.hotkeys.forEach(h => { if (h.trackId === t.id) h.trackId = null; });
+    });
     if (state.selectedId === t.id) state.selectedId = null;
-    closeEdit();
+    if (state.playingId === t.id) { state.playingId = null; state.isPlaying = false; stopTicker(); }
+    closeSongEdit();
     saveAll();
     renderAll();
   }
 
-  function previewTrack() {
-    startTrack(editTrackId, { count: false });
-  }
-
-  function closeEdit() {
-    $('overlay').classList.remove('open');
-    editTrackId = null;
-  }
-
   // ============================================================
-  // HURTIGVALG: spill og rediger
+  // HURTIGVALG
   // ============================================================
+  const keyOwner = (arr, k, exceptIdx) => arr.hotkeys.findIndex((x, j) => x.key === k && j !== exceptIdx);
+
   function playHotkey(i) {
-    const h = state.hotkeys[i];
+    const arr = activeArr();
+    if (!arr) return;
+    const h = arr.hotkeys[i];
     if (h.trackId) startTrack(h.trackId);
   }
 
-  function keyOwner(k, exceptIdx) {
-    return state.hotkeys.findIndex((x, j) => x.key === k && j !== exceptIdx);
-  }
-
   function openHkEdit(i) {
+    const arr = activeArr();
+    if (!arr) return;
     hkEditIdx = i;
-    const h = state.hotkeys[i];
+    const h = arr.hotkeys[i];
     hkDraft = { label: h.label, emoji: h.emoji, key: h.key, trackId: h.trackId };
     capturing = false;
+    $('hkSub').textContent = `Gjelder «${arr.name}»`;
     $('hkLabel').value = h.label;
     $('hkSearch').value = '';
     renderHkEdit();
@@ -1203,40 +1410,37 @@
   }
 
   function renderHkEdit() {
+    const arr = activeArr();
     $('hkSymbols').innerHTML = SYMBOLS.map(sym =>
       `<button class="symopt${hkDraft.emoji === sym ? ' on' : ''}" data-sym="${sym}">${sym}</button>`).join('');
-
     const cap = $('hkCapture');
     cap.classList.toggle('waiting', capturing);
-    cap.innerHTML = capturing
-      ? 'Trykk en bokstav eller et tall…'
-      : (hkDraft.key ? `<span class="capkey">${hkDraft.key}</span>Klikk for å endre`
-                     : 'Ingen tast. Klikk for å velge');
-
-    const owner = hkDraft.key ? keyOwner(hkDraft.key, hkEditIdx) : -1;
+    cap.innerHTML = capturing ? 'Trykk en bokstav eller et tall…'
+      : (hkDraft.key ? `<span class="capkey">${hkDraft.key}</span>Klikk for å endre` : 'Ingen tast. Klikk for å velge');
+    const owner = hkDraft.key && arr ? keyOwner(arr, hkDraft.key, hkEditIdx) : -1;
     const warn = $('hkWarn');
     if (owner >= 0) {
-      warn.textContent = `${hkDraft.key} er allerede brukt av ${state.hotkeys[owner].label}. Ved lagring fjernes tasten fra ${state.hotkeys[owner].label}.`;
+      warn.textContent = `${hkDraft.key} er allerede brukt av ${arr.hotkeys[owner].label}. Ved lagring fjernes tasten fra ${arr.hotkeys[owner].label}.`;
       warn.classList.add('show');
-    } else {
-      warn.classList.remove('show');
-    }
+    } else warn.classList.remove('show');
 
+    // Velg bare blant sanger som er med i arrangementet
     const q = $('hkSearch').value.toLowerCase();
-    const list = state.library
-      .filter(t => !q || (t.name + ' ' + t.artist).toLowerCase().includes(q))
-      .slice(0, 12);
-    $('hkList').innerHTML = list.length
-      ? list.map(t => `<div class="pick ${hkDraft.trackId === t.id ? 'on' : ''}" data-pick="${t.id}">
-            <span>${esc(t.name)}</span><span class="pa">${esc(t.artist)}</span></div>`).join('')
-      : `<div class="pick"><span class="pa">Ingen treff i biblioteket</span></div>`;
+    const songs = arr ? Object.keys(arr.items).map(getTrack).filter(Boolean)
+      .filter(t => !q || (t.name + ' ' + t.artist).toLowerCase().includes(q)) : [];
+    $('hkList').innerHTML = songs.length
+      ? songs.map(t => `<div class="pick ${hkDraft.trackId === t.id ? 'on' : ''}" data-pick="${t.id}">
+          <span>${esc(t.name)}</span><span class="pa">${esc(t.artist)}</span></div>`).join('')
+      : '<div class="pick"><span class="pa">Legg sanger i arrangementet først</span></div>';
   }
 
   function saveHk() {
-    const h = state.hotkeys[hkEditIdx];
+    const arr = activeArr();
+    if (!arr) return;
+    const h = arr.hotkeys[hkEditIdx];
     if (hkDraft.key) {
-      const owner = keyOwner(hkDraft.key, hkEditIdx);
-      if (owner >= 0) state.hotkeys[owner].key = null;
+      const owner = keyOwner(arr, hkDraft.key, hkEditIdx);
+      if (owner >= 0) arr.hotkeys[owner].key = null;
     }
     h.label = $('hkLabel').value.trim() || h.label;
     h.emoji = hkDraft.emoji;
@@ -1244,16 +1448,13 @@
     h.trackId = hkDraft.trackId;
     closeHkEdit();
     saveAll();
-    renderHotkeys();
+    renderAll();
   }
 
-  function closeHkEdit() {
-    capturing = false;
-    $('hkModal').classList.remove('open');
-  }
+  function closeHkEdit() { capturing = false; $('hkModal').classList.remove('open'); }
 
   // ============================================================
-  // LEGG TIL FRA SPOTIFY
+  // SPOTIFY-SØK (legg til sang)
   // ============================================================
   function openAdd() {
     if (!state.token) { toast('Logg inn med Spotify først', 'error'); return; }
@@ -1270,6 +1471,7 @@
     try {
       const data = await api('GET', `search?q=${encodeURIComponent(q)}&type=track&limit=10&market=NO`);
       const items = data.tracks?.items || [];
+      window._searchItems = items;
       $('addResults').innerHTML = items.length
         ? items.map((t, i) => {
             const inLib = !!getTrack(t.id);
@@ -1280,7 +1482,6 @@
             </div>`;
           }).join('')
         : '<div class="pick"><span class="pa">Ingen treff</span></div>';
-      window._searchItems = items;
     } catch (e) {
       $('addResults').innerHTML = `<div class="pick"><span class="pa">Søk feilet: ${esc(e.message)}</span></div>`;
     }
@@ -1289,54 +1490,116 @@
   function addFromSpotify(i) {
     const t = (window._searchItems || [])[i];
     if (!t || getTrack(t.id)) return;
+    const dur = Math.round(t.duration_ms / 1000);
     state.library.push({
-      id: t.id,
-      name: t.name,
+      id: t.id, name: t.name,
       artist: t.artists.map(a => a.name).join(', '),
-      duration: Math.round(t.duration_ms / 1000),
+      duration: dur,
       img: t.album?.images?.[1]?.url || t.album?.images?.[0]?.url || '',
       uri: t.uri,
-      plays: 0,
     });
-    state.settings[t.id] = { startTime: 0, endTime: Math.round(t.duration_ms / 1000), fadeOut: 0, note: '' };
+    state.settings[t.id] = { startTime: 0, endTime: dur, fadeOut: 0, note: '' };
     saveAll();
     toast(`Lagt til: ${t.name}`, 'success');
     runSearch();
     renderAll();
   }
 
-  function closeAdd() { $('addModal').classList.remove('open'); }
+  // ============================================================
+  // MENYER FOR KATEGORI (symbol i biblioteket)
+  // ============================================================
+  function openSymMenu(el, trackId) {
+    const arr = activeArr();
+    if (!arr) return;
+    symTrack = trackId;
+    const r = el.getBoundingClientRect();
+    const cur = catOf(arr, trackId);
+    $('symMenu').innerHTML = CATS.map(c =>
+      `<div class="sym-item ${cur === c.id ? 'on' : ''}" data-pick-cat="${c.id}"><span>${c.sym}</span><span>${c.label}</span></div>`).join('') +
+      '<div class="sym-item remove" data-pick-cat="ingen"><span>✕</span><span>Fjern fra arrangement</span></div>';
+    const m = $('symMenu');
+    m.style.left = Math.min(r.left, window.innerWidth - 230) + 'px';
+    m.style.top = (r.bottom + 6) + 'px';
+    m.classList.add('open');
+  }
+  function closeSymMenu() { $('symMenu').classList.remove('open'); symTrack = null; }
 
   // ============================================================
   // HENDELSER
   // ============================================================
   function bindEvents() {
-    // Bibliotek: klikk, dobbeltklikk, blyant
+    // Bibliotek
     $('grid').addEventListener('click', e => {
       const edit = e.target.closest('[data-edit]');
-      if (edit) { openEdit(edit.dataset.edit); return; }
+      if (edit) { openSongEdit(edit.dataset.edit); return; }
+      const ring = e.target.closest('[data-ring]');
+      if (ring) { setItem(ring.dataset.ring, 'hoved'); return; }
+      const sym = e.target.closest('[data-sym]');
+      if (sym) { openSymMenu(sym, sym.dataset.sym); return; }
       const tile = e.target.closest('.tile');
       if (tile) selectTrack(tile.dataset.id);
     });
     $('grid').addEventListener('dblclick', e => {
       const tile = e.target.closest('.tile');
-      if (tile) startTrack(tile.dataset.id);
+      if (tile && !e.target.closest('button')) startTrack(tile.dataset.id);
+    });
+    $('grid').addEventListener('dragstart', e => {
+      const tile = e.target.closest('.tile');
+      if (!tile) return;
+      dragId = tile.dataset.id;
+      tile.classList.add('dragging');
+    });
+    $('grid').addEventListener('dragend', () => document.querySelectorAll('.dragging').forEach(x => x.classList.remove('dragging')));
+
+    $('symMenu').addEventListener('click', e => {
+      const it = e.target.closest('[data-pick-cat]');
+      if (!it || !symTrack) return;
+      const cat = it.dataset.pickCat;
+      closeSymMenu();
+      setItem(symTrack, cat === 'ingen' ? null : cat);
+    });
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#symMenu') && !e.target.closest('[data-sym]')) closeSymMenu();
+    });
+
+    // Høyre kolonne
+    $('aside').addEventListener('click', e => {
+      const open = e.target.closest('[data-open]');
+      if (open) { toggleArrangement(open.dataset.open); return; }
+      const dupe = e.target.closest('[data-dupe]');
+      if (dupe) { duplicateArrangement(dupe.dataset.dupe); return; }
+      const ex = e.target.closest('[data-export-arr]');
+      if (ex) { exportArrangement(ex.dataset.exportArr); return; }
+      if (e.target.closest('#newArrBtn')) { newArrangement(); return; }
+      if (e.target.closest('#importArrBtn')) { $('importInput').click(); return; }
+    });
+    $('aside').addEventListener('dragover', e => {
+      const cat = e.target.closest('.cat');
+      if (!cat) return;
+      e.preventDefault();
+      cat.classList.add('over');
+    });
+    $('aside').addEventListener('dragleave', e => {
+      const cat = e.target.closest('.cat');
+      if (cat) cat.classList.remove('over');
+    });
+    $('aside').addEventListener('drop', e => {
+      const cat = e.target.closest('.cat');
+      if (!cat || !dragId) return;
+      e.preventDefault();
+      cat.classList.remove('over');
+      if (state.activeArr !== cat.dataset.arr) state.activeArr = cat.dataset.arr;
+      setItem(dragId, cat.dataset.cat);
     });
 
     // Hurtigvalg
     $('hotkeys').addEventListener('click', e => {
-      if (e.target.closest('#hkEditBtn')) {
-        state.editMode = !state.editMode;
-        renderHotkeys();
-        return;
-      }
+      if (e.target.closest('#hkEditBtn')) { state.editMode = !state.editMode; renderHotkeys(); return; }
       const hk = e.target.closest('[data-hk]');
       if (!hk) return;
       const i = Number(hk.dataset.hk);
       if (state.editMode) openHkEdit(i); else playHotkey(i);
     });
-
-    // Hurtigvalg-redigering
     $('hkSymbols').addEventListener('click', e => {
       const b = e.target.closest('[data-sym]');
       if (b) { hkDraft.emoji = b.dataset.sym; renderHkEdit(); }
@@ -1350,45 +1613,83 @@
     $('hkClear').addEventListener('click', () => { hkDraft.trackId = null; renderHkEdit(); });
     $('hkSave').addEventListener('click', saveHk);
     $('hkCancel').addEventListener('click', closeHkEdit);
+    $('hkX').addEventListener('click', closeHkEdit);
 
-    // Sangredigering
-    $('eStartMinus').onclick = () => nudge('start', -1);
-    $('eStartPlus').onclick = () => nudge('start', 1);
-    $('eStartSet').onclick = () => setFromPlayhead('start');
-    $('eEndMinus').onclick = () => nudge('end', -1);
-    $('eEndPlus').onclick = () => nudge('end', 1);
-    $('eEndSet').onclick = () => setFromPlayhead('end');
-    $('eFade').addEventListener('input', e => { editDraft.fade = Number(e.target.value); renderEdit(); });
-    $('eSave').onclick = saveEdit;
-    $('eCancel').onclick = closeEdit;
-    $('ePreview').onclick = previewTrack;
-    $('eRemove').onclick = removeTrack;
+    // Sangvindu
+    $('seX').onclick = closeSongEdit;
+    $('seCancel').onclick = closeSongEdit;
+    $('seSave').onclick = saveSongEdit;
+    $('seRemove').onclick = removeTrack;
+    $('sePlay').onclick = playSongEdit;
+    $('seFromStart').onclick = () => seekSongEdit(songEdit.start);
+    $('seZoomIn').onclick = () => { const i = ZOOMS.indexOf(songEdit.win); songEdit.win = ZOOMS[Math.max(0, i - 1)]; songEdit.view = songPos() - songEdit.win / 2; clampView(); renderSongEdit(); };
+    $('seZoomOut').onclick = () => { const i = ZOOMS.indexOf(songEdit.win); songEdit.win = ZOOMS[Math.min(ZOOMS.length - 1, i + 1)]; songEdit.view = songPos() - songEdit.win / 2; clampView(); renderSongEdit(); };
+    $('seZoomAll').onclick = () => { songEdit.win = Math.round((getTrack(songEdit.id)?.duration) || 225); songEdit.view = 0; renderSongEdit(); };
+    $('seZoomAround').onclick = () => {
+      songEdit.win = Math.max(20, Math.ceil(songEdit.end - songEdit.start + 16));
+      songEdit.view = songEdit.start - 8;
+      clampView();
+      renderSongEdit();
+    };
+    document.querySelectorAll('#songEdit .nudges').forEach(group => {
+      const point = group.dataset.point;
+      group.querySelectorAll('button').forEach(b => b.addEventListener('click', () => nudgeSong(point, Number(b.dataset.step))));
+    });
+    $('inStart').addEventListener('change', e => commitSongTime('start', e.target.value));
+    $('inEnd').addEventListener('change', e => commitSongTime('end', e.target.value));
+    ['inStart', 'inEnd'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); }));
+    document.querySelectorAll('#fadeChoices .fade-opt').forEach(b => b.addEventListener('click', () => {
+      songEdit.fade = Number(b.dataset.fade);
+      renderSongEdit();
+    }));
+
+    // Dra start, stopp og streken
+    let drag = null;
+    const tl = $('tl');
+    const timeAt = e => {
+      const r = tl.getBoundingClientRect();
+      const dur = (getTrack(songEdit?.id)?.duration) || 225;
+      return r1(Math.max(0, Math.min(dur, songEdit.view + (e.clientX - r.left) / r.width * songEdit.win)));
+    };
+    const down = id => e => { if (!songEdit) return; drag = id; e.preventDefault(); };
+    $('mStart').addEventListener('pointerdown', down('start'));
+    $('mEnd').addEventListener('pointerdown', down('end'));
+    $('ph').addEventListener('pointerdown', down('pos'));
+    window.addEventListener('pointermove', e => {
+      if (!drag || !songEdit) return;
+      const t = timeAt(e);
+      if (drag === 'start') songEdit.start = Math.min(t, songEdit.end - 0.1);
+      if (drag === 'end') songEdit.end = Math.max(t, songEdit.start + 0.1);
+      if (drag === 'pos') { songEdit.pos = t; if (state.playingId === songEdit.id) { state.pos = t; } }
+      renderSongEdit();
+    });
+    window.addEventListener('pointerup', async () => {
+      if (drag === 'pos' && songEdit && state.playingId === songEdit.id) await seekDevice(songEdit.pos);
+      drag = null;
+    });
 
     // Legg til fra Spotify
+    $('addBtn').onclick = openAdd;
+    $('addX').onclick = () => $('addModal').classList.remove('open');
     $('addSearchBtn').onclick = runSearch;
     $('addQuery').addEventListener('keydown', e => { if (e.key === 'Enter') runSearch(); });
     $('addResults').addEventListener('click', e => {
       const b = e.target.closest('[data-add]');
       if (b) addFromSpotify(Number(b.dataset.add));
     });
-    $('addClose').onclick = closeAdd;
 
-    // Overlegg: klikk utenfor lukker
-    ['overlay', 'hkModal', 'addModal'].forEach(id => {
-      $(id).addEventListener('click', e => {
-        if (e.target.id !== id) return;
-        if (id === 'overlay') closeEdit();
-        if (id === 'hkModal') closeHkEdit();
-        if (id === 'addModal') closeAdd();
-      });
+    // Bibliotek-verktøy
+    $('search').addEventListener('input', e => { state.query = e.target.value; renderGrid(); });
+    $('unusedBtn').onclick = () => { state.unusedOnly = !state.unusedOnly; renderAll(); };
+    $('exportLibBtn').onclick = exportLibrary;
+    $('importBtn').onclick = () => $('importInput').click();
+    $('importInput').addEventListener('change', e => {
+      const f = e.target.files?.[0];
+      if (f) importJsonFile(f);
+      e.target.value = '';
     });
 
-    // Søk, faner, spiller
-    $('search').addEventListener('input', e => { state.query = e.target.value; renderTiles(); });
-    $('tabAll').onclick = () => setTab('all');
-    $('tabArr').onclick = () => setTab('arr');
-    $('resetBtn').onclick = () => { state.library.forEach(t => t.plays = 0); saveAll(); renderAll(); };
-    $('addBtn').onclick = openAdd;
+    // Fil, innlogging, spiller
     $('libFileBtn').onclick = libFileMenu;
     $('userBtn').onclick = () => { if (!state.token) $('authModal').classList.add('open'); };
     $('loginBtn').onclick = startLogin;
@@ -1400,21 +1701,13 @@
       state.masterVol = Number(e.target.value) / 100;
       setVolFactor(state.volFactor);
     });
-    $('importInput').addEventListener('change', e => {
-      const f = e.target.files?.[0];
-      if (f) importJsonFile(f);
-      e.target.value = '';
+
+    // Overlegg: klikk utenfor lukker
+    [['songEdit', closeSongEdit], ['hkModal', closeHkEdit], ['addModal', () => $('addModal').classList.remove('open')]].forEach(([id, fn]) => {
+      $(id).addEventListener('click', e => { if (e.target.id === id) fn(); });
     });
 
-    // Tastatur
     document.addEventListener('keydown', onKey);
-  }
-
-  function setTab(tab) {
-    state.tab = tab;
-    $('tabAll').classList.toggle('active', tab === 'all');
-    $('tabArr').classList.toggle('active', tab === 'arr');
-    renderTiles();
   }
 
   function onKey(e) {
@@ -1428,22 +1721,20 @@
       }
       return;
     }
-    if (e.key === 'Escape') { closeEdit(); closeHkEdit(); closeAdd(); return; }
+    if (e.key === 'Escape') { closeSongEdit(); closeHkEdit(); $('addModal').classList.remove('open'); closeSymMenu(); return; }
     const tag = document.activeElement?.tagName;
     const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
-    const modalOpen = ['overlay', 'hkModal', 'addModal', 'authModal'].some(id => $(id).classList.contains('open'));
+    const modalOpen = ['songEdit', 'hkModal', 'addModal', 'authModal'].some(id => $(id).classList.contains('open'));
     if (typing || modalOpen || e.metaKey || e.ctrlKey || e.altKey) return;
 
-    if (e.code === 'Space') {
-      e.preventDefault();
-      togglePlay();
-    } else if (e.key === 'ArrowRight') {
-      e.preventDefault(); stepSelection(1);
-    } else if (e.key === 'ArrowLeft') {
-      e.preventDefault(); stepSelection(-1);
-    } else if (/^[a-zA-Z0-9]$/.test(e.key)) {
+    if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); stepSelection(1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); stepSelection(-1); }
+    else if (/^[a-zA-Z0-9]$/.test(e.key)) {
+      const arr = activeArr();
+      if (!arr) return;
       const k = e.key.toUpperCase();
-      const i = state.hotkeys.findIndex(h => h.key === k);
+      const i = arr.hotkeys.findIndex(h => h.key === k);
       if (i >= 0) playHotkey(i);
     }
   }
@@ -1464,7 +1755,6 @@
 
     let loggedIn = !!state.token && Date.now() < state.tokenExpiry;
     if (!loggedIn && localStorage.getItem('spotify_refresh_token')) loggedIn = await refreshAccessToken();
-
     if (loggedIn) {
       $('authModal').classList.remove('open');
       await fetchMe();
@@ -1476,7 +1766,6 @@
     await initLibraryFile();
     renderAll();
   };
-
 </script>
 </body>
 </html>
