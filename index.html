@@ -89,6 +89,9 @@
   .mk.ring:hover { border-color: var(--green); }
   .mk.sym { font-size: 14px; background: var(--bg-hover); border: 1px solid var(--border); padding: 0 6px; cursor: pointer; }
   .mk.sym:hover { border-color: var(--text-dim); }
+  .group-title { font-family: 'Barlow Condensed'; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-dim); margin-top: 6px; padding-bottom: 2px; border-bottom: 1px solid var(--border); }
+  .view-tabs { display: flex; gap: 4px; }
+  .view-tabs button.active { color: var(--text); background: var(--bg-raised); }
   .empty-msg { color: var(--text-dim); padding: 40px 0; text-align: center; grid-column: 1 / -1; }
 
   /* Høyre kolonne: arrangementer */
@@ -217,7 +220,7 @@
 <nav class="hotkeys" id="hotkeys"></nav>
 
 <div class="toolbar">
-  <span class="title">Bibliotek</span>
+  <div class="view-tabs" id="viewTabs"></div>
   <span class="count" id="count"></span>
   <button id="unusedBtn" title="Vis bare sanger som ikke er brukt i noe arrangement">Ubrukte</button>
   <span class="spacer"></span>
@@ -457,6 +460,7 @@
     selectedId: null, playingId: null, isPlaying: false, freePlay: false,
     pos: 0, duration: 0,
     query: '', unusedOnly: false, editMode: false,
+    view: 'lib',       // 'lib' = hele biblioteket, 'arr' = innlastet arrangement
   };
 
   let tickTimer = null, stopping = false;
@@ -494,7 +498,17 @@
   const arrCount = trackId => state.arrangements.filter(a => a.items[trackId]).length;
   const catOf = (arr, trackId) => arr && arr.items[trackId];
   const catInfo = id => CATS.find(c => c.id === id);
+  // Sangene i innlastet arrangement, i rekkefølge: Hovedliste, Intro, Pause, Outro
+  function arrangementTracks() {
+    const arr = activeArr();
+    if (!arr) return [];
+    return CATS.flatMap(c => Object.keys(arr.items)
+      .filter(id => arr.items[id] === c.id)
+      .map(getTrack).filter(Boolean));
+  }
+
   function visibleTracks() {
+    if (state.view === 'arr') return arrangementTracks();
     const q = state.query.trim().toLowerCase();
     return state.library.filter(t =>
       (!q || (t.name + ' ' + t.artist).toLowerCase().includes(q)) &&
@@ -1039,6 +1053,13 @@
   // ============================================================
   // RENDER
   // ============================================================
+  function renderViewTabs() {
+    const arr = activeArr();
+    $('viewTabs').innerHTML = `
+      <button class="${state.view === 'lib' ? 'active' : ''}" data-view="lib">Bibliotek</button>
+      <button class="${state.view === 'arr' ? 'active' : ''}" data-arrmenu="1" title="Bytt arrangement">${arr ? esc(arr.name) : 'Velg arrangement'} ▾</button>`;
+  }
+
   function renderAll() {
     renderGrid();
     renderAside();
@@ -1052,6 +1073,30 @@
   function renderGrid() {
     const list = visibleTracks();
     const arr = activeArr();
+    renderViewTabs();
+    if (state.view === 'arr') {
+      if (!arr) { $('grid').innerHTML = '<div class="empty-msg">Ingen arrangement innlastet.</div>'; $('count').textContent = ''; return; }
+      $('count').textContent = `${list.length} sanger i ${arr.name}`;
+      const tile = t => {
+        const s = settingsFor(t);
+        const c = catOf(arr, t.id);
+        return `<div class="tile ${t.id === state.selectedId ? 'selected' : ''}" draggable="true" data-id="${t.id}">
+          <div class="thumb">${t.img ? `<img src="${esc(t.img)}" alt="">` : ''}</div>
+          <div style="min-width:0">
+            <div class="t">${esc(t.name)}</div>
+            <div class="a">${esc(t.artist)} · <span class="r">${fmt(s.start)}–${fmt(s.end)}</span></div>
+          </div>
+          <span class="mk sym" title="${catInfo(c).label}">${catInfo(c).sym}</span>
+          <button class="pencil" data-edit="${t.id}" title="Rediger sang (gjelder alle arrangementer)">✎</button>
+        </div>`;
+      };
+      $('grid').innerHTML = CATS.map(c => {
+        const items = list.filter(t => catOf(arr, t.id) === c.id);
+        return `<div class="group-title" style="grid-column:1/-1">${c.sym} ${c.label} <span class="faint">${items.length}</span></div>` +
+          (items.length ? items.map(tile).join('') : '<div class="faint" style="grid-column:1/-1;font-size:12px;padding:0 0 6px">Ingen sanger</div>');
+      }).join('');
+      return;
+    }
     $('count').textContent = `${list.length} av ${state.library.length} sanger`;
     if (!state.library.length) {
       $('grid').innerHTML = '<div class="empty-msg">Ingen sanger ennå. Klikk «+ Legg til fra Spotify» eller importer en fil.</div>';
@@ -1095,6 +1140,7 @@
         }).join('');
         body = `<div class="arr-body">${cats}
           <div class="arr-actions">
+            <button class="primary" data-load="${a.id}">Last inn i spiller</button>
             <button data-dupe="${a.id}">Dupliser</button>
             <button data-export-arr="${a.id}">Eksporter</button>
           </div></div>`;
@@ -1203,6 +1249,29 @@
     state.activeArr = copy.id;
     saveAll();
     toast(`Kopi laget av «${src.name}». Endringene gjelder bare kopien.`, 'success');
+    renderAll();
+  }
+
+  // Meny under arrangementnavnet: bytt arrangement uten å stoppe avspillingen
+  function openArrMenu(el) {
+    if (!state.arrangements.length) { toast('Ingen arrangementer ennå. Lag et i høyre kolonne.', 'error'); return; }
+    const r = el.getBoundingClientRect();
+    showMenu(r.left, r.bottom + 4, state.arrangements.map(a => ({
+      label: (a.id === state.activeArr ? '✓ ' : '    ') + a.name,
+      action: () => loadArrangement(a.id),
+    })));
+  }
+
+  // Laster arrangementet inn i spilleren: setter det som aktivt, viser sangene og aktiverer hurtigvalg
+  function loadArrangement(id) {
+    const arr = getArr(id);
+    if (!arr) return;
+    state.activeArr = id;
+    state.view = 'arr';
+    state.editMode = false;
+    const first = arrangementTracks()[0];
+    if (first && !getTrack(state.selectedId)) state.selectedId = first.id;
+    toast(`Lastet inn «${arr.name}»`, 'success');
     renderAll();
   }
 
@@ -1554,16 +1623,26 @@
     $('symMenu').addEventListener('click', e => {
       const it = e.target.closest('[data-pick-cat]');
       if (!it || !symTrack) return;
+      const trackId = symTrack;
       const cat = it.dataset.pickCat;
       closeSymMenu();
-      setItem(symTrack, cat === 'ingen' ? null : cat);
+      setItem(trackId, cat === 'ingen' ? null : cat);
     });
     document.addEventListener('click', e => {
       if (!e.target.closest('#symMenu') && !e.target.closest('[data-sym]')) closeSymMenu();
     });
 
+    $('viewTabs').addEventListener('click', e => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      if (b.dataset.view === 'lib') { state.view = 'lib'; renderAll(); return; }
+      if (b.dataset.arrmenu) openArrMenu(b);
+    });
+
     // Høyre kolonne
     $('aside').addEventListener('click', e => {
+      const load = e.target.closest('[data-load]');
+      if (load) { loadArrangement(load.dataset.load); return; }
       const open = e.target.closest('[data-open]');
       if (open) { toggleArrangement(open.dataset.open); return; }
       const dupe = e.target.closest('[data-dupe]');
