@@ -1027,13 +1027,16 @@
   // Sangen spilleren viser og styrer: den som spiller, ellers den valgte
   const displayedId = () => (state.isPlaying ? state.playingId : state.selectedId);
 
-  // Neste sang: den du har gjort klar, ellers sangen etter den som spiller (eller den valgte, når ingen spiller)
+  // Neste sang: en sang du har klikket på (også en spilt), ellers den første ikke-spilte sangen etter den som spiller.
+  // Når ingenting spiller, er det den valgte sangen.
   function currentNext() {
     if (state.nextId && getTrack(state.nextId)) return getTrack(state.nextId);
     if (!state.isPlaying) return getTrack(state.selectedId);
+    const arr = activeArr();
+    const played = id => !!(arr && (arr.plays || {})[id]);
     const list = visibleTracks();
     const i = list.findIndex(t => t.id === state.playingId);
-    return list[i + 1] || null;
+    return list.slice(i + 1).find(t => !played(t.id)) || null;
   }
 
   // Klikk i listen: gjør sangen klar som neste. Klikk på sangen som spiller nullstiller til standard.
