@@ -14,7 +14,7 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; font-size: 13px; }
-  body { display: grid; grid-template-rows: 52px auto auto 1fr 92px; height: 100vh; overflow: hidden; }
+  body { display: grid; grid-template-rows: 52px auto auto 1fr 116px; height: 100vh; overflow: hidden; }
   button, input[type=text], select { font: inherit; color: var(--text); }
   button { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; cursor: pointer; white-space: nowrap; }
   button:hover { background: var(--bg-hover); }
@@ -1015,7 +1015,15 @@
     if (!t) return;
     if (state.player && state.deviceId) {
       const cs = await state.player.getCurrentState().catch(() => null);
-      if (!cs) return;
+      if (!cs) {
+        // Spotify gir ingen status når sangen er ferdig. Da er den ferdig, og vi går videre.
+        state.nullCount = (state.nullCount || 0) + 1;
+        const t2 = getTrack(state.playingId);
+        const nearEnd = t2 && state.pos >= settingsFor(t2).end - 1.5;
+        if (state.nullCount >= 3 || nearEnd) { state.nullCount = 0; await finishPlayback(); }
+        return;
+      }
+      state.nullCount = 0;
       state.pos = cs.position / 1000;
       if (cs.duration) state.duration = cs.duration / 1000;
     } else {
@@ -1030,7 +1038,8 @@
 
   // Sangen er spilt til stopp-punktet: fade ut, pause og tilbake til startpunktet
   async function finishPlayback() {
-    const nx = state.freePlay ? null : currentNext();
+    // Automatisk neste gjelder bare i et innlastet arrangement, ikke i biblioteket
+    const nx = state.freePlay || state.view !== 'arr' || !activeArr() ? null : currentNext();
     stopping = true;
     stopTicker();
     if (state.stopFadeDuration > 0) await fadeOut(state.stopFadeDuration);
@@ -1240,7 +1249,6 @@
             <div class="a">${esc(t.artist)} · <span class="r">${fmt(s.start)}–${fmt(s.end)}</span></div>
           </div>
           <span class="cnt">${plays ? plays + '×' : ''}</span>
-          <span class="mk sym">${symFor(arr, t.id)}</span>
           <button class="pencil" data-edit="${t.id}" title="Rediger sang (gjelder alle arrangementer)">✎</button>
         </div>`;
       }).join('') : `<div class="empty-msg">Ingen sanger i ${cat.label} ennå.</div>`;
